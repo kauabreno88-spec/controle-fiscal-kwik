@@ -1,7 +1,7 @@
 /* KWIK Folha — deixa o app abrir sem internet.
    Arquivos do próprio app: rede primeiro (pega atualizações), cache se estiver offline.
    Fontes e a biblioteca do Excel: cache primeiro. A API do GitHub e a pasta dados/ nunca passam pelo cache. */
-const CACHE = "kwik-folha-v1";
+const CACHE = "kwik-folha-v2";
 const APP = ["./", "./index.html", "./manifest.webmanifest", "./apple-touch-icon.png", "./icone-192.png", "./icone-512.png"];
 const EXTERNOS = ["fonts.googleapis.com", "fonts.gstatic.com", "cdnjs.cloudflare.com"];
 
