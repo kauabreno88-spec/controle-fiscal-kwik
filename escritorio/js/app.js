@@ -397,7 +397,7 @@
 
     const colP = el('div', { class: 'principal' },
       el('h3', {}, '⭐ Principais notícias ', el('span', { class: 'chip' }, String(r.principais.length))),
-      el('p', { class: 'sub' }, 'Manchetes em destaque nos dois portais, priorizando temas dos clientes KWIK (Simples, MEI, Reforma, folha, prazos).'),
+      el('p', { class: 'sub' }, 'Manchetes em destaque nos portais, priorizando temas dos clientes KWIK (Simples, MEI, Reforma, folha, prazos).'),
       r.principais.map(itemNoticia));
 
     const colD = el('div', {});

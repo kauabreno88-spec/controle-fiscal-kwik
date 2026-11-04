@@ -1,6 +1,6 @@
 /* KWIK Mini Escritório — deixa o app abrir sem internet.
    Arquivos do app: rede primeiro (pega atualizações), cache se estiver offline. A API do GitHub nunca passa pelo cache. */
-const CACHE = 'kwik-mini-v1';
+const CACHE = 'kwik-mini-v2';
 const APP = ['./', './index.html', './manifest.webmanifest', './js/cena.js', './js/efeitos.js', './js/nuvem.js', './js/app.js',
   './assets/kwik-simbolo.svg', './assets/icone-192.png', './assets/icone-512.png', './assets/apple-touch-icon.png',
   './assets/fontes/Montserrat-Medium.ttf', './assets/fontes/Montserrat-Bold.ttf', './assets/fontes/Montserrat-ExtraBold.ttf', './assets/fontes/Montserrat-Black.ttf'];

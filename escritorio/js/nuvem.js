@@ -134,7 +134,7 @@
     async acompanhar(id, cb) {
       const roteiro = [
         [0, 'Pedido enviado ao GitHub 📨', 6], [5, 'Ligando o computador da nuvem…', 14], [14, 'Abrindo o Portal Contábeis…', 28],
-        [20, 'Abrindo o Contadores.cnt.br…', 42], [27, 'Lendo as matérias e os resumos…', 60], [37, 'Separando as principais notícias…', 78],
+        [20, 'Lendo as manchetes do dia…', 42], [27, 'Lendo as matérias e os resumos…', 60], [37, 'Separando as principais notícias…', 78],
         [48, 'Organizando o relatório…', 90], [80, 'A fila do GitHub está mais lenta hoje, já já sai…', 94],
       ];
       const t0 = Date.now();
