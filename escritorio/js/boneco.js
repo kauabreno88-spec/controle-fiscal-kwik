@@ -5,8 +5,26 @@
   const KM = (window.KM = window.KM || {});
   const VERDE = '#28BE52';
 
+  // Fantasias: cores trocadas + enfeites desenhados por cima.
+  const FANT = {
+    vampiro: { nome: '🧛 Vampiro', ap: { pele: '#ece4ea', corCabelo: '#141414', cabelo: 'curto', estiloCamisa: 'terno', corCamisa: '#1b1b1f', corGravata: '#9b1b30', calca: '#1b1b1f', sapato: '#111111', cracha: false, oculos: false, bone: false, fone: false, barba: false } },
+    zumbi: { nome: '🧟 Zumbi', ap: { pele: '#a3c48f', corCamisa: '#8a8c7a', estiloCamisa: 'casual', calca: '#4f5541', cracha: false, oculos: false, bone: false, fone: false } },
+    pirata: { nome: '🏴‍☠️ Pirata', ap: { corCamisa: '#f4f1ea', estiloCamisa: 'casual', calca: '#3b2a1e', sapato: '#2b1d12', cracha: false, oculos: false, bone: false, fone: false } },
+    astronauta: { nome: '👨‍🚀 Astronauta', ap: { corCamisa: '#f1f3f5', estiloCamisa: 'moletom', calca: '#e9ecef', sapato: '#adb5bd', cracha: false, bone: false, fone: false } },
+    mago: { nome: '🧙 Mago', ap: { corCamisa: '#5f3dc4', estiloCamisa: 'moletom', calca: '#5f3dc4', sapato: '#3b2a8a', cracha: false, bone: false, fone: false } },
+    heroi: { nome: '🦸 Herói', ap: { corCamisa: '#3f7fc1', estiloCamisa: 'heroi', calca: '#2b4f8a', sapato: '#c9453a', cracha: false, bone: false, fone: false, oculos: false } },
+    bear: { nome: '🎧 Bear (Obsessão)', ap: { corCamisa: '#8b1e2d', estiloCamisa: 'casual', calca: '#2f3a4a', cracha: false, bone: false } },
+    nikki: { nome: '😊 Nikki (Obsessão)', ap: {} },
+  };
+  KM.FANTASIAS = Object.fromEntries(Object.entries(FANT).map(([k, v]) => [k, v.nome]));
+
   KM.desenharBoneco = function (g, ap, est) {
     const { tom } = KM.cor;
+    const fant = est.fantasia || '';
+    if (FANT[fant]) ap = Object.assign({}, ap, FANT[fant].ap);
+    if (fant === 'nikki') { est = Object.assign({ olhos: 'vermelhos', boca: 'sorrisao' }, est); ap = Object.assign({}, ap, { pele: tom(ap.pele, 1.12) }); }
+    if (fant === 'zumbi' && !est.bracos) est = Object.assign({}, est, { bracos: 'zumbi' });
+    const prop = est.prop || '';
     const r = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
     const p = (x, y, c) => r(x, y, 1, 1, c);
 
@@ -45,19 +63,34 @@
       const c = longe ? camS : cam;
       for (let i = 0; i < 5; i++) r(x, 22 + i, 3, 1, i < manga ? (estilo === 'casual' && i === manga - 1 ? camH : c) : (longe ? peleS : pele));
     }
-    const b = est.bracos || 'baixo';
+    const PROP_BRACOS = { camera: 'camera', prancheta: 'segura', disco: 'segura', cartas: 'cartas', claquete: 'aceno', desejo: 'aceno', taco: 'taco', varinha: 'aceno' };
+    const b = est.bracos || PROP_BRACOS[prop] || 'baixo';
+    const antebraco = (x0, y0, x1, y1, longe) => { // segmento de pele (ou manga longa)
+      const cor = manga >= 9 ? (longe ? camS : cam) : (longe ? peleS : pele);
+      const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)) || 1;
+      for (let i = 0; i <= n; i++) r(Math.round(x0 + (x1 - x0) * i / n), Math.round(y0 + (y1 - y0) * i / n), 3, 3, cor);
+    };
     const bracoLonge = () => {
       if (b === 'cima') bracoSobe(20, true);
       else if (b === 'aceno') bracoSobe(20, true, est.aceno ? 1 : 0);
       else if (b === 'poder') { bracoDesce(21, true); r(21, 30, 4, 3, peleS); }
       else if (b === 'frente') bracoFrente(20, true);
       else if (b === 'cafe') { r(20, 22, 3, 3, camS); r(17, 24, 4, 2, manga >= 5 ? camS : peleS); }
+      else if (b === 'camera') { r(19, 22, 3, 3, camS); antebraco(19, 22, 16, 16, true); }
+      else if (b === 'segura' || b === 'cartas') { r(19, 22, 3, 3, camS); antebraco(19, 24, 15, 26, true); }
+      else if (b === 'zumbi') { r(18, 22, 3, 3, camS); antebraco(17, 23, 12, 23, true); r(10, 23, 3, 3, peleS); }
+      else if (b === 'taco') { r(19, 22, 3, 3, camS); antebraco(19, 24, 17, 28, true); }
       else bracoDesce(20, true);
     };
     const bracoPerto = () => {
       if (b === 'cima') bracoSobe(5, false);
       else if (b === 'poder') { bracoDesce(4, false); r(3, 30, 4, 3, pele); p(4, 31, peleS); }
       else if (b === 'frente') bracoFrente(5, false);
+      else if (b === 'camera') { r(5, 22, 3, 3, cam); antebraco(6, 23, 8, 17, false); }
+      else if (b === 'segura') { r(5, 22, 3, 4, cam); antebraco(6, 25, 9, 27, false); }
+      else if (b === 'cartas') { r(5, 22, 3, 4, cam); antebraco(6, 25, 10, 25, false); }
+      else if (b === 'zumbi') { r(5, 22, 3, 3, cam); antebraco(5, 24, 1, 24, false); r(0, 24, 2, 3, pele); }
+      else if (b === 'taco') { r(5, 22, 3, 4, cam); antebraco(6, 25, 4, 30, false); }
       else bracoDesce(5, false);
     };
 
@@ -82,6 +115,9 @@
     }
 
     // ---------------------------------------------------------------- tronco
+    const capa = fant === 'vampiro' ? ['#141414', '#9b1b30'] : fant === 'heroi' ? ['#b0254f', '#d6336c'] : null;
+    if (capa && !costas) { r(5, 21, 18, 20, capa[0]); r(6, 22, 16, 18, capa[1]); }
+    if (fant === 'astronauta' && !costas) r(20, 21, 3, 9, '#ced4da');
     bracoLonge();
     r(8, 21, 12, 11, cam); r(7, 22, 14, 3, cam);
     r(17, 21, 3, 11, camS); r(19, 22, 2, 3, camS); r(8, 29, 12, 1, camS);
@@ -111,6 +147,19 @@
         p(13, 25, '#9aa3a1'); r(12, 26, 3, 4, '#ffffff'); p(13, 27, '#6aa5d8'); r(12, 29, 3, 1, '#c9c9c2');
       }
     }
+    // enfeites da fantasia no tronco
+    if (!costas) {
+      if (fant === 'pirata') for (const y of [23, 25, 27, 29]) r(8, y, 12, 1, '#c9453a');
+      if (fant === 'bear') { for (const y of [24, 28]) r(8, y, 12, 1, '#4a0f17'); for (const x of [10, 14, 18]) r(x, 22, 1, 9, '#4a0f17'); r(9, 20, 10, 1, '#202426'); r(8, 20, 1, 2, '#202426'); r(19, 20, 1, 2, '#202426'); }
+      if (fant === 'heroi') { r(12, 24, 4, 4, '#ffd93b'); p(13, 25, '#c9453a'); p(13, 26, '#c9453a'); p(14, 25, '#c9453a'); p(14, 27, '#c9453a'); }
+      if (fant === 'astronauta') { r(15, 24, 3, 3, VERDE); p(16, 25, '#ffffff'); r(9, 26, 3, 2, '#c9453a'); }
+      if (fant === 'zumbi') { p(10, 25, '#5c5e4f'); p(11, 26, '#5c5e4f'); p(16, 28, '#5c5e4f'); p(17, 27, '#5c5e4f'); r(9, 30, 2, 1, '#5c5e4f'); }
+      if (fant === 'mago') { p(10, 26, '#ffd93b'); p(16, 28, '#ffd93b'); p(12, 30, '#ffd93b'); }
+      if (fant === 'vampiro') { r(6, 17, 2, 5, '#141414'); r(20, 17, 2, 5, '#141414'); }
+    } else {
+      if (capa) { r(6, 20, 16, 22, capa[1]); r(13, 21, 1, 20, capa[0]); }
+      if (fant === 'astronauta') { r(9, 22, 10, 9, '#ced4da'); r(10, 23, 8, 1, '#adb5bd'); }
+    }
     bracoPerto();
 
     // ---------------------------------------------------------------- cabeça
@@ -131,6 +180,33 @@
       acessoriosFrente();
     }
 
+    // enfeites da fantasia na cabeça
+    if (fant === 'pirata') {
+      r(6, Y(3), 17, 4, '#1b1b1b'); r(4, Y(6), 21, 2, '#1b1b1b'); r(9, Y(2), 11, 1, '#1b1b1b');
+      if (!costas) { p(13, Y(4), '#ffffff'); p(14, Y(4), '#ffffff'); p(13, Y(5), '#ffffff'); r(8, Y(13), 13, 1, '#111111'); r(14, Y(14), 3, 2, '#111111'); }
+    } else if (fant === 'mago') {
+      const ch = '#4c2fa3';
+      r(13, Y(-2), 2, 1, ch); r(12, Y(-1), 4, 1, ch); r(11, Y(0), 6, 2, ch); r(10, Y(2), 8, 2, ch); r(9, Y(4), 10, 2, ch); r(5, Y(6), 19, 2, '#3d2896');
+      p(13, Y(0), '#ffd93b'); p(11, Y(3), '#ffd93b'); p(16, Y(4), '#ffd93b');
+      if (!costas) { r(9, Y(17), 10, 5, '#f1f3f5'); r(10, Y(22), 8, 2, '#f1f3f5'); r(11, Y(24), 6, 1, '#f1f3f5'); r(12, Y(18), 2, 1, '#7a3b2a'); }
+    } else if (fant === 'heroi' && !costas) {
+      r(8, Y(13), 13, 3, '#111111'); p(10, Y(14), '#ffffff'); p(15, Y(14), '#ffffff');
+    } else if (fant === 'vampiro' && !costas) {
+      p(12, Y(19), '#ffffff'); p(14, Y(19), '#ffffff'); r(13, Y(8), 1, 2, tom(cab, 1.3));
+    } else if (fant === 'zumbi' && !costas) {
+      p(9, Y(16), '#6f8c5e'); p(16, Y(16), '#6f8c5e');
+    }
+    if (fant === 'astronauta') { // capacete de vidro
+      g.fillStyle = 'rgba(170,225,255,0.28)';
+      for (let yy = -9; yy <= 9; yy++) for (let xx = -10; xx <= 10; xx++) { if (xx * xx / 100 + yy * yy / 81 <= 1) g.fillRect(14 + xx, Y(14) + yy, 1, 1); }
+      for (let k = 0; k < 64; k++) { const a = k / 64 * Math.PI * 2; p(Math.round(14 + Math.cos(a) * 10), Math.round(Y(14) + Math.sin(a) * 9), '#dee2e6'); }
+      if (!costas) { p(9, Y(8), '#ffffff'); p(10, Y(7), '#ffffff'); }
+      r(8, Y(22), 12, 2, '#ced4da');
+    }
+
+    // objetos nas mãos
+    if (!costas) desenharProp();
+
     // caneca na mão (café) por cima de tudo
     if (b === 'cafe' && !costas) {
       r(15, 21, 2, 2, peleS);
@@ -139,12 +215,42 @@
     g.translate(0, -(est.dy || 0));
 
     // ---------------------------------------------------------------- partes
+    function desenharProp() {
+      if (prop === 'camera') {
+        r(8, Y(14), 9, 6, '#26292c'); r(9, Y(13), 3, 1, '#26292c'); r(10, Y(15), 4, 4, '#4a5560'); p(11, Y(16), '#9fe8ff'); p(12, Y(17), '#6c7a86');
+        r(15, Y(13), 2, 1, est.flash ? '#ffffff' : '#c9c9c2');
+        if (est.flash) { for (const [x, y] of [[16, 10], [18, 11], [19, 13], [18, 15], [14, 10]]) p(x, Y(y), '#fff9c4'); r(15, Y(12), 3, 3, '#ffffff'); }
+        r(16, Y(16), 3, 3, peleS); r(7, Y(17), 3, 3, pele);
+      } else if (prop === 'prancheta') {
+        r(9, 22, 8, 10, '#8d5a3b'); r(10, 24, 6, 7, '#ffffff'); r(11, 22, 4, 2, '#adb5bd');
+        for (const y of [25, 27, 29]) { r(12, y, 3, 1, '#9aa3a1'); p(11, y, y === 25 ? VERDE : '#c9c9c2'); }
+        r(8, 26, 2, 3, pele); r(16, 25, 2, 3, peleS);
+      } else if (prop === 'disco') {
+        r(9, 22, 9, 9, '#141414'); r(10, 21, 7, 11, '#141414'); r(12, 25, 3, 3, '#c9453a'); p(13, 26, '#ffffff'); p(10, 23, '#555555'); p(16, 29, '#555555');
+        r(8, 26, 2, 3, pele); r(17, 25, 2, 3, peleS);
+      } else if (prop === 'cartas') {
+        ['#e03131', '#f59f00', '#2f9e44', '#1971c2'].forEach((c, i) => { r(10 + i * 2, 20 - (i % 2), 3, 5, '#ffffff'); r(11 + i * 2, 21 - (i % 2), 1, 3, c); });
+        r(10, 25, 6, 2, pele);
+      } else if (prop === 'claquete') {
+        r(20, 7, 7, 5, '#141414'); for (let x = 20; x < 27; x += 2) p(x, 7, '#ffffff'); r(21, 9, 5, 1, '#ffffff');
+      } else if (prop === 'desejo') {
+        r(21, 5, 1, 7, '#6b4a2a'); p(20, 6, '#6b4a2a'); p(22, 7, '#6b4a2a');
+        for (const [x, y] of [[19, 4], [22, 4], [23, 6], [20, 8], [24, 8]]) p(x, y, '#b07cff');
+        p(21, 3, '#ffffff'); p(23, 3, '#e2c6ff');
+      } else if (prop === 'varinha') {
+        r(21, 5, 1, 7, '#6b4a2a'); p(21, 4, '#ffd93b'); p(20, 3, '#fff3a0'); p(22, 3, '#fff3a0');
+      } else if (prop === 'taco') {
+        for (let i = 0; i < 26; i++) p(2 + i, 34 - Math.round(i * 0.7), i > 22 ? '#ffffff' : i > 18 ? '#e9d5b7' : '#7a4a2e');
+      }
+    }
+
     function rosto() {
       const olho = ss === 'deus' ? '#d81b3c' : ss === 'branco' ? '#9fb4d6' : ss ? '#13a89e' : '#2a1d16';
       const esc = '#2a1d16';
       if (ss) { p(9, Y(12), cabS); p(10, Y(13), cabS); p(16, Y(12), cabS); p(15, Y(13), cabS); }
       else { r(9, Y(12), 2, 1, cabS); r(14, Y(12), 3, 1, cabS); }
       if (est.olhos === 'fechados' || est.piscar) { r(9, Y(15), 2, 1, peleD); r(15, Y(15), 2, 1, peleD); }
+      else if (est.olhos === 'vermelhos') { r(10, Y(14), 1, 2, '#ff2a2a'); r(15, Y(14), 1, 2, '#ff2a2a'); p(10, Y(14), '#ffd0d0'); p(15, Y(14), '#ffd0d0'); p(9, Y(13), '#ff6b6b'); p(16, Y(13), '#ff6b6b'); }
       else if (est.olhos === 'feliz') { p(9, Y(15), esc); p(10, Y(14), esc); p(11, Y(15), esc); p(14, Y(15), esc); p(15, Y(14), esc); p(16, Y(15), esc); }
       else {
         r(10, Y(14), 1, 2, olho); r(15, Y(14), 1, 2, olho);
@@ -156,6 +262,7 @@
       if (boca === 'sorriso') { p(11, Y(17), '#7a3b2a'); r(12, Y(18), 2, 1, '#7a3b2a'); p(14, Y(17), '#7a3b2a'); }
       else if (boca === 'grito') { r(11, Y(17), 4, 2, '#5a1a1a'); r(12, Y(18), 2, 1, '#d84a4a'); }
       else if (boca === 'o') r(12, Y(17), 2, 2, '#5a1a1a');
+      else if (boca === 'sorrisao') { r(10, Y(17), 6, 2, '#3a0a0a'); r(11, Y(17), 4, 1, '#ffffff'); p(9, Y(16), '#3a0a0a'); p(16, Y(16), '#3a0a0a'); }
       else r(12, Y(18), 2, 1, peleD);
       if (boca === 'sorriso' || est.olhos === 'feliz') { p(9, Y(17), '#f0a08a'); p(16, Y(17), '#f0a08a'); }
     }

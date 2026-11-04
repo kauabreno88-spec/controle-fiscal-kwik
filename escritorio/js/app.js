@@ -20,23 +20,42 @@
 
   // ------------------------------------------------------------------ configuração
   const PADRAO = {
-    versao: 2,
+    versao: 3,
     escritorio: {
       nome: 'Mini Escritório', parede: '#EBDCCB', rodape: '#6B4A35', piso: 'madeira', corPiso: '#B98A62',
       tapete: true, corTapete: '#F5C27E', padraoTapete: 'losango', mesa: '#9C5B3A', cadeira: '#2A2F33', estante: '#2b2f33', ceu: 'auto',
       itens: { planta: true, estante: true, janela: true, relogio: true, tv: true, grafico: true, logo: true, quadros: true, cofre: true, lixeira: true },
     },
     funcionarios: [{
-      id: 'f1', nome: 'Léo', cargo: 'Analista de Notícias',
+      id: 'f1', nome: 'Léo', cargo: 'Analista de Notícias', funcao: 'noticias',
       aparencia: {
         pele: '#E8B48F', cabelo: 'curto', corCabelo: '#5A3825', estiloCamisa: 'casual', corCamisa: '#E9D5B7', corGravata: '#28BE52',
         calca: '#2F3A4A', sapato: '#5A3A22', oculos: false, fone: false, bone: false, barba: false, corBone: '#28BE52',
         cracha: true, corCordao: '#E8613C',
       },
       xp: 0, tarefas: 0, ganhos: 0,
+    }, {
+      id: 'clara', nome: 'Clara', cargo: 'Organizadora de Tarefas', funcao: 'checklist',
+      aparencia: {
+        pele: '#F1C9A5', cabelo: 'longo', corCabelo: '#3B2416', estiloCamisa: 'casual', corCamisa: '#F4B6C2', corGravata: '#28BE52',
+        calca: '#3b4a6b', sapato: '#7a3b2a', oculos: false, fone: false, bone: false, barba: false, corBone: '#28BE52',
+        cracha: true, corCordao: '#28BE52',
+      },
+      xp: 0, tarefas: 0, ganhos: 0,
+    }, {
+      id: 'maycon', nome: 'Maycon (pai)', cargo: 'Prospecção de Clientes', funcao: 'prospeccao',
+      aparencia: {
+        pele: '#E0AC82', cabelo: 'curto', corCabelo: '#8a8a8a', estiloCamisa: 'social', corCamisa: '#cfe0f5', corGravata: '#1f3a68',
+        calca: '#3a3f47', sapato: '#2b1d12', oculos: true, fone: false, bone: false, barba: true, corBone: '#28BE52',
+        cracha: true, corCordao: '#3f7fc1',
+      },
+      xp: 0, tarefas: 0, ganhos: 0,
     }],
+    checklist: [],
+    maycon: { cidade: '', uf: '', fotos: 0 },
+    jogos: { gatos: { fase: 1, estrelas: {} } },
     economia: { valorTarefa: 150, caixa: 0 },
-    opcoes: { comemorar: true, soneca: true, som: true },
+    opcoes: { comemorar: true, soneca: true, som: true, fotos: true },
   };
   const TEMAS = {
     'KWIK Clássico': { parede: '#EBDCCB', rodape: '#6B4A35', piso: 'madeira', corPiso: '#B98A62', corTapete: '#F5C27E', padraoTapete: 'losango', mesa: '#9C5B3A', cadeira: '#2A2F33', estante: '#2b2f33' },
@@ -83,12 +102,36 @@
 
   // ------------------------------------------------------------------ estado da cena
   const estado = {
-    personagem: { modo: 'sentado', X: KM.LUGAR.X, Y: KM.LUGAR.Y, Z: 0, est: {}, selecionado: false, visivel: true },
+    pessoas: {}, principal: 'f1', trabalhoDe: {}, sala: 'escritorio',
     tv: { modo: 'normal', progresso: 0 },
-    caixa: 0, trabalhando: false, relatorios: [], selecionado: null, relAberto: null,
+    caixa: 0, relatorios: [], selecionado: null, relAberto: null,
   };
   KM.estado = estado;
-  const func = () => cfg.funcionarios[0];
+  const func = id => cfg.funcionarios.find(f => f.id === (id || estado.selecionado || estado.principal)) || cfg.funcionarios[0];
+  const pessoaDe = id => estado.pessoas[id || estado.selecionado || estado.principal];
+  const ROTULO_TRABALHO = { noticias: '📰 Buscar notícias', checklist: '📋 Abrir prancheta', prospeccao: '📞 Buscar clientes' };
+
+  // Cria/atualiza os bonecos da cena a partir dos funcionários da configuração.
+  const doms = {};
+  function sincronizarPessoas() {
+    const ids = new Set(cfg.funcionarios.map(f => f.id));
+    for (const id of Object.keys(estado.pessoas)) if (!ids.has(id)) { delete estado.pessoas[id]; if (doms[id]) { doms[id].cracha.remove(); doms[id].balao.remove(); delete doms[id]; } }
+    for (const f of cfg.funcionarios) {
+      let p = estado.pessoas[f.id];
+      if (!p) {
+        const a = KM.LAYOUT.assentos[f.funcao] || KM.LAYOUT.assentos.noticias;
+        p = estado.pessoas[f.id] = { id: f.id, funcao: f.funcao, modo: 'sentado', X: a.X, Y: a.Y, Z: 0, dir: a.dir, est: {}, visivel: true, fase: Math.random() * 3, piscarEm: 1 + Math.random() * 3 };
+      }
+      p.funcao = f.funcao;
+      if (!doms[f.id]) {
+        const cracha = el('div', { class: 'cracha' }, el('i'), el('span', {}));
+        const balao = el('div', { class: 'balao' });
+        $('#palco').append(cracha, balao);
+        doms[f.id] = { cracha, balao, timer: null };
+      }
+      doms[f.id].cracha.querySelector('span').textContent = f.nome;
+    }
+  }
 
   // ------------------------------------------------------------------ toasts / fala / banner
   function toast(msg, opc = {}) {
@@ -97,11 +140,13 @@
     $('#toasts').append(t);
     setTimeout(() => t.remove(), opc.ms || 4200);
   }
-  let timerFala = null;
-  KM.onFala = (txt, ms = 2500) => {
-    const b = $('#balao'); b.textContent = txt; b.classList.add('on');
-    clearTimeout(timerFala); timerFala = setTimeout(() => b.classList.remove('on'), ms);
+  KM.onFala = (id, txt, ms = 2500) => {
+    if (typeof txt !== 'string') { ms = txt || ms; txt = id; id = estado.selecionado || estado.principal; } // chamada antiga: (texto, ms)
+    const d = doms[id]; if (!d) return;
+    d.balao.textContent = txt; d.balao.classList.add('on');
+    clearTimeout(d.timer); d.timer = setTimeout(() => d.balao.classList.remove('on'), ms);
   };
+  const falar = (id, txt, ms) => KM.onFala(id, txt, ms);
   KM.onBanner = (txt, nivel) => {
     const b = $('#banner'); b.textContent = txt;
     b.className = 'banner' + (nivel === 'deus' ? ' deus' : nivel === 'verde' ? ' verde' : '');
@@ -132,8 +177,8 @@
   }
   const saiyanDoNivel = i => (i >= 4 ? 3 : i >= 2 ? 2 : 1);
 
-  function desenharAvatar(canvas, est = {}, recorte) {
-    const s = KM.sprite(func().aparencia, est);
+  function desenharAvatar(canvas, est = {}, recorte, id) {
+    const s = KM.sprite(func(id).aparencia, est);
     const g = canvas.getContext('2d');
     g.imageSmoothingEnabled = false;
     g.clearRect(0, 0, canvas.width, canvas.height);
@@ -143,30 +188,36 @@
 
   function atualizarFuncionario() {
     const f = func(), n = nivelDe(f.xp);
-    $('#latNome').textContent = f.nome; $('#crachaNome').textContent = f.nome;
+    $('#latNome').textContent = f.nome;
+    for (const g of cfg.funcionarios) if (doms[g.id]) doms[g.id].cracha.querySelector('span').textContent = g.nome;
     $('#latCargo').textContent = f.cargo;
     $('#latNivel').textContent = `Nv. ${n.i + 1} · ${n.nome}`;
     $('#latXp').style.width = n.pct + '%';
     $('#latXp').parentElement.title = n.falta ? `Faltam ${n.falta} tarefa(s) para o próximo nível` : 'Nível máximo!';
     $('#latTarefas').textContent = f.tarefas;
     $('#latGanhos').textContent = brlCurto(f.ganhos);
-    desenharAvatar($('#avatarLateral'), { boca: 'sorriso' }, 2);
+    desenharAvatar($('#avatarLateral'), { boca: 'sorriso' }, 2, f.id);
     $('#nomeEscritorio').textContent = cfg.escritorio.nome || 'Mini Escritório';
     $('#tituloPalco').innerHTML = '';
     $('#tituloPalco').append(document.createTextNode((cfg.escritorio.nome || 'Mini Escritório') + ' '), el('span', {}, 'KWIK'));
   }
 
   function atualizarBotoes() {
-    const tb = $('#btTrabalhar');
-    tb.disabled = estado.trabalhando;
-    tb.textContent = estado.trabalhando ? '⏳ Trabalhando…' : '▶ Trabalhar';
-    tb.classList.toggle('pronto', !!estado.selecionado && !estado.trabalhando);
+    const tb = $('#btTrabalhar'), f = func(), p = pessoaDe();
+    const ocupadoTrab = p && p.trabalhando && f.funcao !== 'checklist';
+    tb.disabled = !!ocupadoTrab;
+    tb.textContent = ocupadoTrab ? '⏳ Trabalhando…' : estado.selecionado ? (ROTULO_TRABALHO[f.funcao] || '▶ Trabalhar') : '▶ Trabalhar';
+    tb.classList.toggle('pronto', !!estado.selecionado && !ocupadoTrab);
+    const trab = Object.values(estado.pessoas).filter(q => q.trabalhando);
     const pill = $('#statusPill');
-    pill.classList.toggle('trab', estado.trabalhando);
-    pill.querySelector('span').textContent = estado.trabalhando ? `${func().nome} está trabalhando` :
-      KM.fx.ocupado === 'soneca' ? `${func().nome} está cochilando` : KM.fx.ocupado ? `${func().nome} está se divertindo` : `${func().nome} está livre`;
-    $('#cracha').classList.toggle('trab', estado.trabalhando);
-    $('#cracha').classList.toggle('sel', !!estado.selecionado);
+    pill.classList.toggle('trab', trab.length > 0);
+    pill.querySelector('span').textContent = trab.length ? trab.map(q => func(q.id).nome.split(' ')[0]).join(' e ') + (trab.length > 1 ? ' trabalhando' : ' trabalhando')
+      : KM.fx.ocupado ? 'Equipe se divertindo' : 'Equipe livre';
+    for (const [id, d] of Object.entries(doms)) {
+      const q = estado.pessoas[id];
+      d.cracha.classList.toggle('trab', !!(q && q.trabalhando));
+      d.cracha.classList.toggle('sel', estado.selecionado === id);
+    }
   }
 
   // ------------------------------------------------------------------ seleção de funcionário
@@ -179,31 +230,61 @@
         class: 'membro' + (estado.selecionado === f.id ? ' sel' : ''), onclick: () => {
           selecionar(f.id); $('#dlgEquipe').close();
         },
-      }, cv, el('b', {}, f.nome), el('span', {}, f.cargo), el('span', {}, `Nv. ${n.i + 1} · ${n.nome} · ${f.tarefas} tarefa(s)`));
+      }, cv, el('b', {}, f.nome), el('span', {}, f.cargo), el('span', {}, `Nv. ${n.i + 1} · ${n.nome} · ${f.tarefas} tarefa(s)`), el('small', { class: 'funcao' }, ROTULO_TRABALHO[f.funcao] || ''));
       box.append(card);
-      desenharAvatar(cv, { bracos: 'aceno', boca: 'sorriso' });
+      desenharAvatar(cv, { bracos: 'aceno', boca: 'sorriso' }, 0, f.id);
     }
     box.append(el('div', { class: 'membro novo', title: 'Em breve você poderá contratar mais gente' }, el('b', {}, '+'), el('span', {}, 'Contratar'), el('span', {}, '(em breve)')));
     $('#dlgEquipe').showModal();
   }
+  const OLA = {
+    noticias: 'Oi! Sou {n}. Busco as notícias contábeis do dia 📰',
+    checklist: 'Oi! Sou {n}. Vamos organizar suas tarefas? 📋',
+    prospeccao: 'Opa! Sou o {n}. Vou achar clientes novos 📞',
+  };
   function selecionar(id) {
     estado.selecionado = id;
-    estado.personagem.selecionado = !!id;
-    KM.acordar();
+    for (const q of Object.values(estado.pessoas)) q.selecionado = q.id === id;
+    KM.acordar(id || undefined);
     KM.tocar('clique');
     if (id) {
-      KM.onFala(`Oi! Sou ${func().nome}. Pode mandar a tarefa! 💼`, 2600);
-      toast(`${func().nome} selecionado. Agora aperte ▶ Trabalhar.`);
+      const f = func(id);
+      falar(id, (OLA[f.funcao] || 'Oi! Sou {n}.').replace('{n}', f.nome.split(' ')[0]), 2800);
+      toast(`${f.nome} selecionado. Agora aperte ${ROTULO_TRABALHO[f.funcao] || '▶ Trabalhar'}.`);
     }
-    atualizarBotoes();
+    atualizarFuncionario(); atualizarBotoes();
   }
 
   // ------------------------------------------------------------------ trabalhar
-  async function esperarLivre(ms = 3000) {
-    if (KM.fx.ocupado === 'soneca') KM.acordar();
+  async function esperarLivre(p, ms = 3000) {
+    p = p || pessoaDe();
+    if (!p) return false;
+    await KM.pararRotina(p);
     const ini = performance.now();
-    while (KM.fx.ocupado && performance.now() - ini < ms) await KM.esperar(80);
-    return !KM.fx.ocupado;
+    while (p.acao && performance.now() - ini < ms) await KM.esperar(80);
+    return !p.acao;
+  }
+
+  // Dinheiro na hora de mandar a tarefa.
+  function pagar(f, p) {
+    const valor = Number(cfg.economia.valorTarefa) || 0;
+    KM.explosaoDinheiro(valor, p.id);
+    cfg.economia.caixa += valor; f.ganhos += valor;
+    estado.caixa = cfg.economia.caixa; animarCaixa(); atualizarFuncionario(); salvar();
+    return valor;
+  }
+  // XP, nível e comemoração ao entregar.
+  async function concluir(f, p) {
+    const antes = nivelDe(f.xp);
+    f.xp += 1; f.tarefas += 1; salvar();
+    const depois = nivelDe(f.xp);
+    atualizarFuncionario();
+    if (depois.i > antes.i) {
+      setTimeout(() => KM.onBanner('SUBIU DE NÍVEL: ' + depois.nome.toUpperCase() + '!', 'verde'), 300);
+      toast(`🎖️ ${f.nome} subiu para ${depois.nome}!`);
+    }
+    if (cfg.opcoes.comemorar) { await KM.esperar(depois.i > antes.i ? 2200 : 900); KM.comemorar(depois.i >= 5 && depois.i > antes.i ? 'deus' : saiyanDoNivel(depois.i), p.id); }
+    else KM.confete(80);
   }
 
   async function trabalhar() {
@@ -214,14 +295,22 @@
       toast('Primeiro selecione o funcionário 👤');
       return abrirEquipe();
     }
-    if (estado.trabalhando) return;
+    const f = func(), p = pessoaDe();
+    if (f.funcao === 'checklist') return KM.clara.trabalhar(f, p);
+    if (f.funcao === 'prospeccao') return KM.maycon.trabalhar(f, p);
+    return trabalharNoticias(f, p);
+  }
+
+  async function trabalharNoticias(f, p) {
+    const bt = $('#btTrabalhar');
+    if (p.trabalhando) return;
     if (!online) {
       if (BK && BK.nome === 'github') { toast('Conecte ao GitHub para ele poder trabalhar 🔗'); return abrirConexao(); }
       return toast('O servidor está desligado. Abra o ABRIR-ESCRITORIO.bat para ele acessar os sites.', { erro: true, ms: 6000 });
     }
-    if (!(await esperarLivre(KM.fx.ocupado === 'soneca' ? 3000 : 400))) return toast('Espere a animação terminar 😉');
+    if (!(await esperarLivre(p, 1500))) return toast('Espere a animação terminar 😉');
 
-    const f = func(), valor = Number(cfg.economia.valorTarefa) || 0;
+    const valor = Number(cfg.economia.valorTarefa) || 0;
     const agora = new Date(), dd = n => String(n).padStart(2, '0');
     const pedido = {
       id: `${agora.getFullYear()}${dd(agora.getMonth() + 1)}${dd(agora.getDate())}-${dd(agora.getHours())}${dd(agora.getMinutes())}${dd(agora.getSeconds())}-${Math.random().toString(36).slice(2, 6)}`,
@@ -235,82 +324,85 @@
       atualizarBotoes();
       return toast('Não consegui mandar a tarefa: ' + e.message, { erro: true, ms: 8000 });
     }
-    estado.trabalhando = true;
-    const p = estado.personagem;
-    if (p.modo !== 'sentado') await KM.voltarSentar();
+    p.trabalhando = true; estado.trabalhoDe.noticias = true;
+    if (p.modo !== 'sentado') await KM.voltarSentar(p);
     p.est = { boca: 'sorriso' }; p.digitando = true; p.dormindo = false;
     estado.tv = { modo: 'trabalhando', progresso: 0 };
-    // 💰 ganhou dinheiro com a tarefa
-    KM.explosaoDinheiro(valor);
-    cfg.economia.caixa += valor; f.ganhos += valor;
-    estado.caixa = cfg.economia.caixa; animarCaixa(); atualizarFuncionario(); salvar();
-    KM.onFala('Partiu! Vou buscar as notícias 📰', 2200);
-    $('#tarefaVazia').hidden = true; $('#tarefaAtiva').hidden = false;
-    $('#tarefaLog').innerHTML = ''; $('#tarefaBarra').style.width = '0%';
+    pagar(f, p);
+    falar(p.id, 'Partiu! Vou buscar as notícias 📰', 2200);
+    iniciarPainelTarefa('📰 Notícias contábeis do dia');
     atualizarBotoes();
 
-    const fim = await acompanhar(tarefa);
-    estado.trabalhando = false; p.digitando = false; p.est = {};
+    const fim = await acompanhar(tarefa, p);
+    p.trabalhando = false; estado.trabalhoDe.noticias = false; p.digitando = false; p.est = {};
     atualizarBotoes();
     if (fim.status === 'pronto') {
       estado.tv = { modo: 'pronto', progresso: 100 };
-      setTimeout(() => { if (!estado.trabalhando && estado.tv.modo === 'pronto') estado.tv.modo = 'normal'; }, 30000);
-      const antes = nivelDe(f.xp);
-      f.xp += 1; f.tarefas += 1; salvar();
-      const depois = nivelDe(f.xp);
-      atualizarFuncionario();
+      setTimeout(() => { if (!p.trabalhando && estado.tv.modo === 'pronto') estado.tv.modo = 'normal'; }, 30000);
       await carregarRelatorios(fim.relatorio);
       const rid = fim.relatorio && fim.relatorio.id;
       toast(`📑 ${f.nome} entregou o relatório: ${fim.relatorio.qtdPrincipais} principais + ${fim.relatorio.qtdDia} do dia.`, { botao: ['Ver relatório', () => abrirRelatorio(rid)], ms: 9000 });
-      KM.onFala('Relatório entregue! Está na aba Relatórios ✅', 2600);
-      if (depois.i > antes.i) {
-        setTimeout(() => KM.onBanner('SUBIU DE NÍVEL: ' + depois.nome.toUpperCase() + '!', 'verde'), 300);
-        toast(`🎖️ ${f.nome} subiu para ${depois.nome}!`);
-      }
-      if (cfg.opcoes.comemorar) { await KM.esperar(depois.i > antes.i ? 2200 : 900); KM.comemorar(depois.i >= 5 && depois.i > antes.i ? 'deus' : saiyanDoNivel(depois.i)); }
-      else KM.confete(80);
+      falar(p.id, 'Relatório entregue! Está na aba Relatórios ✅', 2600);
+      await concluir(f, p);
     } else {
       estado.tv = { modo: 'normal', progresso: 0 };
-      KM.onFala('Não consegui acessar os sites 😓', 3000);
+      falar(p.id, 'Não consegui acessar os sites 😓', 3000);
       toast('A tarefa falhou: ' + (fim.erro || 'erro desconhecido'), { erro: true, ms: 8000 });
     }
   }
 
-  function acompanhar(id) {
+  // Painel "Tarefa atual" + moedinhas enquanto trabalha (usado por Léo e Maycon).
+  function iniciarPainelTarefa(titulo) {
+    $('#tarefaVazia').hidden = true; $('#tarefaAtiva').hidden = false;
+    $('#tarefaTitulo').textContent = titulo;
+    $('#tarefaLog').innerHTML = ''; $('#tarefaBarra').style.width = '0%';
+  }
+  function callbacksTarefa(p, comTV) {
     let ultimaMoeda = performance.now();
-    return BK.acompanhar(id, {
-      progresso(p) { estado.tv.progresso = p; $('#tarefaBarra').style.width = p + '%'; },
+    return {
+      progresso(v) { if (comTV) estado.tv.progresso = v; $('#tarefaBarra').style.width = v + '%'; },
       etapa(texto) {
-        $('#tarefaLog').append(el('li', { class: /errado|não respondeu/.test(texto) ? 'erro' : '' }, texto));
+        $('#tarefaLog').append(el('li', { class: /errado|não respondeu|falhou/.test(texto) ? 'erro' : '' }, texto));
         $('#tarefaLog').scrollTop = 1e6;
-        KM.onFala(texto, 2400);
+        falar(p.id, texto, 2400);
       },
       tique() {
-        if (performance.now() - ultimaMoeda < 2200) return; // ganhando dinheiro enquanto trabalha
+        if (performance.now() - ultimaMoeda < 2200) return;
         ultimaMoeda = performance.now();
-        const [x, y] = estado.personagem.cabecaTela || [126, 100];
+        const [x, y] = p.cabecaTela || [126, 100];
         KM.emitir('moeda', 3, i => ({ x: x + (Math.random() * 10 - 5), y, vx: Math.random() * 60 - 30, vy: -90, g: 220, vida: 0.9 }));
         KM.tocar('moeda');
       },
-    });
+    };
   }
+  function acompanhar(id, p) { return BK.acompanhar(id, callbacksTarefa(p, true)); }
 
   // ------------------------------------------------------------------ animações (menu)
   const SO_PARADO = new Set(['ss1', 'ss2', 'ss3', 'deus', 'branco', 'danca', 'pulos', 'teleporte', 'soneca']);
   async function animacao(nome) {
     ativo();
     $('#menuAnim').classList.remove('on');
-    if (estado.trabalhando && SO_PARADO.has(nome)) return toast(`${func().nome} está trabalhando! Espere ele terminar 💼`);
-    if (nome === 'dinheiro') return KM.explosaoDinheiro(Number(cfg.economia.valorTarefa) || 0);
+    if (estado.sala === 'jogos') KM.jogos.sair();
+    const p = pessoaDe(), f = func();
+    if (nome === 'dinheiro') return KM.explosaoDinheiro(Number(cfg.economia.valorTarefa) || 0, p.id);
     if (nome === 'confete') return KM.confete();
-    if (KM.fx.ocupado && KM.fx.ocupado !== 'soneca') return toast('Calma! Uma animação de cada vez 😄');
-    if (!(await esperarLivre())) return;
+    if (KM.filmes && KM.filmes[nome]) { // animações em grupo: só quem não está trabalhando
+      irPara('escritorio');
+      const livres = Object.values(estado.pessoas).filter(q => !q.trabalhando);
+      if (livres.length < 2) return toast('Precisa de pelo menos 2 funcionários livres para essa cena 🎬');
+      const ok = await KM.filmes[nome](livres.map(q => q.id));
+      if (ok === false) toast('Alguém já está em outra animação. Tente de novo em instantes 😄');
+      return;
+    }
+    if (p.trabalhando && SO_PARADO.has(nome)) return toast(`${f.nome} está trabalhando! Espere terminar 💼`);
+    if (p.acao && p.acao !== 'soneca' && p.acao !== 'rotina') return toast('Calma! Uma animação de cada vez 😄');
     irPara('escritorio');
+    const id = p.id;
     const mapa = {
-      ss1: () => KM.superSayajin(1), ss2: () => KM.superSayajin(2), ss3: () => KM.superSayajin(3),
-      deus: () => KM.superSayajin('deus'), branco: () => KM.superSayajin('branco'),
-      chuva: () => KM.rodar('chuva', () => KM.chuvaDinheiro(4)), danca: KM.danca, cafe: KM.cafe, foco: KM.foco,
-      soneca: () => KM.soneca(8), pulos: KM.pulos, teleporte: KM.teleporte,
+      ss1: () => KM.superSayajin(1, {}, id), ss2: () => KM.superSayajin(2, {}, id), ss3: () => KM.superSayajin(3, {}, id),
+      deus: () => KM.superSayajin('deus', {}, id), branco: () => KM.superSayajin('branco', {}, id),
+      chuva: () => KM.rodar('chuva', () => KM.chuvaDinheiro(4), [id]), danca: () => KM.danca(id), cafe: () => KM.cafe(id), foco: () => KM.foco(id),
+      soneca: () => KM.soneca(8, id), pulos: () => KM.pulos(id), teleporte: () => KM.teleporte(id),
     };
     if (mapa[nome]) await mapa[nome]();
   }
@@ -336,19 +428,21 @@
     box.innerHTML = '';
     if (!r) { box.className = 'vazio'; box.textContent = 'Nenhum relatório ainda.'; return; }
     box.className = 'ultimo';
-    box.append(el('b', {}, `📰 Notícias de ${fmtDia(r.diaData)}`),
-      el('span', {}, `${fmtData(r.criadoEm)} · por ${r.funcionario?.nome || '—'} · ${r.qtdPrincipais} principais + ${r.qtdDia} do dia`),
+    box.append(el('b', {}, tituloRel(r)),
+      el('span', {}, `${fmtData(r.criadoEm)} · por ${r.funcionario?.nome || '—'} · ${resumoRel(r)}`),
       el('div', { style: 'margin-top:10px' }, el('button', { class: 'bt peq escuro', onclick: () => abrirRelatorio(r.id) }, 'Abrir relatório →')));
   }
 
+  const tituloRel = r => r.tipo === 'prospeccao' ? `📞 Clientes em ${r.cidade || '—'}${r.uf ? '-' + r.uf : ''}` : `📰 Notícias de ${fmtDia(r.diaData)}`;
+  const resumoRel = r => r.tipo === 'prospeccao' ? `🏥 ${r.qtdClinicas || 0} clínicas · ☎️ ${r.qtdComTelefone || 0} com telefone` : `⭐ ${r.qtdPrincipais} principais · 📅 ${r.qtdDia} do dia`;
   function renderListaRel() {
     const box = $('#listaRel'); box.innerHTML = '';
     if (!estado.relatorios.length) { box.append(el('p', { class: 'vazio', style: 'padding:0 8px' }, 'As entregas do funcionário aparecem aqui.')); }
     for (const r of estado.relatorios) {
       box.append(el('button', { class: 'item-rel' + (estado.relAberto && estado.relAberto.id === r.id ? ' ativo' : ''), onclick: () => abrirRelatorio(r.id) },
-        el('b', {}, `📰 Notícias de ${fmtDia(r.diaData)}`),
+        el('b', {}, tituloRel(r)),
         el('span', {}, `${fmtData(r.criadoEm)} · ${r.funcionario?.nome || '—'}`), el('br'),
-        el('span', {}, `⭐ ${r.qtdPrincipais} principais · 📅 ${r.qtdDia} do dia`)));
+        el('span', {}, resumoRel(r))));
     }
     if (!estado.relAberto) renderRel(null);
   }
@@ -386,6 +480,7 @@
         !estado.relatorios.length && el('button', { class: 'bt prim', onclick: () => irPara('escritorio') }, '🏢 Ir para o escritório')));
       return;
     }
+    if (r.tipo === 'prospeccao') return KM.maycon.renderRel(r, box);
     const rel = el('div', { class: 'rel' });
     const chips = el('div', { class: 'chips' }, (r.fontes || []).map(f => el('span', { class: 'chip ' + (f.ok ? 'ok' : 'erro') }, `${f.ok ? '✓' : '✗'} ${f.nome}${f.ok ? ` · ${f.itens} lidas` : ' · falhou'}`)));
     rel.append(el('div', { class: 'rel-cab' },
@@ -466,9 +561,11 @@
   const MOVEIS = ['#9C5B3A', '#6B4226', '#e8e2d6', '#F2F2EE', '#1f2524', '#2b2f33', '#28BE52', '#3f7fc1'];
   const TAPETES = ['#F5C27E', '#28BE52', '#c9453a', '#3f7fc1', '#e9e4d8', '#7B4FBF', '#111A19', '#ff8c5a'];
 
-  const F = 'funcionarios.0.', A = F + 'aparencia.', E = 'escritorio.';
-  const CAMPOS = {
-    camposFunc: [
+  let persIdx = 0;
+  const E = 'escritorio.';
+  const camposFunc = () => {
+    const F = `funcionarios.${persIdx}.`, A = F + 'aparencia.';
+    return [
       { c: F + 'nome', t: 'texto', r: 'Nome' },
       { c: F + 'cargo', t: 'texto', r: 'Cargo' },
       { sec: 'Aparência' },
@@ -484,7 +581,9 @@
       { c: A + 'corCordao', t: 'cor', r: 'Cordão do crachá', op: ['#E8613C', '#28BE52', '#111A19', '#3f7fc1', '#c9453a', '#e2b33c'] },
       { sec: 'Acessórios' },
       { t: 'checks', itens: [[A + 'oculos', '👓 Óculos'], [A + 'fone', '🎧 Fone'], [A + 'bone', '🧢 Boné'], [A + 'barba', '🧔 Barba'], [A + 'cracha', '🪪 Crachá']] },
-    ],
+    ];
+  };
+  const CAMPOS = {
     camposEsc: [
       { sec: 'Geral' },
       { c: E + 'nome', t: 'texto', r: 'Nome do escritório' },
@@ -509,7 +608,9 @@
     ],
     camposEco: [
       { c: 'economia.valorTarefa', t: 'num', r: 'R$ por tarefa' },
-      { t: 'checks', itens: [['opcoes.comemorar', '⚡ Vira Super Sayajin ao entregar'], ['opcoes.soneca', '😴 Cochila se ficar parado (3 min)'], ['opcoes.som', '🔊 Sons']] },
+      { c: 'maycon.cidade', t: 'texto', r: 'Cidade do Maycon' },
+      { c: 'maycon.uf', t: 'sel', r: 'Estado (UF)', op: Object.fromEntries(['', 'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'].map(u => [u, u || '—'])) },
+      { t: 'checks', itens: [['opcoes.comemorar', '⚡ Vira Super Sayajin ao entregar'], ['opcoes.soneca', '😴 Cochila se ficar parado (3 min)'], ['opcoes.fotos', '📸 Maycon tira fotos quando está livre'], ['opcoes.som', '🔊 Sons']] },
     ],
   };
 
@@ -522,8 +623,14 @@
     if (semSalvar !== true) salvar();
   }
 
+  function montarAbasFunc() {
+    const box = $('#persAbas'); if (!box) return;
+    box.innerHTML = '';
+    cfg.funcionarios.forEach((f, i) => box.append(el('button', { class: i === persIdx ? 'on' : '', onclick: () => { persIdx = i; montarCampos(); preencherCampos(); } }, f.nome)));
+  }
   function montarCampos() {
-    for (const [id, lista] of Object.entries(CAMPOS)) {
+    montarAbasFunc();
+    for (const [id, lista] of Object.entries({ camposFunc: camposFunc(), ...CAMPOS })) {
       const box = $('#' + id); box.innerHTML = '';
       for (const d of lista) {
         if (d.sec) { box.append(el('h4', {}, d.sec)); continue; }
@@ -579,7 +686,7 @@
   let ultimaAtividade = performance.now();
   function ativo() {
     ultimaAtividade = performance.now();
-    if (KM.fx.ocupado === 'soneca') KM.acordar();
+    KM.acordar();
   }
 
   // ------------------------------------------------------------------ laço de desenho
@@ -588,11 +695,13 @@
   function quadro(agora) {
     const t = agora / 1000, dt = Math.min(0.05, (agora - ultimo) / 1000);
     ultimo = agora;
-    const p = estado.personagem;
-    // piscar de olhos
-    if (t > proxPiscar) { p.est.piscar = true; if (t > proxPiscar + 0.12) { p.est.piscar = false; proxPiscar = t + 2 + Math.random() * 3; } }
+    // piscar de olhos (cada um no seu ritmo)
+    for (const q of Object.values(estado.pessoas)) {
+      if (t > q.piscarEm) { q.est.piscar = true; if (t > q.piscarEm + 0.12) { q.est.piscar = false; q.piscarEm = t + 2 + Math.random() * 3; } }
+    }
     KM.atualizarEfeitos(dt, t);
-    KM.desenhar(ctx, cfg, estado, t);
+    if (estado.sala === 'jogos') KM.jogos.desenhar(ctx, cfg, estado, t);
+    else KM.desenhar(ctx, cfg, estado, t);
     KM.desenharEfeitos(ctx, t);
 
     // tremor da tela
@@ -600,24 +709,29 @@
     tela.style.transform = tr > 0.05 ? `translate(${(Math.random() * 2 - 1) * tr * 2}px, ${(Math.random() * 2 - 1) * tr * 2}px)` : '';
     palco.classList.toggle('noite', KM.periodo(cfg) === 'noite');
 
-    // crachá e balão acima da cabeça
+    // crachás e balões acima das cabeças
     const r = tela.getBoundingClientRect(), pr = palco.getBoundingClientRect(), esc = r.width / KM.W;
-    const [hx, hy] = p.cabecaTela || [126, 96];
-    const cr = $('#cracha'), ba = $('#balao');
-    cr.style.display = p.visivel === false ? 'none' : '';
-    const cx = r.left - pr.left + hx * esc, cy = r.top - pr.top + (hy - 3) * esc;
-    cr.style.left = cx + 'px'; cr.style.top = cy + 'px';
-    ba.style.left = Math.max(110, Math.min(pr.width - 110, cx)) + 'px'; ba.style.top = (cy - cr.offsetHeight - 10) + 'px';
+    for (const [id, d] of Object.entries(doms)) {
+      const q = estado.pessoas[id];
+      const cab = estado.sala === 'jogos' ? q && q.cabecaJogo : q && q.cabecaTela;
+      const some = !q || q.visivel === false || !cab || (estado.sala !== 'jogos' && q.naSalaJogos) || estado.jogando;
+      d.cracha.style.display = some ? 'none' : ''; d.balao.style.display = some ? 'none' : '';
+      if (some) continue;
+      const cx = r.left - pr.left + cab[0] * esc, cy = r.top - pr.top + (cab[1] - 3) * esc;
+      d.cracha.style.left = cx + 'px'; d.cracha.style.top = cy + 'px';
+      d.balao.style.left = Math.max(100, Math.min(pr.width - 100, cx)) + 'px'; d.balao.style.top = (cy - d.cracha.offsetHeight - 10) + 'px';
+    }
 
     // prévia animada na personalização
     if ($('#aba-personalizar').classList.contains('ativa') && t - previewT > 0.15) {
       previewT = t;
       const fase = Math.floor(t / 2) % 4;
-      desenharAvatar($('#previewFunc'), { bracos: fase === 1 ? 'aceno' : 'baixo', aceno: Math.floor(t * 4) % 2, boca: fase >= 1 ? 'sorriso' : 'normal', piscar: (t % 3) < 0.15 });
+      desenharAvatar($('#previewFunc'), { bracos: fase === 1 ? 'aceno' : 'baixo', aceno: Math.floor(t * 4) % 2, boca: fase >= 1 ? 'sorriso' : 'normal', piscar: (t % 3) < 0.15 }, 0, (cfg.funcionarios[persIdx] || cfg.funcionarios[0]).id);
     }
-    // soneca automática
-    if (cfg.opcoes.soneca && !estado.trabalhando && !KM.fx.ocupado && agora - ultimaAtividade > 180000 && p.modo === 'sentado') {
-      ultimaAtividade = agora; KM.soneca(0);
+    // soneca automática (Léo e Clara; o Maycon fica tirando fotos)
+    if (cfg.opcoes.soneca && agora - ultimaAtividade > 180000) {
+      ultimaAtividade = agora;
+      for (const q of Object.values(estado.pessoas)) if (q.funcao !== 'prospeccao' && !q.trabalhando && !q.acao && q.modo === 'sentado') KM.soneca(0, q.id);
     }
     requestAnimationFrame(quadro);
   }
@@ -638,24 +752,29 @@
       cfg.economia.caixa = 0; for (const f of cfg.funcionarios) f.ganhos = 0; mudou(); animarCaixa();
     });
     $('#btRestaurar').addEventListener('click', () => {
-      if (!confirm('Voltar o escritório, o funcionário e o caixa ao padrão? (Os relatórios continuam salvos.)')) return;
-      cfg = clone(PADRAO); mudou(); preencherCampos(); animarCaixa();
+      if (!confirm('Voltar o escritório, os funcionários e o caixa ao padrão? (Os relatórios e a prancheta continuam salvos.)')) return;
+      const lista = cfg.checklist;
+      cfg = clone(PADRAO); cfg.checklist = lista; sincronizarPessoas(); mudou(); montarCampos(); preencherCampos(); animarCaixa();
     });
+    const pontoLogico = e => { const r = tela.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * KM.W, (e.clientY - r.top) / r.height * KM.H]; };
     tela.addEventListener('click', e => {
       ativo();
-      const r = tela.getBoundingClientRect();
-      const x = (e.clientX - r.left) / r.width * KM.W, y = (e.clientY - r.top) / r.height * KM.H;
-      if (KM.acertouPersonagem(estado, x, y)) {
-        if (estado.selecionado) { selecionar(null); } else selecionar(func().id);
-      }
+      const [x, y] = pontoLogico(e);
+      if (estado.sala === 'jogos') return KM.jogos.clique(x, y);
+      const id = KM.pessoaEm(estado, x, y);
+      if (id) return selecionar(estado.selecionado === id ? null : id);
+      if (KM.naPorta(x, y)) KM.jogos.entrar();
     });
     tela.addEventListener('mousemove', e => {
-      const r = tela.getBoundingClientRect();
-      const x = (e.clientX - r.left) / r.width * KM.W, y = (e.clientY - r.top) / r.height * KM.H;
-      tela.style.cursor = KM.acertouPersonagem(estado, x, y) ? 'pointer' : 'default';
+      const [x, y] = pontoLogico(e);
+      if (estado.sala === 'jogos') { tela.style.cursor = KM.jogos.sobre(x, y) ? 'pointer' : 'default'; return; }
+      estado.portaHover = KM.naPorta(x, y);
+      tela.style.cursor = KM.pessoaEm(estado, x, y) || estado.portaHover ? 'pointer' : 'default';
     });
+    $('#btSalaJogos').addEventListener('click', () => { ativo(); estado.sala === 'jogos' ? KM.jogos.sair() : KM.jogos.entrar(); });
     document.addEventListener('keydown', ativo);
     window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (['escritorio', 'relatorios', 'personalizar'].includes(h)) irPara(h); });
+    $$('[data-fechar]').forEach(b => b.addEventListener('click', () => b.closest('dialog').close()));
   }
 
   // ------------------------------------------------------------------ início
@@ -695,6 +814,12 @@
       for (const f of cfg.funcionarios) f.aparencia = clone(PADRAO.funcionarios[0].aparencia);
       cfg.versao = 2; migrou = true;
     }
+    if ((cfg.versao || 1) < 3 || cfg.funcionarios.length < PADRAO.funcionarios.length) { // versão 3: chegam Clara e Maycon
+      for (const pf of PADRAO.funcionarios) if (!cfg.funcionarios.some(f => f.id === pf.id)) { cfg.funcionarios.push(clone(pf)); migrou = true; }
+      cfg.versao = 3;
+    }
+    for (const f of cfg.funcionarios) if (!f.funcao) f.funcao = (PADRAO.funcionarios.find(x => x.id === f.id) || { funcao: 'noticias' }).funcao;
+    sincronizarPessoas();
     estado.relatorios = (j && j.relatorios) || [];
     estado.caixa = cfg.economia.caixa; caixaMostrado = cfg.economia.caixa;
     $('#caixaValor').textContent = brl(caixaMostrado);
@@ -766,8 +891,18 @@
     const h = location.hash.slice(1);
     if (['relatorios', 'personalizar'].includes(h)) irPara(h);
     requestAnimationFrame(quadro);
+    KM.clara.iniciar(); KM.maycon.iniciar(); KM.jogos.iniciar();
     const hh = new Date().getHours(), sauda = hh < 12 ? 'Bom dia' : hh < 18 ? 'Boa tarde' : 'Boa noite';
-    setTimeout(() => KM.onFala(`${sauda}! Eu sou ${func().nome}. Clique em mim ou em "Selecionar funcionário" 👋`, 4200), 700);
+    setTimeout(() => falar('f1', `${sauda}! Clique em um de nós para mandar trabalhar 👋`, 3800), 700);
+    setTimeout(() => falar('clara', 'Oi! Eu cuido da sua prancheta de tarefas 📋', 3400), 2300);
+    setTimeout(() => falar('maycon', 'E eu acho clientes novos! 📞📸', 3400), 3900);
   }
+
+  // API para os módulos (Clara, Maycon, jogos, filmes).
+  KM.app = {
+    el, toast, salvar, mudou, cfg: () => cfg, estado, func, pessoaDe, pagar, concluir, falar, irPara, brl, fmtData,
+    BK: () => BK, online: () => online, abrirConexao, carregarRelatorios, abrirRelatorio, animarCaixa, atualizarBotoes, atualizarFuncionario,
+    iniciarPainelTarefa, callbacksTarefa, esperarLivre, apagarRel: r => apagarRel(r), desenharAvatar,
+  };
   iniciar();
 })();

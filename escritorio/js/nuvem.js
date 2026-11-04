@@ -9,7 +9,9 @@
   const resumo = r => ({
     id: r.id, criadoEm: r.criadoEm, funcionario: r.funcionario, tarefa: r.tarefa, diaData: r.diaData, ganho: r.ganho,
     duracao: r.duracao, qtdPrincipais: (r.principais || []).length, qtdDia: (r.dia || []).length,
+    tipo: r.tipo || 'noticias', cidade: r.cidade, uf: r.uf, qtdClinicas: r.qtdClinicas, qtdComTelefone: r.qtdComTelefone,
   });
+  KM.resumoRelatorio = resumo;
 
   // ------------------------------------------------------------------ servidor local (PC)
   const local = {
@@ -42,6 +44,8 @@
     relatorio(id) { return this.req('GET', '/api/relatorios/' + id); },
     async listar() { return (await this.carregar()).relatorios; },
     apagar(id) { return this.req('DELETE', '/api/relatorios/' + id); },
+    salvarRelatorio(rel) { return this.req('POST', '/api/relatorios', rel); },
+    async lerTexto() { return null; },
   };
 
   // ------------------------------------------------------------------ GitHub (celular)
@@ -168,6 +172,25 @@
       return r;
     },
     async listar() { return (await this.lerJson('nuvem/indice.json')) || []; },
+    async lerTexto(arq) {
+      return this.req('GET', '/contents/' + arq + '?ref=' + encodeURIComponent(this.conf().branch) + '&t=' + Date.now(), null, true);
+    },
+    // Relatório feito no próprio app (ex.: Maycon) → nuvem/relatorios + índice.
+    async salvarRelatorio(rel) {
+      await this.gravarJson('nuvem/relatorios/' + rel.id + '.json', rel, `Relatório: ${rel.tarefa || rel.tipo}`);
+      this.cacheRel.set(rel.id, rel);
+      const idx = (await this.lerJson('nuvem/indice.json')) || [];
+      await this.gravarJson('nuvem/indice.json', [resumo(rel), ...idx.filter(i => i.id !== rel.id)].slice(0, 300), 'Atualiza índice de relatórios');
+    },
+    // Notificações push (Clara): guarda a inscrição deste aparelho e pede um teste à Action.
+    async salvarInscricao(sub, aparelho) {
+      const lista = (await this.lerJson('nuvem/push-inscricoes.json')) || [];
+      const nova = [...lista.filter(i => i.endpoint !== sub.endpoint), { ...sub, aparelho, criadaEm: new Date().toISOString() }];
+      await this.gravarJson('nuvem/push-inscricoes.json', nova, 'Notificações da Clara: novo aparelho');
+    },
+    pedirTestePush(info) {
+      return this.gravarJson('nuvem/push-teste/' + (info.id || Date.now()) + '.json', info, 'Notificações da Clara: teste');
+    },
     async apagar(id) {
       const idx = (await this.lerJson('nuvem/indice.json')) || [];
       await this.gravarJson('nuvem/indice.json', idx.filter(i => i.id !== id), 'Apaga relatório');

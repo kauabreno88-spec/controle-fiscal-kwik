@@ -241,6 +241,103 @@ dialog::backdrop { background: rgba(17,26,25,.55); backdrop-filter: blur(2px); }
 .toast.erro { background: #8f241d; }
 @keyframes entra { from { transform: translateY(20px); opacity: 0; } }
 
+/* ---------- vários funcionários */
+.membro small.funcao { display: block; margin-top: 6px; font-size: 11px; font-weight: 800; color: var(--verde-esc); }
+.abas-func { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.abas-func button { border: 2px solid var(--linha); background: #fff; border-radius: 99px; padding: 6px 14px; font-weight: 800; font-size: 13px; }
+.abas-func button.on { background: var(--grafite); color: #fff; border-color: var(--grafite); }
+.menu-anim { max-height: 70vh; overflow: auto; }
+.menu-anim button.grupo { background: #eef6ff; border-color: #a5d8ff; }
+.menu-anim button.filme { grid-column: 1 / -1; background: linear-gradient(135deg, #2b0a14, #5c0f24); color: #ffd6de; border-color: #8f1d36; }
+.bt.jogos { background: linear-gradient(135deg, #3b2a5c, #6b2a7a); color: #fff; border-color: #6b2a7a; }
+#btVoltarEscritorio { display: none; }
+
+/* ---------- sala de jogos (muda o layout) */
+.painel-jogos { display: none; }
+.modo-jogos .lateral:not(.painel-jogos) { display: none; }
+.modo-jogos .painel-jogos { display: flex; }
+.modo-jogos #btSelecionar, .modo-jogos #btTrabalhar, .modo-jogos #btAnimacoes, .modo-jogos #btSalaJogos { display: none; }
+.modo-jogos #btVoltarEscritorio { display: inline-flex; }
+.modo-jogos .topo { background: linear-gradient(90deg, #1a1030, #3b1452); }
+.modo-jogos .abas button.ativa { background: #ff4fd8; }
+.modo-jogos .palco { background: radial-gradient(ellipse at 50% 40%, #3b2a5c 0%, #1f1535 70%, #140d24 100%); }
+.modo-jogos .palco-card { background: #1d1530; border-color: #3b2a5c; color: #f3e8ff; }
+.modo-jogos .palco-topo h1 span { color: #ff4fd8; }
+.modo-jogos .status-pill { background: #2b2046; color: #d0bfff; }
+.jogo-card h3 { margin: 0 0 6px; }
+.jogo-card .jogo-nome { display: block; font-size: 17px; font-weight: 900; }
+.jogo-card p { font-size: 13px; margin: 6px 0 0; color: var(--cinza); font-weight: 600; }
+.jogo-card.destaque { border: 2px solid #ff4fd8; box-shadow: 0 8px 30px rgba(255,79,216,.18); }
+.jogo-capa { font-size: 34px; text-align: center; background: linear-gradient(135deg, #3b2a5c, #6b2a7a); border-radius: 12px; padding: 14px; margin-bottom: 10px; }
+.jogo-card.breve { opacity: .7; }
+.tela-jogo { display: none; }
+.jogando .palco { display: none; }
+.jogando .tela-jogo { display: block; }
+.jogando .acoes { display: none; }
+.jogo-hud { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 10px; }
+.jogo-info { display: flex; flex-direction: column; font-size: 13px; }
+.jogo-info b:first-child { font-size: 16px; font-weight: 900; }
+.jogo-bts { display: flex; gap: 6px; flex-wrap: wrap; }
+.jogo-bts .bt { background: #2b2046; color: #fff; border-color: #4c3a75; }
+.jogo-bts .bt:disabled { opacity: .35; }
+.jogo-area { position: relative; min-height: 340px; height: min(60vh, 520px); display: grid; place-items: center; background: radial-gradient(ellipse at 50% 30%, #fff4e6 0%, #ffe3c2 60%, #f5c99a 100%); border-radius: 14px; overflow: hidden; touch-action: none; }
+#jogoCanvas { image-rendering: pixelated; cursor: pointer; }
+.jogo-dica { font-size: 12.5px; color: #cdb8ff; margin: 10px 2px 0; }
+.jogo-vitoria { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(29,21,48,.82); color: #fff; text-align: center; padding: 20px; }
+.jogo-vitoria[hidden] { display: none; }
+.jogo-vitoria .estrelas { font-size: 40px; letter-spacing: 4px; animation: pulso .8s; }
+.jogo-vitoria h2 { margin: 8px 0; font-weight: 900; }
+
+/* ---------- prancheta da Clara */
+dialog.prancheta { background: transparent; box-shadow: none; max-width: 560px; overflow: visible; padding-top: 18px; }
+.prancheta-clip { width: 120px; height: 34px; margin: 0 auto -18px; position: relative; z-index: 2; border-radius: 10px 10px 6px 6px;
+  background: linear-gradient(#d0d5da, #9aa3ab); border: 3px solid #5c636a; box-shadow: inset 0 3px 0 rgba(255,255,255,.6); }
+.prancheta-folha { background: #8d5a3b; border-radius: 18px; padding: 26px 14px 14px; box-shadow: 0 30px 80px rgba(0,0,0,.4); border: 3px solid #6b4226; }
+.prancheta-folha > * { background-color: #fffdf6; }
+.prancheta-cab, .prancheta-resumo, .form-tarefa, #pranchetaFiltro, .lista-tarefas, .prancheta-rodape { padding-left: 16px; padding-right: 16px; }
+.prancheta-cab { display: flex; justify-content: space-between; align-items: center; padding-top: 14px; border-radius: 8px 8px 0 0; }
+.prancheta-cab h2 { margin: 0; font-size: 19px; font-weight: 900; }
+.prancheta-cab button { background: none; border: 0; font-size: 24px; color: var(--cinza); }
+.prancheta-resumo { display: flex; gap: 6px; flex-wrap: wrap; padding-top: 8px; padding-bottom: 8px; }
+.pchip { font-size: 11.5px; font-weight: 800; padding: 3px 9px; border-radius: 99px; background: #eef1f4; }
+.pchip.atrasada { background: #ffe3e3; color: #c92a2a; } .pchip.hoje { background: #fff0d6; color: #d9480f; } .pchip.amanha { background: #fff9db; color: #946200; }
+.form-tarefa { display: grid; grid-template-columns: minmax(170px, 1fr) 138px 92px auto; gap: 6px; padding-bottom: 10px; }
+.form-tarefa input { border: 1px solid var(--linha); border-radius: 10px; padding: 9px 10px; font: inherit; font-size: 14px; min-width: 0; }
+#pranchetaFiltro { margin: 0; padding-bottom: 6px; }
+.lista-tarefas { list-style: none; margin: 0; max-height: 46vh; overflow: auto; padding-bottom: 6px;
+  background-image: repeating-linear-gradient(#fffdf6 0 37px, #dbe7f3 37px 38px); }
+.tarefa { display: grid; grid-template-columns: 30px 1fr 28px; align-items: center; gap: 6px; min-height: 46px; padding: 4px 0; border-left: 4px solid transparent; padding-left: 6px; }
+.tarefa.atrasada { border-left-color: #e03131; } .tarefa.hoje { border-left-color: #f76707; } .tarefa.amanha { border-left-color: #fab005; } .tarefa.perto { border-left-color: #74c0fc; }
+.tarefa .tt b { font-weight: 800; font-size: 14px; display: block; }
+.tarefa .tt small { font-size: 11.5px; color: var(--cinza); font-weight: 700; }
+.tarefa.feita .tt b { text-decoration: line-through; color: var(--cinza); }
+.tarefa .marca input { width: 20px; height: 20px; accent-color: var(--verde); }
+.tarefa .apagar { border: 0; background: none; color: #c92a2a; font-size: 15px; opacity: .6; }
+.tarefa .apagar:hover { opacity: 1; }
+.vazio-p { padding: 18px 4px; color: var(--cinza); font-weight: 700; font-size: 13px; }
+.prancheta-rodape { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding-top: 10px; padding-bottom: 14px; border-radius: 0 0 8px 8px; }
+.prancheta-rodape small { color: var(--cinza); font-weight: 600; font-size: 12px; flex: 1; }
+#btNotificar.ok { background: #e3f7e9; border-color: var(--verde); color: var(--verde-esc); }
+
+/* ---------- relatório do Maycon */
+.leads { display: flex; flex-direction: column; gap: 8px; }
+.lead { border: 1px solid var(--linha); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 3px; }
+.lead-cab { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.lead-cab b { font-size: 14.5px; font-weight: 800; }
+.lead .tipo { font-size: 10.5px; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: #e7f5ff; color: #1864ab; }
+.lead .novo { font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 6px; background: var(--verde); color: var(--grafite); }
+.lead small { font-size: 12.5px; color: #3e4a47; font-weight: 600; }
+.lead-bts { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.lead-bts a { text-decoration: none; }
+.lead-bts .whats { background: #25d366; border-color: #25d366; color: #0b3d1e; }
+.filtros select { border: 1px solid var(--linha); border-radius: 10px; padding: 6px 8px; font: inherit; font-size: 13px; }
+.chk { display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 700; }
+
+/* ---------- foto */
+.polaroid { background: #fff; padding: 12px 12px 34px; box-shadow: 0 10px 30px rgba(0,0,0,.25); transform: rotate(-1.5deg); display: inline-block; max-width: 100%; position: relative; }
+.polaroid img { display: block; max-width: 100%; image-rendering: pixelated; }
+.polaroid span { position: absolute; bottom: 8px; left: 0; right: 0; font-weight: 800; color: #555; }
+
 @media (max-width: 980px) {
   .grade-escritorio, .grade-rel, .grade-pers, .colunas { grid-template-columns: 1fr; }
   .lista-rel { position: static; max-height: 300px; }
@@ -273,6 +370,14 @@ dialog::backdrop { background: rgba(17,26,25,.55); backdrop-filter: blur(2px); }
   .campo { grid-template-columns: 1fr; gap: 4px; }
   .pers { padding: 16px; }
   .toasts { left: 10px; right: 10px; bottom: calc(78px + env(safe-area-inset-bottom)); align-items: stretch; }
+  .acoes { grid-template-columns: 1fr 1fr; }
+  .form-tarefa { grid-template-columns: 1fr 1fr; }
+  .form-tarefa #tarefaTexto { grid-column: 1 / -1; }
+  .form-tarefa button { grid-column: 1 / -1; justify-content: center; }
+  .jogo-area { height: 58vh; }
+  .jogando .painel-jogos { display: none !important; }
+  .jogo-hud { gap: 6px; }
+  .jogo-bts .bt { padding: 6px 8px; }
   dialog { max-height: 88vh; }
 }
 </style>
@@ -304,14 +409,37 @@ dialog::backdrop { background: rgba(17,26,25,.55); backdrop-filter: blur(2px); }
         </div>
         <div class="palco" id="palco">
           <canvas id="tela" width="240" height="210"></canvas>
-          <div class="cracha" id="cracha"><i></i><span id="crachaNome">Léo</span></div>
-          <div class="balao" id="balao"></div>
           <div class="banner" id="banner"></div>
+        </div>
+        <div class="tela-jogo" id="telaJogo">
+          <div class="jogo-hud">
+            <button class="bt peq" id="jogoSair">⬅ Sala</button>
+            <div class="jogo-info"><b>🐱 Gatinhos em Ordem</b><span>Fase <b id="jogoFase">1</b> · Jogadas <b id="jogoJogadas">0</b> · Meta ≈ <b id="jogoMinimo">0</b></span></div>
+            <div class="jogo-bts">
+              <button class="bt peq" id="jogoAnterior" title="Fase anterior">◀</button>
+              <button class="bt peq" id="jogoDesfazer">↩️ Desfazer</button>
+              <button class="bt peq" id="jogoDica">💡 Dica</button>
+              <button class="bt peq" id="jogoReiniciar" title="Recomeçar a fase">🔄</button>
+              <button class="bt peq" id="jogoProxima" title="Próxima fase">▶</button>
+            </div>
+          </div>
+          <div class="jogo-area" id="jogoArea">
+            <canvas id="jogoCanvas" width="100" height="100"></canvas>
+            <div class="jogo-vitoria" id="jogoVitoria" hidden>
+              <div class="estrelas" id="vitoriaEstrelas">⭐⭐⭐</div>
+              <h2>Fase concluída! 🐱</h2>
+              <p id="vitoriaTexto"></p>
+              <button class="bt prim" id="vitoriaProxima">Próxima fase ▶</button>
+            </div>
+          </div>
+          <p class="jogo-dica">Toque numa caixa e depois em outra — ou <b>deslize</b> de uma caixa para outra. O gatinho só entra numa caixa vazia ou em cima de outro da <b>mesma cor</b>. Deixe cada caixa com uma cor só!</p>
         </div>
         <div class="acoes">
           <button class="bt" id="btSelecionar">👤 <span class="so-pc">Selecionar </span>funcionário</button>
           <button class="bt prim" id="btTrabalhar">▶ Trabalhar</button>
           <button class="bt" id="btAnimacoes">✨ Animações</button>
+          <button class="bt jogos" id="btSalaJogos">🎮 <span class="so-pc">Sala de </span>jogos</button>
+          <button class="bt jogos" id="btVoltarEscritorio">⬅ Voltar ao escritório</button>
           <div class="menu-anim" id="menuAnim">
             <h4>Transformações</h4>
             <button class="ss" data-anim="ss1">⚡ Super Sayajin</button>
@@ -330,6 +458,15 @@ dialog::backdrop { background: rgba(17,26,25,.55); backdrop-filter: blur(2px); }
             <button data-anim="cafe">☕ Café turbo</button>
             <button data-anim="foco">🧠 Modo foco (Matrix)</button>
             <button data-anim="soneca">😴 Soneca</button>
+            <h4>Equipe, fantasias e filmes</h4>
+            <button class="filme" data-anim="obsessao">🎬 Obsessão (2025) — paródia</button>
+            <button class="grupo" data-anim="festa">🎉 Festa à fantasia</button>
+            <button class="grupo" data-anim="terror">🧛 Noite do terror</button>
+            <button class="grupo" data-anim="piratas">🏴‍☠️ Caça ao tesouro</button>
+            <button class="grupo" data-anim="espaco">🚀 Missão espacial</button>
+            <button class="grupo" data-anim="magia">🧙 Aula de magia</button>
+            <button class="grupo" data-anim="foto">📸 Foto da equipe</button>
+            <button class="grupo" data-anim="toca">🙌 Toca aqui</button>
           </div>
         </div>
       </div>
@@ -353,7 +490,7 @@ dialog::backdrop { background: rgba(17,26,25,.55); backdrop-filter: blur(2px); }
         </div>
         <div class="card">
           <h3>Tarefa atual</h3>
-          <div id="tarefaVazia" class="vazio">Selecione o funcionário e aperte <b>Trabalhar</b> para ele buscar as notícias do Portal Contábeis e do Contadores.cnt.br.</div>
+          <div id="tarefaVazia" class="vazio">Clique em um funcionário (ou em <b>Selecionar</b>) e aperte o botão verde: <b>Léo</b> busca as notícias, <b>Clara</b> abre a prancheta de tarefas e <b>Maycon</b> procura clientes.</div>
           <div id="tarefaAtiva" hidden>
             <b id="tarefaTitulo" style="font-weight:800;font-size:14px">📰 Notícias contábeis do dia</b>
             <div class="barra"><div id="tarefaBarra"></div></div>
@@ -364,6 +501,19 @@ dialog::backdrop { background: rgba(17,26,25,.55); backdrop-filter: blur(2px); }
           <h3>Último relatório</h3>
           <div id="ultimoRel" class="vazio">Nenhum relatório ainda.</div>
         </div>
+      </aside>
+      <aside class="lateral painel-jogos" id="painelJogos">
+        <div class="card jogo-card destaque">
+          <div class="jogo-capa">🐱🐱🐱</div>
+          <h3>Mini jogos</h3>
+          <b class="jogo-nome">Gatinhos em Ordem</b>
+          <p>Puzzle de lógica: deslize os gatinhos entre as caixas até cada uma ter uma cor só.</p>
+          <div class="nums"><div><small>Fase</small><b id="gatosFase">1</b></div><div><small>Estrelas</small><b id="gatosEstrelas">0</b></div></div>
+          <button class="bt prim" id="btJogarGatos" style="width:100%;justify-content:center;margin-top:12px">🕹️ Jogar</button>
+          <small class="vazio">Cada fase vencida rende moedas para o caixa 💰</small>
+        </div>
+        <div class="card jogo-card breve"><h3>Em breve</h3><b class="jogo-nome">🎱 Sinuca</b><p>A mesa já está montada na sala.</p></div>
+        <div class="card jogo-card breve"><b class="jogo-nome">🃏 Cartas Coloridas</b><p>Jogo de cartas por cores e números.</p></div>
       </aside>
     </div>
   </section>
@@ -383,8 +533,9 @@ dialog::backdrop { background: rgba(17,26,25,.55); backdrop-filter: blur(2px); }
   <section class="aba" id="aba-personalizar">
     <div class="grade-pers">
       <div class="card pers" id="persFunc">
-        <h2>👤 Funcionário</h2>
+        <h2>👤 Funcionários</h2>
         <p class="sub">Nome, visual e roupa. As mudanças aparecem na hora no escritório.</p>
+        <div class="abas-func" id="persAbas"></div>
         <div class="preview-func">
           <canvas id="previewFunc" width="30" height="46"></canvas>
           <div style="display:flex;flex-direction:column;gap:8px">
@@ -417,6 +568,46 @@ dialog::backdrop { background: rgba(17,26,25,.55); backdrop-filter: blur(2px); }
   </section>
 </main>
 
+<dialog id="dlgPrancheta" class="prancheta">
+  <div class="prancheta-clip"></div>
+  <div class="prancheta-folha">
+    <div class="prancheta-cab"><h2>📋 Prancheta da Clara</h2><button data-fechar aria-label="Fechar">×</button></div>
+    <div class="prancheta-resumo" id="pranchetaResumo"></div>
+    <form id="formTarefa" class="form-tarefa" autocomplete="off">
+      <input id="tarefaTexto" type="text" maxlength="140" placeholder="Escreva uma tarefa… (ex.: Enviar DAS da Clínica X)" required>
+      <input id="tarefaData" type="date" title="Dia do prazo">
+      <input id="tarefaHora" type="time" title="Hora (opcional)">
+      <button class="bt prim" type="submit">＋ Anotar</button>
+    </form>
+    <div class="filtros" id="pranchetaFiltro"><button data-f="pendentes" class="on">Pendentes</button><button data-f="feitas">Feitas</button><button data-f="todas">Todas</button></div>
+    <ul class="lista-tarefas" id="listaTarefas"></ul>
+    <div class="prancheta-rodape">
+      <button class="bt peq" id="btNotificar">🔔 Ativar notificações</button>
+      <small>A Clara avisa quando o prazo está chegando (amanhã, hoje e atrasadas).</small>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="dlgCidade">
+  <div class="dlg-topo"><h2>📞 Onde o Maycon procura clientes?</h2><button data-fechar aria-label="Fechar">×</button></div>
+  <form class="dlg-corpo" id="formCidade">
+    <p class="vazio" style="margin-top:0">Ele procura clínicas, consultórios, dentistas, laboratórios e outras empresas da cidade no mapa aberto (OpenStreetMap). Dá para trocar depois em Personalizar.</p>
+    <div class="campo"><label>Cidade</label><input type="text" id="cidadeNome" placeholder="Ex.: Goiânia" required></div>
+    <div class="campo"><label>Estado (UF)</label><select id="cidadeUF" required>
+      <option value="">—</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option>
+    </select></div>
+    <button class="bt prim" type="submit">🔎 Procurar clientes</button>
+  </form>
+</dialog>
+
+<dialog id="dlgFoto">
+  <div class="dlg-topo"><h2>📸 Foto da equipe</h2><button data-fechar aria-label="Fechar">×</button></div>
+  <div class="dlg-corpo" style="text-align:center">
+    <div class="polaroid"><img alt="Foto da equipe"><span>Equipe KWIK 💚</span></div>
+    <a class="bt prim" style="margin-top:14px">⬇️ Baixar foto</a>
+  </div>
+</dialog>
+
 <dialog id="dlgEquipe">
   <div class="dlg-topo"><h2>Selecione o funcionário</h2><button data-fechar aria-label="Fechar">×</button></div>
   <div class="dlg-corpo">
@@ -435,6 +626,10 @@ dialog::backdrop { background: rgba(17,26,25,.55); backdrop-filter: blur(2px); }
 <script src="js/boneco.js"></script>
 <script src="js/nuvem.js"></script>
 <script src="js/efeitos.js"></script>
+<script src="js/clara.js"></script>
+<script src="js/maycon.js"></script>
+<script src="js/filmes.js"></script>
+<script src="js/jogos.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

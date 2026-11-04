@@ -134,6 +134,12 @@
       case 'pulo': tom(330, 0, 0.15, 'square', 0.04, 660); break;
       case 'gole': tom(220, 0, 0.08, 'sine', 0.08); tom(180, 0.15, 0.08, 'sine', 0.08); tom(200, 0.3, 0.08, 'sine', 0.08); break;
       case 'bip': tom(1200 + Math.random() * 600, 0, 0.05, 'square', 0.02); break;
+      case 'foto': ruido(0, 0.06, 0.12, 9000); tom(2400, 0.02, 0.05, 'square', 0.03); break;
+      case 'coracao': tom(70, 0, 0.12, 'sine', 0.25, 50); tom(70, 0.22, 0.12, 'sine', 0.2, 50); break;
+      case 'susto': ruido(0, 0.5, 0.25, 3000); tom(160, 0, 0.6, 'sawtooth', 0.08, 60); tom(1800, 0, 0.3, 'square', 0.05, 900); break;
+      case 'magia': [880, 1175, 1568, 2093].forEach((f, i) => tom(f, i * 0.06, 0.25, 'triangle', 0.04)); break;
+      case 'tchau': tom(523, 0, 0.1, 'triangle', 0.05); tom(392, 0.12, 0.2, 'triangle', 0.05); break;
+      case 'notif': tom(988, 0, 0.09, 'triangle', 0.06); tom(1480, 0.1, 0.18, 'triangle', 0.06); break;
       case 'batida': {
         for (let i = 0; i < 16; i++) {
           tom(110, i * 0.25, 0.12, 'sine', 0.18, 50);
@@ -184,56 +190,71 @@
       }
     }
     if (st.verde > 0) { ctx.fillStyle = `rgba(20,120,50,${0.25 * st.verde})`; ctx.fillRect(0, 0, W, H); }
+    if (st.escuro > 0) {
+      const pisca = st.piscaLuz && Math.random() < 0.12 ? 0.25 : 0;
+      ctx.fillStyle = `rgba(8,4,14,${Math.min(0.85, 0.7 * st.escuro + pisca)})`; ctx.fillRect(0, 0, W, H);
+      if (st.vermelho) { ctx.fillStyle = `rgba(160,0,20,${0.25 * st.vermelho})`; ctx.fillRect(0, 0, W, H); }
+    }
+    if (st.espaco > 0) {
+      ctx.fillStyle = `rgba(6,10,30,${0.6 * st.espaco})`; ctx.fillRect(0, 0, W, H);
+      for (let i = 0; i < 40; i++) { ctx.fillStyle = (i + Math.floor(t * 4)) % 7 ? '#ffffff' : '#ffd93b'; ctx.fillRect((i * 53 + Math.floor(t * 10)) % W, (i * 37) % H, 1, 1); }
+    }
     KM.desenharParticulas(ctx, t, 'frente');
     if (st.flash > 0) { ctx.globalAlpha = Math.min(1, st.flash); ctx.fillStyle = st.corFlash; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; }
   };
 
-  // ---------------- personagem: andar, levantar, sentar
-  const LUGAR = { X: 16, Y: 50 };
-  const DE_PE = { X: 16, Y: 74 };
-  const TAPETE = { X: 74, Y: 74 };
-  KM.LUGAR = LUGAR;
+  // ---------------- pessoas: andar, levantar, sentar (vários funcionários)
+  const pessoa = id => (KM.estado && KM.estado.pessoas || {})[id];
+  const alvo = id => pessoa(id || KM.estado.selecionado || KM.estado.principal) || Object.values(KM.estado.pessoas || {})[0];
+  const todas = () => Object.values(KM.estado.pessoas || {});
+  const assento = p => KM.LAYOUT.assentos[p.funcao] || KM.LAYOUT.assentos.noticias;
+  KM.pessoa = pessoa; KM.alvo = alvo; KM.todas = todas;
 
-  function pers() { return KM.estado.personagem; }
-
-  function andarAte(X, Y, vel = 46) {
-    const p = pers();
+  function andarAte(p, X, Y, vel = 46) {
     p.modo = 'em-pe';
     return quadroAQuadro((dt, t) => {
       const dx = X - p.X, dy = Y - p.Y, dist = Math.hypot(dx, dy);
       if (dist < 1) { p.X = X; p.Y = Y; p.est.passo = 0; return true; }
       const s = Math.min(dist, vel * dt);
       p.X += dx / dist * s; p.Y += dy / dist * s;
-      p.est.passo = [1, 0, 2, 0][Math.floor(t * 8) % 4];
+      p.est.passo = [1, 0, 2, 0][Math.floor(t * 8 + (p.fase || 0)) % 4];
       // vira para onde anda: +X baixo-direita, +Y baixo-esquerda, -X cima-esquerda, -Y cima-direita
       p.dir = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 'fd' : 'ce') : (dy > 0 ? 'fe' : 'cd');
       return false;
     });
   }
-
-  async function levantar() {
-    const p = pers();
+  async function levantar(p) {
     p.dormindo = false; p.digitando = false;
     if (p.modo !== 'sentado') return;
-    p.modo = 'em-pe'; p.X = LUGAR.X; p.Y = LUGAR.Y + 8; p.est = { bracos: 'baixo' }; p.dir = 'fe';
+    const a = assento(p);
+    p.modo = 'em-pe'; p.X = a.pe[0]; p.Y = a.pe[1]; p.est = {}; p.dir = 'fe';
     await esperar(120);
   }
-  async function irAoTapete() { await levantar(); await andarAte(DE_PE.X, DE_PE.Y); await andarAte(TAPETE.X, TAPETE.Y); pers().dir = 'fe'; }
-  async function voltarSentar() {
-    const p = pers();
-    p.est = { bracos: 'baixo' };
-    if (Math.abs(p.X - TAPETE.X) < 30 && p.Y > 60) { await andarAte(DE_PE.X + 10, TAPETE.Y); }
-    await andarAte(DE_PE.X, DE_PE.Y); await andarAte(LUGAR.X, LUGAR.Y + 8);
-    p.modo = 'sentado'; p.X = LUGAR.X; p.Y = LUGAR.Y; p.dir = 'fd'; p.est = {}; p.Z = 0;
+  // Sai da mesa pelo corredor e anda até (X, Y).
+  async function irAte(p, X, Y, vel) {
+    await levantar(p);
+    if (!p.foraDaMesa) { for (const [x, y] of assento(p).caminho) await andarAte(p, x, y, vel); p.foraDaMesa = true; }
+    await andarAte(p, X, Y, vel);
   }
+  async function irAoTapete(p, ponto) { const [x, y] = ponto || assento(p).tapete; await irAte(p, x, y); p.dir = 'fe'; }
+  async function voltarSentar(p) {
+    p = p || alvo();
+    if (!p || p.modo === 'sentado') return;
+    p.est = {};
+    const a = assento(p);
+    if (p.foraDaMesa) { const c = a.caminho; for (let i = c.length - 1; i >= 0; i--) await andarAte(p, c[i][0], c[i][1]); p.foraDaMesa = false; }
+    await andarAte(p, a.pe[0], a.pe[1]);
+    p.modo = 'sentado'; p.X = a.X; p.Y = a.Y; p.dir = a.dir; p.est = {}; p.Z = 0;
+  }
+  function cabeca(p) { const [x, y] = KM.ancora(p); return [x, p.modo === 'sentado' ? y - 27 : y - 35]; }
+  function pes(p) { return KM.ancora(p); }
+  const fala = (p, txt, ms = 2400) => p && KM.onFala(p.id, txt, ms);
   KM.voltarSentar = voltarSentar;
-
-  function cabeca() { const p = pers(); const [x, y] = KM.ancora(p); return [x, p.modo === 'sentado' ? y - 27 : y - 35]; }
-  function pes() { return KM.ancora(pers()); }
+  KM.mov = { andarAte, levantar, irAte, irAoTapete, voltarSentar, cabeca, pes, fala, esperar, quadroAQuadro, assento };
 
   // ---------------- efeitos sem movimento
-  KM.explosaoDinheiro = function (valor) {
-    const [x, y] = cabeca();
+  KM.explosaoDinheiro = function (valor, id) {
+    const [x, y] = cabeca(alvo(id));
     KM.emitir('moeda', 26, i => ({ x: x + rnd(-4, 4), y: y + rnd(-2, 4), vx: rnd(-55, 75), vy: rnd(-120, -60), g: 220, vida: rnd(0.9, 1.4), chao: KM.H - 8 }));
     KM.emitir('nota', 12, i => ({ x: x + rnd(-30, 30), y: y - rnd(10, 50), vy: rnd(-10, 5), g: 40, vida: rnd(1.6, 2.4) }));
     KM.emitir('estrela', 6, i => ({ x: x + rnd(-14, 14), y: y + rnd(-14, 4), vy: -12, vida: 0.6, cor: '#fff3a0' }));
@@ -244,11 +265,11 @@
   };
 
   KM.chuvaDinheiro = async function (seg = 4) {
-    const p = pers();
-    const antes = Object.assign({}, p.est);
-    p.est = Object.assign({}, p.est, { bracos: 'cima', boca: 'sorriso', olhos: 'feliz' });
+    const ps = todas().filter(p => !p.acao || p.acao === 'chuva');
+    const antes = ps.map(p => Object.assign({}, p.est));
+    ps.forEach(p => { p.est = Object.assign({}, p.est, { bracos: 'cima', boca: 'sorriso', olhos: 'feliz' }); });
+    fala(alvo(), 'Olha o dinheiro entrando!! 🤑', 2500);
     const fim = performance.now() + seg * 1000;
-    KM.onFala('Olha o dinheiro entrando!! 🤑', 2500);
     while (performance.now() < fim) {
       KM.emitir('nota', 3, i => ({ x: rnd(15, KM.W - 15), y: rnd(-10, 0), vy: 10, g: 30, vida: 5 }));
       KM.emitir('moeda', 2, i => ({ x: rnd(20, KM.W - 20), y: -6, vy: rnd(20, 60), g: 160, vida: 2.2, chao: rnd(140, KM.H - 8) }));
@@ -256,7 +277,7 @@
       await esperar(140);
     }
     await esperar(800);
-    p.est = antes;
+    ps.forEach((p, i) => { p.est = antes[i]; });
   };
 
   KM.confete = function (n = 120) {
@@ -265,29 +286,43 @@
     KM.tocar('sucesso');
   };
 
-  // ---------------- animações completas
-  async function rodar(nome, fn) {
-    if (st.ocupado) return false;
-    st.ocupado = nome;
+  // ---------------- travas: cada pessoa faz uma coisa por vez
+  async function pararRotina(p) {
+    if (p.acao === 'soneca') { p.dormindo = false; }
+    if (p.acao !== 'rotina' && p.acao !== 'soneca') return;
+    p.pararRotina = true;
+    const ini = performance.now();
+    while ((p.acao === 'rotina' || p.acao === 'soneca') && performance.now() - ini < 12000) await esperar(80);
+    p.pararRotina = false;
+  }
+  KM.pararRotina = pararRotina;
+  async function rodar(nome, fn, ids) {
+    ids = ids || [alvo() && alvo().id];
+    const ps = ids.map(pessoa).filter(Boolean);
+    for (const p of ps) await pararRotina(p);
+    if (!ps.length || ps.some(p => p.acao)) return false;
+    ps.forEach(p => { p.acao = nome; });
+    st.rodando = (st.rodando || 0) + 1; st.ocupado = nome;
     KM.onOcupado && KM.onOcupado(nome);
-    try { await fn(); } finally {
-      st.ocupado = false; st.disco = 0; st.verde = 0; st.tremorFixo = false;
+    try { await fn(...ps); } finally {
+      ps.forEach(p => { p.acao = null; p.auraAtras = null; });
+      st.rodando--;
+      if (!st.rodando) { st.ocupado = false; st.disco = 0; st.verde = 0; st.escuro = 0; st.espaco = 0; st.tremorFixo = false; }
       KM.onOcupado && KM.onOcupado(false);
     }
     return true;
   }
   KM.rodar = rodar;
+  KM.livre = id => { const p = pessoa(id); return p && !p.acao; };
 
   // Super Sayajin: nivel 1, 2, 3, 'deus' ou 'branco'
-  KM.superSayajin = (nivel = 1, opc = {}) => rodar('saiyan', async () => {
-    const p = pers();
-    await irAoTapete();
+  KM.superSayajin = (nivel = 1, opc = {}, id) => rodar('saiyan', async p => {
+    await irAoTapete(p);
     const corAura = nivel === 'deus' ? '#ff3b5c' : nivel === 'branco' ? '#c9e3ff' : '#ffe14d';
     const corRaio = nivel === 'deus' ? '#ffb3c0' : '#9fe8ff';
     const nomes = { 1: 'SUPER SAYAJIN!', 2: 'SUPER SAYAJIN 2!', 3: 'SUPER SAYAJIN 3!!', deus: 'MODO DEUS!', branco: 'INSTINTO SUPREMO!' };
-    // 1) carregando energia
     p.est = { bracos: 'poder', boca: 'grito', dy: 1 };
-    KM.onFala(opc.fala || 'Haaaaaaa!!!', 2300);
+    fala(p, opc.fala || 'Haaaaaaa!!!', 2300);
     KM.tocar('poder');
     st.tremorFixo = true;
     const ini = performance.now();
@@ -295,26 +330,24 @@
     while (performance.now() - ini < 2300) {
       const k = (performance.now() - ini) / 2300;
       st.tremor = 0.5 + k * 2.5;
-      const [x, y] = pes();
+      const [x, y] = pes(p);
       KM.emitir('aura', Math.round(2 + k * 6), i => ({ x: x + rnd(-8 - k * 4, 8 + k * 4), y: y - rnd(0, 42), vy: rnd(-60, -30), vida: rnd(0.25, 0.5), cor: corAura, atras: true }));
       if (Math.random() < 0.35) KM.emitir('pedra', 1, { x: x + rnd(-30, 30), y: y + rnd(-4, 6), vy: rnd(-22, -10), vida: 2.5, g: 0 });
       if (Math.random() < 0.25 * k) KM.emitir('faisca', 4, { x: x + rnd(-10, 10), y: y - rnd(10, 30), dvx: 60, dvy: 60, vida: 0.25, cor: '#ffffff' });
       p.est.dy = Math.floor(performance.now() / 60) % 2;
       await esperar(40);
     }
-    // 2) transformação
     st.tremorFixo = false; st.flash = 1.2; st.corFlash = '#ffffff'; st.tremor = 4;
     KM.tocar('explosao');
     for (const q of KM.particulas) if (q.tipo === 'pedra') { q.g = 220; q.vy = rnd(-40, 0); q.vx = rnd(-60, 60); q.chao = q.y + 30; }
     p.est = { bracos: 'poder', boca: 'normal', saiyan: nivel };
     KM.onBanner(nomes[nivel] || nomes[1], nivel);
-    const [x0, y0] = pes();
+    const [x0, y0] = pes(p);
     KM.emitir('faisca', 40, { x: x0, y: y0 - 18, dvx: 140, dvy: 140, vida: 0.6, cor: corAura });
-    // 3) aura acesa
     const dur = opc.dur || 4200;
     const ini2 = performance.now();
     while (performance.now() - ini2 < dur) {
-      const [x, y] = pes();
+      const [x, y] = pes(p);
       KM.emitir('aura', 6, i => ({ x: x + rnd(-10, 10), y: y - rnd(-2, 44), vy: rnd(-70, -40), vida: rnd(0.25, 0.45), cor: corAura, atras: true }));
       KM.emitir('aura', 1, i => ({ x: x + rnd(-12, 12), y: y - rnd(0, 38), vy: rnd(-70, -40), vida: 0.2, cor: corAura }));
       if ((nivel === 2 || nivel === 3 || nivel === 'deus') && Math.random() < 0.3) {
@@ -327,26 +360,22 @@
       st.tremor = Math.max(st.tremor, 0.4);
       await esperar(40);
     }
-    // 4) volta ao normal
     st.flash = 0.6; KM.tocar('teleporte');
     p.est = { boca: 'sorriso', olhos: 'feliz' };
     p.auraAtras = null;
     await esperar(500);
-    if (!opc.ficarDePe) await voltarSentar();
-  });
+    if (!opc.ficarDePe) await voltarSentar(p);
+  }, [id || (alvo() && alvo().id)]);
 
-  KM.danca = () => rodar('danca', async () => {
-    const p = pers();
-    await irAoTapete();
-    KM.onFala('Hora da dança da vitória! 🕺', 2200);
+  KM.danca = id => rodar('danca', async p => {
+    await irAoTapete(p);
+    fala(p, 'Hora da dança da vitória! 🕺', 2200);
     const ini = performance.now();
     KM.tocar('batida');
     while (performance.now() - ini < 4200) {
-      const k = Math.min(1, (performance.now() - ini) / 500);
-      st.disco = k;
+      st.disco = Math.min(1, (performance.now() - ini) / 500);
       const fase = Math.floor((performance.now() - ini) / 260) % 4;
       p.est = { bracos: ['cima', 'aceno', 'cima', 'baixo'][fase], boca: 'sorriso', olhos: fase % 2 ? 'feliz' : undefined, dy: fase % 2, aceno: fase === 1 ? 1 : 0, passo: [1, 0, 2, 0][fase] };
-      // gira: frente, lado, costas, outro lado
       p.dir = ['fe', 'fd', 'cd', 'ce'][Math.floor((performance.now() - ini) / 520) % 4];
       if (Math.random() < 0.3) KM.emitir('estrela', 1, { x: KM.W / 2 + rnd(-80, 80), y: rnd(40, 160), vida: 0.5, cor: ['#ff5c8a', '#3fb6ff', '#ffd93b'][Math.floor(Math.random() * 3)] });
       await esperar(60);
@@ -354,23 +383,22 @@
     KM.confete(80);
     for (let k = 1; k >= 0; k -= 0.1) { st.disco = k; await esperar(40); }
     p.dir = 'fe';
-    await voltarSentar();
-  });
+    await voltarSentar(p);
+  }, [id || (alvo() && alvo().id)]);
 
-  KM.cafe = () => rodar('cafe', async () => {
-    const p = pers();
-    if (p.modo !== 'sentado') await voltarSentar();
+  KM.cafe = id => rodar('cafe', async p => {
+    if (p.modo !== 'sentado') await voltarSentar(p);
     p.dormindo = false;
     p.est = { bracos: 'cafe', olhos: 'fechados' };
     KM.estado.cafe = true;
     KM.tocar('gole');
     await esperar(1300);
-    p.est = { olhos: undefined, boca: 'o' };
-    KM.onFala('CAFÉ TURBO ATIVADO! ☕⚡', 2000);
+    p.est = { boca: 'o' };
+    fala(p, 'CAFÉ TURBO ATIVADO! ☕⚡', 2000);
     p.digitando = true; p.turbo = true;
     const ini = performance.now();
     while (performance.now() - ini < 4500) {
-      const [x, y] = cabeca();
+      const [x, y] = cabeca(p);
       KM.emitir('vento', 2, { x: x - 20 + rnd(-6, 0), y: y + rnd(0, 26), vx: -60, vida: 0.3 });
       if (Math.random() < 0.08) KM.emitir('gota', 1, { x: x + 6, y: y + 2, vy: 10, g: 60, vida: 0.6 });
       if (Math.random() < 0.3) KM.emitir('pixel', 2, { x: x + 6, y: y + 24, dvx: 40, vy: -30, dvy: 20, g: 100, vida: 0.5, cor: '#ffffff' });
@@ -378,40 +406,38 @@
       st.tremor = 0.4;
       await esperar(50);
     }
-    p.turbo = false; p.digitando = KM.estado.trabalhando || false;
+    p.turbo = false; p.digitando = !!p.trabalhando;
     KM.estado.cafe = false;
     p.est = {};
-  });
+  }, [id || (alvo() && alvo().id)]);
 
-  KM.soneca = (seg = 0) => rodar('soneca', async () => {
-    const p = pers();
-    if (p.modo !== 'sentado') await voltarSentar();
+  KM.soneca = (seg = 0, id) => rodar('soneca', async p => {
+    if (p.modo !== 'sentado') await voltarSentar(p);
     p.dormindo = true; p.digitando = false;
     p.est = { olhos: 'fechados', cabecaDy: 2, bracos: 'frente' };
     const ini = performance.now();
-    while (p.dormindo && (!seg || performance.now() - ini < seg * 1000)) {
-      const [x, y] = cabeca();
+    while (p.dormindo && !p.pararRotina && (!seg || performance.now() - ini < seg * 1000)) {
+      const [x, y] = cabeca(p);
       KM.emitir('z', 1, { x: x + 6, y: y + 2, vx: 6, vy: -9, vida: 2.2 });
       await esperar(900);
     }
     p.dormindo = false;
-    p.est = { olhos: undefined, boca: 'o' };
-    KM.onFala('Hã? Tô acordado! 😅', 1600);
+    p.est = { boca: 'o' };
+    fala(p, 'Hã? Tô acordado! 😅', 1600);
     await esperar(600);
     p.est = {};
-  });
-  KM.acordar = () => { const p = pers(); if (p) p.dormindo = false; };
+  }, [id || (alvo() && alvo().id)]);
+  KM.acordar = id => { for (const p of id ? [pessoa(id)] : todas()) if (p) p.dormindo = false; };
 
-  KM.foco = () => rodar('foco', async () => {
-    const p = pers();
-    if (p.modo !== 'sentado') await voltarSentar();
+  KM.foco = id => rodar('foco', async p => {
+    if (p.modo !== 'sentado') await voltarSentar(p);
     const tvAntes = KM.estado.tv.modo;
     KM.estado.tv.modo = 'matrix'; KM.estado.matrix = true;
-    const oculosAntes = KM.config().funcionarios[0].aparencia.oculos;
-    KM.config().funcionarios[0].aparencia.oculos = true;
+    const ap = KM.aparenciaDe(KM.config(), p.id), oculosAntes = ap.oculos;
+    ap.oculos = true;
     p.digitando = true; p.turbo = true;
     p.est = { brilhoOculos: true };
-    KM.onFala('Modo foco: entrando na Matrix contábil 🧠', 2400);
+    fala(p, 'Modo foco: entrando na Matrix contábil 🧠', 2400);
     const ini = performance.now();
     while (performance.now() - ini < 4800) {
       st.verde = Math.min(1, (performance.now() - ini) / 600);
@@ -420,58 +446,63 @@
       p.est.brilhoOculos = Math.floor(performance.now() / 400) % 2 === 0;
       await esperar(60);
     }
-    KM.config().funcionarios[0].aparencia.oculos = oculosAntes;
+    ap.oculos = oculosAntes;
     KM.estado.tv.modo = tvAntes === 'matrix' ? 'normal' : tvAntes;
-    KM.estado.matrix = false; p.turbo = false; p.digitando = KM.estado.trabalhando || false;
+    KM.estado.matrix = false; p.turbo = false; p.digitando = !!p.trabalhando;
     p.est = {};
-  });
+  }, [id || (alvo() && alvo().id)]);
 
-  KM.pulos = () => rodar('pulo', async () => {
-    const p = pers();
-    await irAoTapete();
+  KM.pulos = id => rodar('pulo', async p => {
+    await irAoTapete(p);
     p.est = { bracos: 'cima', boca: 'sorriso', olhos: 'feliz' };
-    KM.onFala('Uhuuul! 🚀', 1500);
+    fala(p, 'Uhuuul! 🚀', 1500);
     for (let n = 0; n < 3; n++) {
       KM.tocar('pulo');
-      const ini = performance.now();
-      await quadroAQuadro(() => {
-        const k = (performance.now() - ini) / 420;
-        p.Z = Math.max(0, Math.sin(Math.min(1, k) * Math.PI) * 16);
-        return k >= 1;
-      });
-      p.Z = 0;
-      const [x, y] = pes();
+      await pular(p, 16, 420);
+      const [x, y] = pes(p);
       KM.emitir('estrela', 5, { x, y: y - 20, dvx: 50, vy: -20, dvy: 20, vida: 0.7 });
       await esperar(80);
     }
     p.est = {};
-    await voltarSentar();
-  });
+    await voltarSentar(p);
+  }, [id || (alvo() && alvo().id)]);
+  function pular(p, alt = 16, ms = 420) {
+    const ini = performance.now();
+    return quadroAQuadro(() => {
+      const k = (performance.now() - ini) / ms;
+      p.Z = Math.max(0, Math.sin(Math.min(1, k) * Math.PI) * alt);
+      if (k >= 1) { p.Z = 0; return true; }
+      return false;
+    });
+  }
+  KM.mov.pular = pular;
 
-  KM.teleporte = () => rodar('teleporte', async () => {
-    const p = pers();
-    const cores = () => { const a = KM.config().funcionarios[0].aparencia; return [a.pele, a.corCamisa, a.corCabelo, a.calca, '#ffffff']; };
-    const sumir = () => {
-      const [x, y] = pes(); const cs = cores(); const alto = p.modo === 'sentado' ? 32 : 42;
-      KM.emitir('pixel', 70, i => ({ x: x + rnd(-6, 6), y: y - rnd(0, alto), vx: rnd(-10, 10), vy: rnd(-70, -20), vida: rnd(0.5, 0.9), cor: cs[i % cs.length] }));
-      KM.emitir('estrela', 4, { x, y: y - 18, dx: 8, dy: 12, vida: 0.5, cor: '#b0f0ff' });
-    };
+  function sumir(p) {
+    const a = KM.aparenciaDe(KM.config(), p.id), cs = [a.pele, a.corCamisa, a.corCabelo, a.calca, '#ffffff'];
+    const [x, y] = pes(p); const alto = p.modo === 'sentado' ? 32 : 42;
+    KM.emitir('pixel', 70, i => ({ x: x + rnd(-6, 6), y: y - rnd(0, alto), vx: rnd(-10, 10), vy: rnd(-70, -20), vida: rnd(0.5, 0.9), cor: cs[i % cs.length] }));
+    KM.emitir('estrela', 4, { x, y: y - 18, dx: 8, dy: 12, vida: 0.5, cor: '#b0f0ff' });
+  }
+  KM.mov.sumir = sumir;
+  KM.teleporte = id => rodar('teleporte', async p => {
     KM.tocar('teleporte');
-    sumir(); p.visivel = false;
+    sumir(p); p.visivel = false;
     await esperar(700);
-    p.modo = 'em-pe'; p.X = TAPETE.X; p.Y = TAPETE.Y; p.dir = 'fe'; p.est = { bracos: 'aceno', boca: 'sorriso' };
-    p.visivel = true; sumir(); st.flash = 0.35; st.corFlash = '#b0f0ff';
-    KM.onFala('Teletransporte contábil! ✨', 1800);
+    const [tx, ty] = assento(p).tapete;
+    p.modo = 'em-pe'; p.X = tx; p.Y = ty; p.dir = 'fe'; p.foraDaMesa = true; p.est = { bracos: 'aceno', boca: 'sorriso' };
+    p.visivel = true; sumir(p); st.flash = 0.35; st.corFlash = '#b0f0ff';
+    fala(p, 'Teletransporte contábil! ✨', 1800);
     for (let i = 0; i < 6; i++) { p.est.aceno = i % 2; await esperar(220); }
     KM.tocar('teleporte');
-    sumir(); p.visivel = false;
+    sumir(p); p.visivel = false;
     await esperar(700);
-    p.modo = 'sentado'; p.X = LUGAR.X; p.Y = LUGAR.Y; p.dir = 'fd'; p.est = {}; p.visivel = true; sumir();
-  });
+    const a = assento(p);
+    p.modo = 'sentado'; p.X = a.X; p.Y = a.Y; p.dir = a.dir; p.foraDaMesa = false; p.est = {}; p.visivel = true; sumir(p);
+  }, [id || (alvo() && alvo().id)]);
 
   // Comemoração quando entrega uma tarefa.
-  KM.comemorar = async function (nivelSaiyan) {
+  KM.comemorar = async function (nivelSaiyan, id) {
     KM.confete(90);
-    if (nivelSaiyan) await KM.superSayajin(nivelSaiyan, { fala: 'Relatório entregue! Haaaa!!', dur: 3200 });
+    if (nivelSaiyan) await KM.superSayajin(nivelSaiyan, { fala: 'Tarefa entregue! Haaaa!!', dur: 3200 }, id);
   };
 })();

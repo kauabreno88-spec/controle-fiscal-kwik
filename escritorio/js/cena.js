@@ -187,7 +187,7 @@
       g.fillStyle = tom(e.parede, 0.96); for (let u = 0; u < w; u += 9) g.fillRect(u, 0, 1, h - 4);
       g.fillStyle = e.rodape; g.fillRect(0, h - 4, w, 4);
       g.fillStyle = tom(e.rodape, 0.6); g.fillRect(0, h - 4, w, 1);
-      if (e.itens.grafico) quadroGrafico(g, 56, 16, 22, 18);
+      if (e.itens.grafico) quadroGrafico(g, 60, 6, 22, 16);
       if (e.itens.logo) {
         g.fillStyle = CONTORNO; g.fillRect(83, 18, 18, 18);
         g.fillStyle = '#ffffff'; g.fillRect(84, 19, 16, 16);
@@ -195,10 +195,10 @@
         g.fillStyle = GRAFITE; g.fillRect(85, 33, 14, 1);
       }
       if (e.itens.quadros) {
-        g.fillStyle = CONTORNO; g.fillRect(45, 22, 8, 9); g.fillStyle = '#f4efe6'; g.fillRect(46, 23, 6, 7);
-        g.fillStyle = '#6aa5d8'; g.fillRect(47, 26, 4, 3); g.fillStyle = '#f2c14e'; g.fillRect(49, 24, 2, 2);
-        g.fillStyle = CONTORNO; g.fillRect(46, 34, 6, 6); g.fillStyle = '#ffffff'; g.fillRect(47, 35, 4, 4);
-        g.fillStyle = VERDE; g.fillRect(48, 36, 2, 2);
+        g.fillStyle = CONTORNO; g.fillRect(50, 22, 8, 9); g.fillStyle = '#f4efe6'; g.fillRect(51, 23, 6, 7);
+        g.fillStyle = '#6aa5d8'; g.fillRect(52, 26, 4, 3); g.fillStyle = '#f2c14e'; g.fillRect(54, 24, 2, 2);
+        g.fillStyle = CONTORNO; g.fillRect(51, 34, 6, 6); g.fillStyle = '#ffffff'; g.fillRect(52, 35, 4, 4);
+        g.fillStyle = VERDE; g.fillRect(53, 36, 2, 2);
       }
     });
   }
@@ -220,8 +220,8 @@
       g.fillStyle = tom(e.rodape, 0.55); g.fillRect(0, h - 4, w, 1);
       if (e.itens.quadros) {
         // certificado
-        g.fillStyle = CONTORNO; g.fillRect(95, 20, 11, 9); g.fillStyle = '#fffdf3'; g.fillRect(96, 21, 9, 7);
-        g.fillStyle = '#c9b27a'; g.fillRect(97, 22, 7, 1); g.fillRect(97, 24, 5, 1); g.fillStyle = '#d4483b'; g.fillRect(102, 25, 2, 2);
+        g.fillStyle = CONTORNO; g.fillRect(70, 6, 11, 9); g.fillStyle = '#fffdf3'; g.fillRect(71, 7, 9, 7);
+        g.fillStyle = '#c9b27a'; g.fillRect(72, 8, 7, 1); g.fillRect(72, 10, 5, 1); g.fillStyle = '#d4483b'; g.fillRect(77, 11, 2, 2);
       }
     });
   }
@@ -349,58 +349,116 @@
   }
 
   // ------------------------------------------------------------------ móveis
-  function mesa(ctx, e) {
-    const c = e.mesa, X = 26, Y = 30, w = 18, d = 40;
-    for (const [x, y] of [[X + 1, Y + 1], [X + w - 3, Y + 1]]) prisma(ctx, { X: x, Y: y, w: 2, d: 2, h: 11, cor: tom(c, 0.75) });
-    prisma(ctx, { X: X + 1, Y: Y + d - 13, w: w - 2, d: 12, Z: 0, h: 11, cor: tom(c, 0.92) }); // gaveteiro
-    const dr = tex('gav' + c, 12, 11, (g, w, h) => {
+  // Planta da sala (X para baixo-direita, Y para baixo-esquerda; 0..108).
+  const LAY = KM.LAYOUT = {
+    assentos: {
+      noticias: { X: 12, Y: 74, dir: 'fd', pe: [12, 86], caminho: [[12, 100], [44, 100]], tapete: [52, 92] },
+      checklist: { X: 42, Y: 14, dir: 'fe', pe: [52, 15], caminho: [[62, 18], [66, 46]], tapete: [64, 80] },
+      prospeccao: { X: 84, Y: 26, dir: 'fe', pe: [73, 26], caminho: [[68, 30], [68, 64]], tapete: [76, 94] },
+    },
+    tapete: { X: 44, Y: 68, w: 40, d: 36 },
+    centro: [64, 86],
+    porta: { Y0: 30, Y1: 46, alto: 44 },
+  };
+
+  function texGaveta(c, w, h) {
+    return tex('gav' + c + w + 'x' + h, w, h, (g, w, h) => {
       g.fillStyle = tom(c, 0.62); g.fillRect(0, 0, w, h);
-      g.fillStyle = tom(c, 0.45); g.fillRect(0, 5, w, 1); moldura(g, w, h, tom(c, 0.4), 'blr');
-      g.fillStyle = '#d8d2c4'; g.fillRect(5, 2, 3, 1); g.fillRect(5, 8, 3, 1);
+      g.fillStyle = tom(c, 0.45); g.fillRect(0, Math.floor(h / 2), w, 1); moldura(g, w, h, tom(c, 0.4), 'blr');
+      g.fillStyle = '#d8d2c4'; g.fillRect(Math.floor(w / 2) - 1, 2, 3, 1); g.fillRect(Math.floor(w / 2) - 1, h - 3, 3, 1);
     });
-    face(ctx, dr, MAT.paredeE, ...P(X + w - 1, Y + d - 1, 11));
-    for (const [x, y] of [[X + 1, Y + d - 3], [X + w - 3, Y + d - 3]]) if (y < Y + d - 13) prisma(ctx, { X: x, Y: y, w: 2, d: 2, h: 11, cor: tom(c, 0.75) });
+  }
+  // Mesa: tampo em Z 11..14, pernas e um gaveteiro. gav: 'fimY' (gaveteiro no fim do eixo Y) ou 'fimX'.
+  function mesaTrabalho(ctx, c, X, Y, w, d, gav) {
+    const perna = (x, y) => prisma(ctx, { X: x, Y: y, w: 2, d: 2, h: 11, cor: tom(c, 0.75) });
+    perna(X + 1, Y + 1);
+    if (gav === 'fimY') {
+      perna(X + w - 3, Y + 1);
+      prisma(ctx, { X: X + 1, Y: Y + d - 13, w: w - 2, d: 12, h: 11, cor: tom(c, 0.92) });
+      face(ctx, texGaveta(c, 12, 11), MAT.paredeE, ...P(X + w - 1, Y + d - 1, 11));
+    } else {
+      perna(X + 1, Y + d - 3);
+      prisma(ctx, { X: X + w - 13, Y: Y + 1, w: 12, d: d - 2, h: 11, cor: tom(c, 0.92) });
+      face(ctx, texGaveta(c, 12, 11), MAT.paredeD, ...P(X + w - 13, Y + d - 1, 11));
+    }
     prisma(ctx, { X, Y, Z: 11, w, d, h: 3, cor: c });
   }
 
-  function itensMesa(ctx, e, estado, t) {
-    // papéis, livros, caneca, teclado e monitor
-    prisma(ctx, { X: 35, Y: 60, Z: 14, w: 7, d: 8, h: 1, cor: '#f7f7f2' });
-    prisma(ctx, { X: 36, Y: 61, Z: 15, w: 6, d: 6, h: 1, cor: '#ffffff' });
-    prisma(ctx, { X: 32, Y: 32, Z: 14, w: 9, d: 6, h: 2, cor: '#3f7fc1' });
-    prisma(ctx, { X: 33, Y: 32, Z: 16, w: 8, d: 6, h: 2, cor: '#2E8B45' });
-    prisma(ctx, { X: 32, Y: 33, Z: 18, w: 8, d: 5, h: 2, cor: '#e2b33c' });
-    // caneca KWIK
-    prisma(ctx, { X: 29, Y: 63, Z: 14, w: 3, d: 3, h: 4, cor: '#ffffff', corDir: '#dcdcd5', corEsq: '#efefea' });
-    const [mx, my] = P(31, 65, 18);
+  function adesivo(ctx, m, X, Y, Z) {
+    const s = tex('adesivo', 6, 6, g => { g.fillStyle = '#ffffff'; g.fillRect(0, 0, 6, 6); simboloPixel(g, 0, 0, 0.5, VERDE); });
+    face(ctx, s, m, ...P(X, Y, Z));
+  }
+  function brilhoTela(ctx, x, y, w, h, t, matrix) {
+    ctx.fillStyle = matrix ? 'rgba(80,255,130,0.25)' : 'rgba(120,230,160,' + (0.18 + 0.08 * Math.sin(t * 10)) + ')';
+    ctx.fillRect(Math.round(x), Math.round(y), w, h);
+  }
+  function caneca(ctx, X, Y, fumaca, t) {
+    prisma(ctx, { X, Y, Z: 14, w: 3, d: 3, h: 4, cor: '#ffffff', corDir: '#dcdcd5', corEsq: '#efefea' });
+    const [mx, my] = P(X + 2, Y + 2, 18);
     ctx.fillStyle = VERDE; ctx.fillRect(Math.round(mx) - 2, Math.round(my) + 2, 1, 1);
-    if (estado.cafe) for (let i = 0; i < 3; i++) {
+    if (fumaca) for (let i = 0; i < 3; i++) {
       const fy = (t * 8 + i * 4) % 10;
-      ctx.fillStyle = `rgba(255,255,255,${0.6 - fy / 18})`; ctx.fillRect(Math.round(mx) - 2 + Math.round(Math.sin(t * 3 + i) * 1), Math.round(my) - 2 - fy, 1, 1);
-    }
-    // teclado
-    prisma(ctx, { X: 27, Y: 46, Z: 14, w: 5, d: 12, h: 1, cor: '#2b3135' });
-    // monitor (costas para a gente, tela virada para o funcionário)
-    prisma(ctx, { X: 34, Y: 48, Z: 14, w: 4, d: 4, h: 1, cor: '#30363a' });
-    prisma(ctx, { X: 35, Y: 49, Z: 15, w: 2, d: 2, h: 5, cor: '#30363a' });
-    const brilho = estado.tv && estado.tv.modo === 'trabalhando';
-    prisma(ctx, { X: 33, Y: 42, Z: 19, w: 3, d: 16, h: 12, cor: '#3a4246' });
-    const [lx, ly] = P(33, 58, 31);
-    if (e.itens.logo) { // adesivo KWIK nas costas do monitor
-      const s = tex('adesivo', 6, 6, g => { g.fillStyle = '#ffffff'; g.fillRect(0, 0, 6, 6); simboloPixel(g, 0, 0, 0.5, VERDE); });
-      face(ctx, s, MAT.paredeE, ...P(36, 53, 28));
-    }
-    if (brilho || estado.matrix) {
-      ctx.fillStyle = estado.matrix ? 'rgba(80,255,130,0.25)' : 'rgba(120,230,160,' + (0.18 + 0.08 * Math.sin(t * 10)) + ')';
-      ctx.fillRect(Math.round(lx) - 2, Math.round(ly) - 4, 16, 14);
+      ctx.fillStyle = `rgba(255,255,255,${0.6 - fy / 18})`; ctx.fillRect(Math.round(mx) - 2 + Math.round(Math.sin(t * 3 + i)), Math.round(my) - 2 - fy, 1, 1);
     }
   }
 
-  function cadeira(ctx, e, ocupada) {
+  // Léo (notícias): olha para +X.
+  function mesaLeo(ctx, e, estado, t) {
+    mesaTrabalho(ctx, e.mesa, 24, 56, 16, 36, 'fimY');
+    prisma(ctx, { X: 30, Y: 57, Z: 14, w: 9, d: 6, h: 2, cor: '#3f7fc1' });
+    prisma(ctx, { X: 31, Y: 57, Z: 16, w: 8, d: 6, h: 2, cor: '#2E8B45' });
+    prisma(ctx, { X: 30, Y: 58, Z: 18, w: 8, d: 5, h: 2, cor: '#e2b33c' });
+    prisma(ctx, { X: 33, Y: 84, Z: 14, w: 6, d: 7, h: 1, cor: '#f7f7f2' });
+    caneca(ctx, 26, 85, estado.cafe, t);
+    prisma(ctx, { X: 25, Y: 68, Z: 14, w: 5, d: 12, h: 1, cor: '#2b3135' });
+    prisma(ctx, { X: 32, Y: 72, Z: 14, w: 4, d: 4, h: 1, cor: '#30363a' });
+    prisma(ctx, { X: 33, Y: 73, Z: 15, w: 2, d: 2, h: 5, cor: '#30363a' });
+    prisma(ctx, { X: 31, Y: 66, Z: 19, w: 3, d: 16, h: 12, cor: '#3a4246' });
+    if (e.itens.logo) adesivo(ctx, MAT.paredeE, 34, 77, 28);
+    if ((estado.tv && estado.tv.modo === 'trabalhando') || estado.matrix) { const [lx, ly] = P(31, 82, 31); brilhoTela(ctx, lx - 2, ly - 4, 16, 14, t, estado.matrix); }
+  }
+
+  // Clara (checklist): olha para +Y, notebook e prancheta.
+  function mesaClara(ctx, e, estado, t) {
+    mesaTrabalho(ctx, e.mesa, 24, 24, 36, 14, 'fimX');
+    prisma(ctx, { X: 26, Y: 27, Z: 14, w: 8, d: 9, h: 1, cor: '#8d5a3b' });
+    const papel = tex('papelP', 6, 7, g => { g.fillStyle = '#fff'; g.fillRect(0, 0, 6, 7); g.fillStyle = '#9aa3a1'; for (let y = 1; y < 7; y += 2) g.fillRect(1, y, 4, 1); g.fillStyle = VERDE; g.fillRect(1, 1, 1, 1); });
+    face(ctx, papel, MAT.chao, ...P(27, 28, 15));
+    prisma(ctx, { X: 29, Y: 27, Z: 15, w: 2, d: 1, h: 1, cor: '#adb5bd' });
+    prisma(ctx, { X: 37, Y: 25, Z: 14, w: 11, d: 5, h: 1, cor: '#c9ced4' });
+    prisma(ctx, { X: 37, Y: 30, Z: 14, w: 11, d: 1, h: 9, cor: '#aeb4bb' });
+    if (e.itens.logo) adesivo(ctx, MAT.paredeD, 40, 31, 22);
+    prisma(ctx, { X: 52, Y: 26, Z: 14, w: 3, d: 3, h: 5, cor: '#ff8fb1' });
+    const [px, py] = P(53, 27, 19); ctx.fillStyle = '#3f7fc1'; ctx.fillRect(Math.round(px), Math.round(py) - 3, 1, 3); ctx.fillStyle = '#c9453a'; ctx.fillRect(Math.round(px) + 1, Math.round(py) - 2, 1, 2);
+    caneca(ctx, 56, 31, false, t);
+    if (estado.trabalhoDe && estado.trabalhoDe.checklist) { const [lx, ly] = P(37, 31, 23); brilhoTela(ctx, lx, ly - 1, 12, 9, t); }
+  }
+
+  // Maycon (prospecção): olha para +Y; telefone, câmera e fotos.
+  function mesaMaycon(ctx, e, estado, t) {
+    mesaTrabalho(ctx, e.mesa, 76, 36, 16, 28, 'fimY');
+    prisma(ctx, { X: 80, Y: 37, Z: 14, w: 9, d: 3, h: 1, cor: '#2b3135' });
+    prisma(ctx, { X: 83, Y: 42, Z: 14, w: 4, d: 3, h: 1, cor: '#30363a' });
+    prisma(ctx, { X: 84, Y: 43, Z: 15, w: 2, d: 1, h: 4, cor: '#30363a' });
+    prisma(ctx, { X: 79, Y: 41, Z: 19, w: 12, d: 2, h: 10, cor: '#3a4246' });
+    if (e.itens.logo) adesivo(ctx, MAT.paredeD, 82, 43, 27);
+    prisma(ctx, { X: 77, Y: 46, Z: 14, w: 4, d: 4, h: 2, cor: '#c9453a' });
+    prisma(ctx, { X: 77, Y: 46, Z: 16, w: 4, d: 1, h: 1, cor: '#8f2a22' });
+    prisma(ctx, { X: 79, Y: 54, Z: 14, w: 6, d: 5, h: 1, cor: '#ffffff' });
+    const foto = tex('fotoM', 5, 4, g => { g.fillStyle = '#fff'; g.fillRect(0, 0, 5, 4); g.fillStyle = '#6aa5d8'; g.fillRect(1, 1, 3, 2); });
+    face(ctx, foto, MAT.chao, ...P(80, 55, 15));
+    const comCamera = Object.values(estado.pessoas || {}).some(p => p.funcao === 'prospeccao' && p.prop === 'camera');
+    if (!comCamera) { prisma(ctx, { X: 86, Y: 50, Z: 14, w: 4, d: 3, h: 3, cor: '#222629' }); const [cx, cy] = P(88, 53, 16); ctx.fillStyle = '#5c6670'; ctx.fillRect(Math.round(cx) - 1, Math.round(cy) - 1, 2, 2); }
+    if (estado.trabalhoDe && estado.trabalhoDe.prospeccao) { const [lx, ly] = P(79, 43, 29); brilhoTela(ctx, lx - 1, ly - 1, 14, 10, t); }
+  }
+
+  function cadeira(ctx, e, X, Y, dir, ocupada) {
     const c = e.cadeira;
-    prisma(ctx, { X: 12, Y: 48, w: 2, d: 2, h: 7, cor: '#55595c' });
-    prisma(ctx, { X: 8, Y: 44, Z: 7, w: 10, d: 10, h: 2, cor: c });
-    prisma(ctx, { X: 6, Y: 44, Z: 9, w: 2, d: 10, h: ocupada ? 12 : 13, cor: tom(c, 1.05) });
+    prisma(ctx, { X: X - 1, Y: Y - 1, w: 2, d: 2, h: 7, cor: '#55595c' });
+    prisma(ctx, { X: X - 5, Y: Y - 5, Z: 7, w: 10, d: 10, h: 2, cor: c });
+    const alt = ocupada ? 12 : 13;
+    if (dir === 'fd') prisma(ctx, { X: X - 7, Y: Y - 5, Z: 9, w: 2, d: 10, h: alt, cor: tom(c, 1.05) });
+    else prisma(ctx, { X: X - 5, Y: Y - 7, Z: 9, w: 10, d: 2, h: alt, cor: tom(c, 1.05) });
   }
 
   function gaveteiroPlanta(ctx, e, t) {
@@ -411,7 +469,6 @@
       g.fillStyle = '#9aa3a1'; g.fillRect(6, 3, 3, 1); g.fillRect(6, 9, 3, 1); g.fillRect(6, 15, 3, 1);
     });
     face(ctx, fr, MAT.paredeD, ...P(2, 14, 18));
-    // vaso + planta (sprite em pé)
     const [px, py] = P(9, 8, 18);
     const x = Math.round(px), y = Math.round(py);
     ctx.fillStyle = '#b5532f'; ctx.fillRect(x - 3, y - 5, 6, 5); ctx.fillStyle = '#8f3f22'; ctx.fillRect(x - 3, y - 5, 6, 1);
@@ -422,8 +479,8 @@
   }
 
   function lixeira(ctx) {
-    prisma(ctx, { X: 4, Y: 78, w: 6, d: 6, h: 7, cor: '#8b2f2a' });
-    const [x, y] = P(7, 81, 7); ctx.fillStyle = '#5e1e1a'; ctx.fillRect(Math.round(x) - 2, Math.round(y) - 1, 4, 2);
+    prisma(ctx, { X: 4, Y: 50, w: 6, d: 6, h: 7, cor: '#8b2f2a' });
+    const [x, y] = P(7, 53, 7); ctx.fillStyle = '#5e1e1a'; ctx.fillRect(Math.round(x) - 2, Math.round(y) - 1, 4, 2);
     ctx.fillStyle = '#ffffff'; ctx.fillRect(Math.round(x) - 1, Math.round(y) - 3, 2, 2);
   }
 
@@ -433,11 +490,10 @@
   }
 
   function cofre(ctx, caixa, t) {
-    prisma(ctx, { X: 90, Y: 22, w: 14, d: 14, h: 18, cor: '#5b636a', esq: texCofre(14, 18) });
-    // pilhas de moedas que crescem com o caixa
+    prisma(ctx, { X: 92, Y: 78, w: 14, d: 14, h: 18, cor: '#5b636a', esq: texCofre(14, 18) });
     const pilhas = Math.min(4, Math.ceil(caixa / 600));
     const alturaTot = Math.min(4 * 10, Math.floor(caixa / 60));
-    const pos = [[84, 42], [90, 44], [80, 48], [96, 42]];
+    const pos = [[88, 98], [94, 100], [86, 104], [100, 98]];
     for (let i = 0; i < pilhas; i++) {
       const n = Math.max(1, Math.min(10, alturaTot - i * 10));
       const [x, y] = P(pos[i][0], pos[i][1], 0);
@@ -448,13 +504,53 @@
       }
       if (n >= 10 && Math.floor(t * 2 + i) % 6 === 0) { ctx.fillStyle = '#ffffff'; ctx.fillRect(Math.round(x) + 1, Math.round(y) - n * 2 - 1, 1, 1); }
     }
-    if (caixa >= 5000) { // saco de dinheiro
-      const [x, y] = P(100, 46, 0);
+    if (caixa >= 5000) {
+      const [x, y] = P(104, 100, 0);
       const bx = Math.round(x), by = Math.round(y);
       ctx.fillStyle = '#c9a65b'; ctx.fillRect(bx - 4, by - 8, 8, 8); ctx.fillRect(bx - 2, by - 10, 4, 2);
       ctx.fillStyle = '#8a6a2a'; ctx.fillRect(bx - 2, by - 9, 4, 1);
       texto(ctx, '$', bx - 1, by - 6, '#2E8B45');
     }
+  }
+
+  // Porta para a sala de jogos (parede esquerda).
+  function texPorta(aberta, destaque, t) {
+    const w = 16, h = 44, c = tela(w, h), g = c.getContext('2d');
+    g.fillStyle = CONTORNO; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#2a1f3d'; g.fillRect(1, 1, w - 2, h - 1);
+    if (aberta) {
+      g.fillStyle = '#3b2a5c'; g.fillRect(2, 2, w - 4, h - 2);
+      for (let i = 0; i < 6; i++) { g.fillStyle = ['#ff4fd8', '#3fb6ff', '#ffd93b'][(i + Math.floor(t * 3)) % 3]; g.fillRect(3 + (i * 5) % 10, 6 + i * 6, 2, 1); }
+      g.fillStyle = '#7b5a3a'; g.fillRect(1, 1, 4, h - 1); g.fillStyle = '#5e4229'; g.fillRect(1, 1, 1, h - 1);
+    } else {
+      g.fillStyle = '#7b5a3a'; g.fillRect(1, 1, w - 2, h - 1);
+      g.fillStyle = '#6a4c30'; g.fillRect(3, 4, w - 6, 15); g.fillRect(3, 23, w - 6, 18);
+      g.fillStyle = '#8d6a46'; g.fillRect(3, 4, w - 6, 1); g.fillRect(3, 23, w - 6, 1);
+      g.fillStyle = '#e6c04a'; g.fillRect(w - 4, 24, 2, 2);
+    }
+    if (destaque) { g.fillStyle = '#ff4fd8'; g.fillRect(0, 0, w, 1); g.fillRect(0, 0, 1, h); g.fillRect(w - 1, 0, 1, h); }
+    return c;
+  }
+  function placaJogos(t) {
+    const c = tela(18, 7), g = c.getContext('2d');
+    g.fillStyle = '#1a1030'; g.fillRect(0, 0, 18, 7);
+    texto(g, 'PLAY', 2, 1, Math.floor(t * 2) % 2 ? '#ff4fd8' : '#ff8ae6');
+    return c;
+  }
+
+  // Mural de fotos do Maycon (parede direita).
+  function texMural(fotos) {
+    const w = 14, h = 12, c = tela(w, h), g = c.getContext('2d');
+    g.fillStyle = '#6b4a2a'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#c99a62'; g.fillRect(1, 1, w - 2, h - 2);
+    const pos = [[2, 2], [7, 2], [2, 7], [7, 7], [5, 4], [9, 5]];
+    for (let i = 0; i < Math.min(fotos, pos.length); i++) {
+      const [x, y] = pos[i];
+      g.fillStyle = '#ffffff'; g.fillRect(x, y, 4, 4);
+      g.fillStyle = ['#6aa5d8', '#28BE52', '#f2c14e', '#ff8fb1', '#c9453a', '#7B4FBF'][i]; g.fillRect(x + 1, y + 1, 2, 2);
+      g.fillStyle = '#c9453a'; g.fillRect(x + 1, y, 1, 1);
+    }
+    return c;
   }
 
   // ------------------------------------------------------------------ personagem
@@ -493,16 +589,18 @@
   KM.sprite = sprite;
 
   // ------------------------------------------------------------------ cena completa
-  // Objetos com profundidade (X+Y). O personagem entra na ordenação.
   function objetos(cfg, estado, t) {
-    const e = cfg.escritorio, it = e.itens;
+    const e = cfg.escritorio, it = e.itens, A = LAY.assentos;
+    const sentado = f => Object.values(estado.pessoas || {}).some(p => p.funcao === f && p.modo === 'sentado' && p.visivel !== false && !p.naSalaJogos);
     const lista = [];
     if (it.planta) lista.push({ p: 16, f: c => gaveteiroPlanta(c, e, t) });
-    if (it.estante) lista.push({ p: 70, f: c => estante(c, e) });
-    if (it.cofre) lista.push({ p: 118, f: c => cofre(c, estado.caixa || 0, t) });
-    if (it.lixeira) lista.push({ p: 86, f: c => lixeira(c) });
-    lista.push({ p: 58, f: c => cadeira(c, e, estado.personagem && estado.personagem.modo === 'sentado') });
-    lista.push({ p: 84, f: c => { mesa(c, e); itensMesa(c, e, estado, t); } });
+    if (it.estante) lista.push({ p: 80, f: c => estante(c, e) });
+    if (it.cofre) lista.push({ p: 178, f: c => cofre(c, estado.caixa || 0, t) });
+    if (it.lixeira) lista.push({ p: 60, f: c => lixeira(c) });
+    for (const [f, a] of Object.entries(A)) lista.push({ p: a.X + a.Y - 4, f: c => cadeira(c, e, a.X, a.Y, a.dir, sentado(f)) });
+    lista.push({ p: 106, f: c => mesaLeo(c, e, estado, t) });
+    lista.push({ p: 73, f: c => mesaClara(c, e, estado, t) });
+    lista.push({ p: 134, f: c => mesaMaycon(c, e, estado, t) });
     return lista;
   }
 
@@ -512,9 +610,7 @@
     ctx.imageSmoothingEnabled = false;
     ctx.clearRect(0, 0, W, H);
 
-    // laje do chão + piso
     prisma(ctx, { X: 0, Y: 0, Z: -6, w: SALA, d: SALA, h: 6, topo: texPiso(e), corEsq: tom(e.corPiso, 0.6), corDir: tom(e.corPiso, 0.45) });
-    // paredes (canto, esquerda, direita) com espessura
     const capa = tom(e.parede, 0.62);
     prisma(ctx, { X: -4, Y: -4, w: 4, d: 4, Z: -6, h: PAREDE + 6, cor: capa, semEsq: true, semDir: true, corTopo: capa });
     prisma(ctx, { X: -4, Y: 0, Z: -6, w: 4, d: SALA, h: PAREDE + 6, corTopo: capa, corEsq: tom(e.parede, 0.5), semDir: true });
@@ -522,29 +618,27 @@
     prisma(ctx, { X: 0, Y: -4, Z: -6, w: SALA, d: 4, h: PAREDE + 6, corTopo: capa, corDir: tom(e.parede, 0.45), semEsq: true });
     face(ctx, texParedeD(e), MAT.paredeD, ...P(0, 0, PAREDE));
 
-    // itens dinâmicos nas paredes
     if (e.itens.janela) face(ctx, texJanela(cfg, t), MAT.paredeD, ...P(22, 0, PAREDE - 12));
     if (e.itens.relogio) face(ctx, texRelogio(), MAT.paredeD, ...P(56, 0, PAREDE - 12));
-    if (e.itens.tv) face(ctx, texTV(estado, t), MAT.paredeE, ...P(0, 104, PAREDE - 16));
+    if (e.itens.tv) face(ctx, texTV(estado, t), MAT.paredeE, ...P(0, 94, PAREDE - 16));
+    face(ctx, texMural((cfg.maycon && cfg.maycon.fotos) || 0), MAT.paredeD, ...P(94, 0, PAREDE - 18));
+    const pt = LAY.porta;
+    face(ctx, texPorta(estado.portaAberta, estado.portaHover, t), MAT.paredeE, ...P(0, pt.Y1, pt.alto));
+    face(ctx, placaJogos(t), MAT.paredeE, ...P(0, pt.Y1 - 1, pt.alto + 9));
 
-    // tapete
-    if (e.tapete) face(ctx, texTapete(e, 44, 44), MAT.chao, ...P(52, 50, 0));
+    if (e.tapete) face(ctx, texTapete(e, LAY.tapete.w, LAY.tapete.d), MAT.chao, ...P(LAY.tapete.X, LAY.tapete.Y, 0));
 
-    // sombra do personagem + objetos ordenados
     const lista = objetos(cfg, estado, t);
-    const pers = estado.personagem;
-    if (pers && pers.visivel !== false) lista.push({ p: pers.X + pers.Y, f: c => KM.desenharPersonagem(c, cfg, estado, t), depois: pers.modo === 'sentado' ? 1 : 0 });
+    const pessoas = Object.values(estado.pessoas || {}).filter(p => p.visivel !== false && !p.naSalaJogos);
+    for (const p of pessoas) lista.push({ p: p.X + p.Y + 0.5, f: c => KM.desenharPessoa(c, cfg, p, t) });
+    for (const x of estado.extras || []) lista.push(x); // objetos de cena (baú, sapo…)
     lista.sort((a, b) => a.p - b.p);
     for (const o of lista) o.f(ctx);
-    if (pers && pers.modo === 'sentado' && pers.visivel !== false) KM.desenharMaos(ctx, cfg, estado, t);
+    for (const p of pessoas) if (p.modo === 'sentado') KM.desenharMaos(ctx, cfg, p, t);
 
-    // luz da noite
-    if (KM.periodo(cfg) === 'noite') {
-      ctx.fillStyle = 'rgba(16,24,60,0.22)'; ctx.fillRect(0, 0, W, H);
-    }
+    if (KM.periodo(cfg) === 'noite') { ctx.fillStyle = 'rgba(16,24,60,0.22)'; ctx.fillRect(0, 0, W, H); }
   };
 
-  // posição na tela do personagem
   KM.ancora = function (pers) {
     if (pers.modo === 'sentado') { const [x, y] = P(pers.X, pers.Y, 0); return [Math.round(x), Math.round(y) - 2]; }
     const [x, y] = P(pers.X, pers.Y, pers.Z || 0);
@@ -555,47 +649,53 @@
   //          ce = costas p/ cima-esquerda (-X), cd = costas p/ cima-direita (-Y).
   KM.vistaDe = dir => ({ vista: dir === 'ce' || dir === 'cd' ? 'costas' : 'frente', espelho: dir === 'fd' || dir === 'cd' });
   const SPR_W = 30;
+  KM.aparenciaDe = (cfg, id) => { const f = cfg.funcionarios.find(x => x.id === id) || cfg.funcionarios[0]; return f.aparencia; };
+  const dirDe = p => p.dir || (p.modo === 'sentado' ? (LAY.assentos[p.funcao] || {}).dir || 'fd' : 'fe');
 
-  KM.desenharPersonagem = function (ctx, cfg, estado, t) {
-    const pers = estado.personagem;
-    const ap = cfg.funcionarios[0].aparencia;
-    const est = Object.assign({}, pers.est || {});
-    const dir = pers.dir || (pers.modo === 'sentado' ? 'fd' : 'fe');
-    const v = KM.vistaDe(dir);
-    est.vista = v.vista;
-    if (pers.modo === 'sentado') { est.pose = 'sentado'; est.bracos = est.bracos || 'frente'; }
+  KM.estDe = function (p) {
+    const est = Object.assign({}, p.est || {});
+    if (p.fantasia) est.fantasia = p.fantasia;
+    if (p.prop) est.prop = p.prop;
+    est.vista = KM.vistaDe(dirDe(p)).vista;
+    if (p.modo === 'sentado') { est.pose = 'sentado'; if (!est.bracos && !est.prop) est.bracos = 'frente'; }
+    return est;
+  };
+
+  KM.desenharPessoa = function (ctx, cfg, p, t, opc = {}) {
+    const ap = opc.aparencia || KM.aparenciaDe(cfg, p.id);
+    const v = KM.vistaDe(dirDe(p));
+    const est = KM.estDe(p);
     const s = sprite(ap, est);
-    const [ax, ay] = KM.ancora(pers);
-    const chao = ay + (pers.Z || 0);
-    if (pers.selecionado && pers.modo !== 'sentado') { // círculo verde no chão
+    const [ax, ay] = opc.ancora || KM.ancora(p);
+    const chao = ay + (p.Z || 0);
+    if (p.selecionado && p.modo !== 'sentado') {
       ctx.fillStyle = 'rgba(40,190,82,' + (0.35 + 0.2 * Math.sin(t * 5)) + ')';
       ctx.fillRect(ax - 10, chao - 1, 20, 2); ctx.fillRect(ax - 8, chao - 2, 16, 4);
     }
-    if (pers.modo !== 'sentado') { // sombra
+    if (p.modo !== 'sentado') {
       ctx.fillStyle = 'rgba(0,0,0,0.2)';
-      const so = (pers.Z || 0) > 0 ? 4 : 7;
+      const so = (p.Z || 0) > 0 ? 4 : 7;
       ctx.fillRect(ax - so, chao - 2, so * 2, 3); ctx.fillRect(ax - so + 2, chao - 3, so * 2 - 4, 5);
     }
-    if (pers.auraAtras) pers.auraAtras(ctx, ax, ay, t);
-    const ox = ax - 15, oy = pers.modo === 'sentado' ? ay - 37 : ay - 45;
+    if (p.auraAtras) p.auraAtras(ctx, ax, ay, t);
+    const ox = ax - 15, oy = p.modo === 'sentado' ? ay - 37 : ay - 45;
+    if (p.opacidade !== undefined) ctx.globalAlpha = p.opacidade;
     if (v.espelho) { ctx.save(); ctx.translate(ox + SPR_W, oy); ctx.scale(-1, 1); ctx.drawImage(s, 0, 0); ctx.restore(); }
     else ctx.drawImage(s, ox, oy);
-    const topo = est.saiyan ? 0 : ({ cacheado: 3, moicano: 1, coque: 1, careca: 6 }[ap.cabelo] ?? 5);
-    pers.cabecaTela = [ax, oy + 2 + topo + (ap.bone && !est.saiyan ? -2 : 0)];
+    ctx.globalAlpha = 1;
+    const topo = est.saiyan ? 0 : est.fantasia === 'mago' ? -4 : est.fantasia === 'pirata' ? 1 : ({ cacheado: 3, moicano: 1, coque: 1, careca: 6 }[ap.cabelo] ?? 5);
+    p.cabecaTela = [ax, oy + 2 + topo + (ap.bone && !est.saiyan ? -2 : 0)];
   };
 
-  // Antebraços e mãos no teclado (desenhados por cima da mesa). Sentado ele olha para a mesa (+X).
-  KM.desenharMaos = function (ctx, cfg, estado, t) {
-    const pers = estado.personagem;
-    if (!pers || pers.modo !== 'sentado' || pers.dormindo || (pers.est && pers.est.bracos && pers.est.bracos !== 'frente')) return;
-    const ap = cfg.funcionarios[0].aparencia, pele = ap.pele, peleS = KM.cor.tom(pele, 0.86);
-    const [ax, ay] = KM.ancora(pers);
-    const vel = pers.digitando ? (pers.turbo ? 26 : 12) : 0;
-    const a = vel ? (Math.floor(t * vel) % 2) : 0, b = vel ? 1 - a : 0;
-    const mao = (x, y, cor) => {
-      ctx.fillStyle = CONTORNO; ctx.fillRect(x - 1, y - 1, 5, 4);
-      ctx.fillStyle = cor; ctx.fillRect(x, y, 3, 2);
-    };
+  // Antebraços e mãos no teclado (por cima da mesa). fd = olha +X; fe = olha +Y (espelhado).
+  KM.desenharMaos = function (ctx, cfg, p, t) {
+    if (!p || p.modo !== 'sentado' || p.dormindo || p.prop || (p.est && p.est.bracos && p.est.bracos !== 'frente')) return;
+    const ap = KM.aparenciaDe(cfg, p.id), pele = ap.pele, peleS = KM.cor.tom(pele, 0.86);
+    const [ax, ay] = KM.ancora(p);
+    const s = dirDe(p) === 'fe' ? -1 : 1;
+    const vel = p.digitando ? (p.turbo ? 26 : 12) : 0;
+    const a = vel ? (Math.floor(t * vel + (p.fase || 0)) % 2) : 0, b = vel ? 1 - a : 0;
+    const mao = (x, y, cor) => { ctx.fillStyle = CONTORNO; ctx.fillRect(x - 1, y - 1, 5, 4); ctx.fillStyle = cor; ctx.fillRect(x, y, 3, 2); };
     const braco = (x0, y0, x1, y1, cor) => {
       const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0));
       for (let i = 0; i <= n; i++) { const x = Math.round(x0 + (x1 - x0) * i / n), y = Math.round(y0 + (y1 - y0) * i / n); ctx.fillStyle = CONTORNO; ctx.fillRect(x - 1, y - 1, 4, 4); }
@@ -603,18 +703,31 @@
     };
     const manga = ap.estiloCamisa === 'casual' || ap.estiloCamisa === 'kwik' || !ap.estiloCamisa;
     const corBraco = manga ? pele : ap.corCamisa, corLonge = manga ? peleS : KM.cor.tom(ap.corCamisa, 0.84);
-    braco(ax - 7, ay - 9, ax + 1, ay - 5 - b, corLonge);
-    braco(ax + 6, ay - 10, ax + 9, ay - 7 - a, corBraco);
-    mao(ax + 1, ay - 5 - b, peleS);
-    mao(ax + 9, ay - 7 - a, pele);
+    const X = dx => ax + dx * s - (s < 0 ? 2 : 0);
+    braco(X(-7), ay - 9, X(1), ay - 5 - b, corLonge);
+    braco(X(6), ay - 10, X(9), ay - 7 - a, corBraco);
+    mao(X(1) - (s < 0 ? 1 : 0), ay - 5 - b, peleS);
+    mao(X(9) - (s < 0 ? 1 : 0), ay - 7 - a, pele);
   };
 
-  // Ponto da tela → coordenadas lógicas (para cliques).
-  KM.acertouPersonagem = function (estado, x, y) {
-    const p = estado.personagem;
-    if (!p) return false;
-    const [ax, ay] = KM.ancora(p);
-    const topo = p.modo === 'sentado' ? ay - 37 : ay - 45;
-    return x >= ax - 11 && x <= ax + 11 && y >= topo + 4 && y <= ay;
+  // Quem está sob o ponto (x, y) da tela: devolve o id do mais à frente.
+  KM.pessoaEm = function (estado, x, y) {
+    let achou = null, melhor = -1;
+    for (const p of Object.values(estado.pessoas || {})) {
+      if (p.visivel === false || p.naSalaJogos) continue;
+      const [ax, ay] = KM.ancora(p);
+      const topo = p.modo === 'sentado' ? ay - 37 : ay - 45;
+      if (x >= ax - 11 && x <= ax + 11 && y >= topo + 4 && y <= ay && p.X + p.Y > melhor) { melhor = p.X + p.Y; achou = p.id; }
+    }
+    return achou;
   };
+  KM.naPorta = function (x, y) {
+    const pt = LAY.porta, [x0, yb0] = P(0, pt.Y1, 0), [x1, yb1] = P(0, pt.Y0, 0);
+    if (x < x0 || x > x1) return false;
+    const k = (x - x0) / (x1 - x0), base = yb0 + (yb1 - yb0) * k;
+    return y <= base && y >= base - pt.alto;
+  };
+
+  // utilidades para outras cenas (sala de jogos)
+  Object.assign(KM, { face, MAT, tex, solida, moldura, texRelogio, OX, OY, PAREDE, CONTORNO });
 })();
