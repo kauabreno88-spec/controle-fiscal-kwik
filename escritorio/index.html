@@ -74,7 +74,7 @@ main { max-width: 1320px; margin: 0 auto; padding: 18px 20px 40px; }
 .status-pill.trab i { background: var(--verde); animation: pisca 1s infinite; }
 @keyframes pisca { 50% { opacity: .2; } }
 .palco { position: relative; border-radius: 12px; overflow: hidden; background:
-  radial-gradient(ellipse at 50% 40%, #ffffff 0%, #eef3ee 60%, #e3ebe3 100%); aspect-ratio: 240 / 210; width: min(100%, calc((100vh - 200px) * 1.1428)); min-width: 280px; margin: 0 auto; user-select: none; }
+  radial-gradient(ellipse at 50% 40%, #ffffff 0%, #eef3ee 60%, #e3ebe3 100%); aspect-ratio: 300 / 248; width: min(100%, calc((100vh - 200px) * 1.2097)); min-width: 280px; margin: 0 auto; user-select: none; }
 .palco.noite { background: radial-gradient(ellipse at 50% 40%, #2a3550 0%, #182033 70%, #111726 100%); }
 #tela { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; image-rendering: crisp-edges; cursor: pointer; }
 .cracha { position: absolute; transform: translate(-50%, -100%); background: var(--grafite); color: #fff; font-weight: 800; font-size: 13px;
@@ -250,20 +250,11 @@ dialog::backdrop { background: rgba(17,26,25,.55); backdrop-filter: blur(2px); }
 .menu-anim button.grupo { background: #eef6ff; border-color: #a5d8ff; }
 .menu-anim button.filme { grid-column: 1 / -1; background: linear-gradient(135deg, #2b0a14, #5c0f24); color: #ffd6de; border-color: #8f1d36; }
 .bt.jogos { background: linear-gradient(135deg, #3b2a5c, #6b2a7a); color: #fff; border-color: #6b2a7a; }
-#btVoltarEscritorio { display: none; }
 
-/* ---------- sala de jogos (muda o layout) */
-.painel-jogos { display: none; }
-.modo-jogos .lateral:not(.painel-jogos) { display: none; }
-.modo-jogos .painel-jogos { display: flex; }
-.modo-jogos #btSelecionar, .modo-jogos #btTrabalhar, .modo-jogos #btAnimacoes, .modo-jogos #btSalaJogos { display: none; }
-.modo-jogos #btVoltarEscritorio { display: inline-flex; }
-.modo-jogos .topo { background: linear-gradient(90deg, #1a1030, #3b1452); }
-.modo-jogos .abas button.ativa { background: #ff4fd8; }
-.modo-jogos .palco { background: radial-gradient(ellipse at 50% 40%, #3b2a5c 0%, #1f1535 70%, #140d24 100%); }
-.modo-jogos .palco-card { background: #1d1530; border-color: #3b2a5c; color: #f3e8ff; }
-.modo-jogos .palco-topo h1 span { color: #ff4fd8; }
-.modo-jogos .status-pill { background: #2b2046; color: #d0bfff; }
+/* ---------- sala de jogos (cômodo ao lado, acende a luz) */
+.painel-jogos { display: none !important; }
+.modo-jogos .painel-jogos { display: block !important; }
+.modo-jogos .topo { background: linear-gradient(90deg, #111A19 40%, #3b1452); }
 .jogo-card h3 { margin: 0 0 6px; }
 .jogo-card .jogo-nome { display: block; font-size: 17px; font-weight: 900; }
 .jogo-card p { font-size: 13px; margin: 6px 0 0; color: var(--cinza); font-weight: 600; }
@@ -280,9 +271,20 @@ dialog::backdrop { background: rgba(17,26,25,.55); backdrop-filter: blur(2px); }
 .jogo-bts { display: flex; gap: 6px; flex-wrap: wrap; }
 .jogo-bts .bt { background: #2b2046; color: #fff; border-color: #4c3a75; }
 .jogo-bts .bt:disabled { opacity: .35; }
-.jogo-area { position: relative; min-height: 340px; height: min(60vh, 520px); display: grid; place-items: center; background: radial-gradient(ellipse at 50% 30%, #fff4e6 0%, #ffe3c2 60%, #f5c99a 100%); border-radius: 14px; overflow: hidden; touch-action: none; }
+.jogo-area { position: relative; min-height: 360px; height: min(64vh, 560px); display: grid; place-items: center; background: repeating-linear-gradient(90deg, #a87545 0 22px, #9c6a3c 22px 44px); border-radius: 14px; overflow: hidden; touch-action: none; }
 #jogoCanvas { image-rendering: pixelated; cursor: pointer; }
-.jogo-dica { font-size: 12.5px; color: #cdb8ff; margin: 10px 2px 0; }
+.jogo-dica { font-size: 12.5px; color: var(--cinza); margin: 10px 2px 0; line-height: 1.5; }
+.jogando .palco-card { background: #2b1d4a; border-color: #4c3a75; color: #f3e8ff; }
+.jogando .jogo-dica { color: #d6c8ff; }
+.relogio-jogo { background: linear-gradient(135deg, #7048e8, #9c36b5); color: #fff; font-weight: 900; font-size: 20px; padding: 6px 14px; border-radius: 99px; font-variant-numeric: tabular-nums; box-shadow: 0 3px 0 #4c2fa3; }
+.relogio-jogo.alerta { background: linear-gradient(135deg, #e03131, #f76707); animation: pisca .8s infinite; }
+.relogio-jogo.gelo { background: linear-gradient(135deg, #4dabf7, #99e9f2); color: #0b3d5c; }
+.reforcos { display: flex; gap: 12px; justify-content: center; margin-top: 12px; }
+.reforco { width: 84px; border: 0; border-radius: 50%; aspect-ratio: 1; background: radial-gradient(circle at 35% 30%, #d0bfff, #7048e8); color: #fff; font-size: 26px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 4px 0 #4c2fa3; cursor: pointer; }
+.reforco small { font-size: 11px; font-weight: 800; }
+.reforco.on { outline: 4px solid #ffd43b; }
+.reforco:active { transform: translateY(2px); }
 .jogo-vitoria { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(29,21,48,.82); color: #fff; text-align: center; padding: 20px; }
 .jogo-vitoria[hidden] { display: none; }
 .jogo-vitoria .estrelas { font-size: 40px; letter-spacing: 4px; animation: pulso .8s; }
@@ -376,6 +378,7 @@ dialog.prancheta { background: transparent; box-shadow: none; max-width: 560px; 
   .form-tarefa button { grid-column: 1 / -1; justify-content: center; }
   .jogo-area { height: 58vh; }
   .jogando .painel-jogos { display: none !important; }
+  .reforco { width: 74px; }
   .jogo-hud { gap: 6px; }
   .jogo-bts .bt { padding: 6px 8px; }
   dialog { max-height: 88vh; }
@@ -408,38 +411,40 @@ dialog.prancheta { background: transparent; box-shadow: none; max-width: 560px; 
           <div class="status-pill" id="statusPill"><i></i><span>Livre</span></div>
         </div>
         <div class="palco" id="palco">
-          <canvas id="tela" width="240" height="210"></canvas>
+          <canvas id="tela" width="300" height="248"></canvas>
           <div class="banner" id="banner"></div>
         </div>
         <div class="tela-jogo" id="telaJogo">
           <div class="jogo-hud">
-            <button class="bt peq" id="jogoSair">⬅ Sala</button>
-            <div class="jogo-info"><b>🐱 Gatinhos em Ordem</b><span>Fase <b id="jogoFase">1</b> · Jogadas <b id="jogoJogadas">0</b> · Meta ≈ <b id="jogoMinimo">0</b></span></div>
+            <button class="bt peq" id="jogoSair">⬅ Sair</button>
+            <div class="jogo-info"><b>🐱 Gatinhos em Casa</b><span>Nível <b id="casaNivel">1</b></span></div>
+            <div class="relogio-jogo" id="casaTempo">00:00</div>
             <div class="jogo-bts">
-              <button class="bt peq" id="jogoAnterior" title="Fase anterior">◀</button>
-              <button class="bt peq" id="jogoDesfazer">↩️ Desfazer</button>
-              <button class="bt peq" id="jogoDica">💡 Dica</button>
-              <button class="bt peq" id="jogoReiniciar" title="Recomeçar a fase">🔄</button>
-              <button class="bt peq" id="jogoProxima" title="Próxima fase">▶</button>
+              <button class="bt peq" id="jogoAnterior" title="Nível anterior">◀</button>
+              <button class="bt peq" id="jogoReiniciar" title="Recomeçar o nível">🔄</button>
             </div>
           </div>
           <div class="jogo-area" id="jogoArea">
-            <canvas id="jogoCanvas" width="100" height="100"></canvas>
-            <div class="jogo-vitoria" id="jogoVitoria" hidden>
-              <div class="estrelas" id="vitoriaEstrelas">⭐⭐⭐</div>
-              <h2>Fase concluída! 🐱</h2>
-              <p id="vitoriaTexto"></p>
-              <button class="bt prim" id="vitoriaProxima">Próxima fase ▶</button>
+            <canvas id="jogoCanvas" width="160" height="200"></canvas>
+            <div class="jogo-vitoria" id="jogoFim" hidden>
+              <div class="estrelas" id="fimIcone">⭐⭐⭐</div>
+              <h2 id="fimTitulo">Todos os gatinhos em casa!</h2>
+              <p id="fimTexto"></p>
+              <button class="bt prim" id="fimBotao">Próximo nível ▶</button>
             </div>
           </div>
-          <p class="jogo-dica">Toque numa caixa e depois em outra — ou <b>deslize</b> de uma caixa para outra. O gatinho só entra numa caixa vazia ou em cima de outro da <b>mesma cor</b>. Deixe cada caixa com uma cor só!</p>
+          <div class="reforcos">
+            <button class="reforco" id="btGelo" title="Congela o tempo por 20 s">❄️<small>R$ 20</small></button>
+            <button class="reforco" id="btMartelo" title="Manda um gatinho direto para a caminha">🔨<small>R$ 30</small></button>
+            <button class="reforco" id="btDica" title="Mostra qual caminha mover">💡<small><b id="casaDicas">3</b> dicas</small></button>
+          </div>
+          <p class="jogo-dica"><b>Arraste as caminhas</b> pelo tabuleiro. Quando uma caminha passa por cima de gatinhos da <b>mesma cor</b>, eles pulam para dentro. O número é quantos ainda faltam; caminha cheia vai embora. Gatos de outra cor e outras caminhas bloqueiam o caminho. A seta ⇕ ⇔ indica que a caminha só anda naquela direção. Leve todos para casa antes do tempo acabar!</p>
         </div>
         <div class="acoes">
           <button class="bt" id="btSelecionar">👤 <span class="so-pc">Selecionar </span>funcionário</button>
           <button class="bt prim" id="btTrabalhar">▶ Trabalhar</button>
           <button class="bt" id="btAnimacoes">✨ Animações</button>
-          <button class="bt jogos" id="btSalaJogos">🎮 <span class="so-pc">Sala de </span>jogos</button>
-          <button class="bt jogos" id="btVoltarEscritorio">⬅ Voltar ao escritório</button>
+          <button class="bt jogos" id="btSalaJogos">💡 <span class="so-pc">Sala de </span>jogos</button>
           <div class="menu-anim" id="menuAnim">
             <h4>Transformações</h4>
             <button class="ss" data-anim="ss1">⚡ Super Sayajin</button>
@@ -472,6 +477,15 @@ dialog.prancheta { background: transparent; box-shadow: none; max-width: 560px; 
       </div>
 
       <aside class="lateral">
+        <div class="card jogo-card destaque painel-jogos" id="painelJogos">
+          <div class="jogo-capa">🐱🛏️🐱</div>
+          <h3>Sala de jogos acesa</h3>
+          <b class="jogo-nome">Gatinhos em Casa</b>
+          <p>Arraste as caminhas coloridas e leve cada gatinho para a caminha da sua cor.</p>
+          <div class="nums"><div><small>Nível</small><b id="casaFase">1</b></div><div><small>Estrelas</small><b id="casaEstrelas">0</b></div></div>
+          <button class="bt prim" id="btJogarCasa" style="width:100%;justify-content:center;margin-top:12px">🕹️ Jogar no fliperama</button>
+          <small class="vazio">Cada nível vencido rende moedas para o caixa 💰 · Sinuca e cartas chegam em breve.</small>
+        </div>
         <div class="card">
           <h3>Funcionário</h3>
           <div class="func">
@@ -502,19 +516,7 @@ dialog.prancheta { background: transparent; box-shadow: none; max-width: 560px; 
           <div id="ultimoRel" class="vazio">Nenhum relatório ainda.</div>
         </div>
       </aside>
-      <aside class="lateral painel-jogos" id="painelJogos">
-        <div class="card jogo-card destaque">
-          <div class="jogo-capa">🐱🐱🐱</div>
-          <h3>Mini jogos</h3>
-          <b class="jogo-nome">Gatinhos em Ordem</b>
-          <p>Puzzle de lógica: deslize os gatinhos entre as caixas até cada uma ter uma cor só.</p>
-          <div class="nums"><div><small>Fase</small><b id="gatosFase">1</b></div><div><small>Estrelas</small><b id="gatosEstrelas">0</b></div></div>
-          <button class="bt prim" id="btJogarGatos" style="width:100%;justify-content:center;margin-top:12px">🕹️ Jogar</button>
-          <small class="vazio">Cada fase vencida rende moedas para o caixa 💰</small>
-        </div>
-        <div class="card jogo-card breve"><h3>Em breve</h3><b class="jogo-nome">🎱 Sinuca</b><p>A mesa já está montada na sala.</p></div>
-        <div class="card jogo-card breve"><b class="jogo-nome">🃏 Cartas Coloridas</b><p>Jogo de cartas por cores e números.</p></div>
-      </aside>
+      
     </div>
   </section>
 

@@ -382,7 +382,6 @@
   async function animacao(nome) {
     ativo();
     $('#menuAnim').classList.remove('on');
-    if (estado.sala === 'jogos') KM.jogos.sair();
     const p = pessoaDe(), f = func();
     if (nome === 'dinheiro') return KM.explosaoDinheiro(Number(cfg.economia.valorTarefa) || 0, p.id);
     if (nome === 'confete') return KM.confete();
@@ -700,8 +699,7 @@
       if (t > q.piscarEm) { q.est.piscar = true; if (t > q.piscarEm + 0.12) { q.est.piscar = false; q.piscarEm = t + 2 + Math.random() * 3; } }
     }
     KM.atualizarEfeitos(dt, t);
-    if (estado.sala === 'jogos') KM.jogos.desenhar(ctx, cfg, estado, t);
-    else KM.desenhar(ctx, cfg, estado, t);
+    KM.desenhar(ctx, cfg, estado, t);
     KM.desenharEfeitos(ctx, t);
 
     // tremor da tela
@@ -713,13 +711,14 @@
     const r = tela.getBoundingClientRect(), pr = palco.getBoundingClientRect(), esc = r.width / KM.W;
     for (const [id, d] of Object.entries(doms)) {
       const q = estado.pessoas[id];
-      const cab = estado.sala === 'jogos' ? q && q.cabecaJogo : q && q.cabecaTela;
-      const some = !q || q.visivel === false || !cab || (estado.sala !== 'jogos' && q.naSalaJogos) || estado.jogando;
-      d.cracha.style.display = some ? 'none' : ''; d.balao.style.display = some ? 'none' : '';
+      const cab = q && q.cabecaTela;
+      const some = !q || q.visivel === false || !cab || estado.jogando;
+      // o nome só aparece em quem você tocou; o balão de fala aparece sempre
+      d.cracha.style.display = some || estado.selecionado !== id ? 'none' : ''; d.balao.style.display = some ? 'none' : '';
       if (some) continue;
       const cx = r.left - pr.left + cab[0] * esc, cy = r.top - pr.top + (cab[1] - 3) * esc;
       d.cracha.style.left = cx + 'px'; d.cracha.style.top = cy + 'px';
-      d.balao.style.left = Math.max(100, Math.min(pr.width - 100, cx)) + 'px'; d.balao.style.top = (cy - d.cracha.offsetHeight - 10) + 'px';
+      d.balao.style.left = Math.max(100, Math.min(pr.width - 100, cx)) + 'px'; d.balao.style.top = (cy - (estado.selecionado === id ? d.cracha.offsetHeight + 10 : 4)) + 'px';
     }
 
     // prévia animada na personalização
@@ -760,18 +759,15 @@
     tela.addEventListener('click', e => {
       ativo();
       const [x, y] = pontoLogico(e);
-      if (estado.sala === 'jogos') return KM.jogos.clique(x, y);
       const id = KM.pessoaEm(estado, x, y);
       if (id) return selecionar(estado.selecionado === id ? null : id);
-      if (KM.naPorta(x, y)) KM.jogos.entrar();
+      if (KM.jogos.cliqueArea(x, y)) return;
+      if (estado.selecionado) selecionar(null); // tocar no vazio esconde o nome
     });
     tela.addEventListener('mousemove', e => {
       const [x, y] = pontoLogico(e);
-      if (estado.sala === 'jogos') { tela.style.cursor = KM.jogos.sobre(x, y) ? 'pointer' : 'default'; return; }
-      estado.portaHover = KM.naPorta(x, y);
-      tela.style.cursor = KM.pessoaEm(estado, x, y) || estado.portaHover ? 'pointer' : 'default';
+      tela.style.cursor = KM.pessoaEm(estado, x, y) || KM.jogos.sobre(x, y) ? 'pointer' : 'default';
     });
-    $('#btSalaJogos').addEventListener('click', () => { ativo(); estado.sala === 'jogos' ? KM.jogos.sair() : KM.jogos.entrar(); });
     document.addEventListener('keydown', ativo);
     window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (['escritorio', 'relatorios', 'personalizar'].includes(h)) irPara(h); });
     $$('[data-fechar]').forEach(b => b.addEventListener('click', () => b.closest('dialog').close()));

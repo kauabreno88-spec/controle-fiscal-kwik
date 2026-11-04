@@ -4,7 +4,7 @@
 (function () {
   const KM = (window.KM = window.KM || {});
 
-  const W = 240, H = 210, OX = 120, OY = 92, SALA = 108, PAREDE = 78;
+  const W = 300, H = 248, OX = 112, OY = 90, SALA = 108, PAREDE = 78;
   KM.W = W; KM.H = H; KM.SALA = SALA;
   const P = (X, Y, Z = 0) => [OX + X - Y, OY + (X + Y) / 2 - Z];
   KM.P = P;
@@ -490,10 +490,10 @@
   }
 
   function cofre(ctx, caixa, t) {
-    prisma(ctx, { X: 92, Y: 78, w: 14, d: 14, h: 18, cor: '#5b636a', esq: texCofre(14, 18) });
+    prisma(ctx, { X: 88, Y: 80, w: 14, d: 14, h: 18, cor: '#5b636a', esq: texCofre(14, 18) });
     const pilhas = Math.min(4, Math.ceil(caixa / 600));
     const alturaTot = Math.min(4 * 10, Math.floor(caixa / 60));
-    const pos = [[88, 98], [94, 100], [86, 104], [100, 98]];
+    const pos = [[82, 100], [88, 102], [80, 106], [94, 100]];
     for (let i = 0; i < pilhas; i++) {
       const n = Math.max(1, Math.min(10, alturaTot - i * 10));
       const [x, y] = P(pos[i][0], pos[i][1], 0);
@@ -505,7 +505,7 @@
       if (n >= 10 && Math.floor(t * 2 + i) % 6 === 0) { ctx.fillStyle = '#ffffff'; ctx.fillRect(Math.round(x) + 1, Math.round(y) - n * 2 - 1, 1, 1); }
     }
     if (caixa >= 5000) {
-      const [x, y] = P(104, 100, 0);
+      const [x, y] = P(98, 104, 0);
       const bx = Math.round(x), by = Math.round(y);
       ctx.fillStyle = '#c9a65b'; ctx.fillRect(bx - 4, by - 8, 8, 8); ctx.fillRect(bx - 2, by - 10, 4, 2);
       ctx.fillStyle = '#8a6a2a'; ctx.fillRect(bx - 2, by - 9, 4, 1);
@@ -595,7 +595,7 @@
     const lista = [];
     if (it.planta) lista.push({ p: 16, f: c => gaveteiroPlanta(c, e, t) });
     if (it.estante) lista.push({ p: 80, f: c => estante(c, e) });
-    if (it.cofre) lista.push({ p: 178, f: c => cofre(c, estado.caixa || 0, t) });
+    if (it.cofre) lista.push({ p: 181, f: c => cofre(c, estado.caixa || 0, t) });
     if (it.lixeira) lista.push({ p: 60, f: c => lixeira(c) });
     for (const [f, a] of Object.entries(A)) lista.push({ p: a.X + a.Y - 4, f: c => cadeira(c, e, a.X, a.Y, a.dir, sentado(f)) });
     lista.push({ p: 106, f: c => mesaLeo(c, e, estado, t) });
@@ -622,19 +622,17 @@
     if (e.itens.relogio) face(ctx, texRelogio(), MAT.paredeD, ...P(56, 0, PAREDE - 12));
     if (e.itens.tv) face(ctx, texTV(estado, t), MAT.paredeE, ...P(0, 94, PAREDE - 16));
     face(ctx, texMural((cfg.maycon && cfg.maycon.fotos) || 0), MAT.paredeD, ...P(94, 0, PAREDE - 18));
-    const pt = LAY.porta;
-    face(ctx, texPorta(estado.portaAberta, estado.portaHover, t), MAT.paredeE, ...P(0, pt.Y1, pt.alto));
-    face(ctx, placaJogos(t), MAT.paredeE, ...P(0, pt.Y1 - 1, pt.alto + 9));
 
     if (e.tapete) face(ctx, texTapete(e, LAY.tapete.w, LAY.tapete.d), MAT.chao, ...P(LAY.tapete.X, LAY.tapete.Y, 0));
 
     const lista = objetos(cfg, estado, t);
-    const pessoas = Object.values(estado.pessoas || {}).filter(p => p.visivel !== false && !p.naSalaJogos);
+    const pessoas = Object.values(estado.pessoas || {}).filter(p => p.visivel !== false && p.X < 108);
     for (const p of pessoas) lista.push({ p: p.X + p.Y + 0.5, f: c => KM.desenharPessoa(c, cfg, p, t) });
     for (const x of estado.extras || []) lista.push(x); // objetos de cena (baú, sapo…)
     lista.sort((a, b) => a.p - b.p);
     for (const o of lista) o.f(ctx);
     for (const p of pessoas) if (p.modo === 'sentado') KM.desenharMaos(ctx, cfg, p, t);
+    if (KM.jogos && KM.jogos.desenharArea) KM.jogos.desenharArea(ctx, cfg, estado, t); // cômodo ao lado
 
     if (KM.periodo(cfg) === 'noite') { ctx.fillStyle = 'rgba(16,24,60,0.22)'; ctx.fillRect(0, 0, W, H); }
   };
@@ -714,7 +712,7 @@
   KM.pessoaEm = function (estado, x, y) {
     let achou = null, melhor = -1;
     for (const p of Object.values(estado.pessoas || {})) {
-      if (p.visivel === false || p.naSalaJogos) continue;
+      if (p.visivel === false) continue;
       const [ax, ay] = KM.ancora(p);
       const topo = p.modo === 'sentado' ? ay - 37 : ay - 45;
       if (x >= ax - 11 && x <= ax + 11 && y >= topo + 4 && y <= ay && p.X + p.Y > melhor) { melhor = p.X + p.Y; achou = p.id; }
@@ -729,5 +727,7 @@
   };
 
   // utilidades para outras cenas (sala de jogos)
-  Object.assign(KM, { face, MAT, tex, solida, moldura, texRelogio, OX, OY, PAREDE, CONTORNO });
+  Object.assign(KM, { face, MAT, tex, solida, moldura, texRelogio, OX, OY, PAREDE, CONTORNO, simboloPixel });
+  // tela → chão (Z=0)
+  KM.chaoEm = (x, y) => { const a = x - OX, b = 2 * (y - OY); return [(a + b) / 2, (b - a) / 2]; };
 })();
