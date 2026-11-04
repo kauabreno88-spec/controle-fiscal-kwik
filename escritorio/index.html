@@ -126,7 +126,7 @@ main { max-width: 1320px; margin: 0 auto; padding: 18px 20px 40px; }
 .lateral .card { padding: 16px; }
 .lateral h3 { margin: 0 0 10px; font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--cinza); font-weight: 800; }
 .func { display: flex; gap: 12px; align-items: center; }
-.avatar { width: 64px; height: 84px; image-rendering: pixelated; background: var(--nevoa); border-radius: 12px; flex: none; }
+.avatar { width: 70px; height: 84px; image-rendering: pixelated; background: var(--nevoa); border-radius: 12px; flex: none; }
 .func b { font-size: 18px; font-weight: 900; display: block; }
 .func span { font-size: 12px; color: var(--cinza); font-weight: 700; }
 .nivel { display: inline-block; margin-top: 6px; font-size: 11px; font-weight: 800; background: var(--grafite); color: var(--verde); padding: 3px 8px; border-radius: 99px; }
@@ -159,7 +159,7 @@ dialog::backdrop { background: rgba(17,26,25,.55); backdrop-filter: blur(2px); }
 .membro { border: 2px solid var(--linha); border-radius: 14px; padding: 14px; text-align: center; background: #fff; transition: border-color .15s, transform .1s; }
 .membro:hover { border-color: var(--verde); transform: translateY(-2px); }
 .membro.sel { border-color: var(--verde); background: #f1fbf4; }
-.membro canvas { width: 78px; height: 126px; image-rendering: pixelated; }
+.membro canvas { width: 90px; height: 138px; image-rendering: pixelated; }
 .membro b { display: block; font-size: 16px; font-weight: 900; margin-top: 6px; }
 .membro span { display: block; font-size: 12px; color: var(--cinza); font-weight: 700; }
 .membro.novo { border-style: dashed; color: var(--cinza); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; cursor: not-allowed; background: var(--nevoa); }
@@ -227,7 +227,7 @@ dialog::backdrop { background: rgba(17,26,25,.55); backdrop-filter: blur(2px); }
 .checks label:has(input:checked) { border-color: var(--verde); background: #f1fbf4; }
 .checks input { accent-color: var(--verde); }
 .preview-func { display: flex; gap: 16px; align-items: center; background: var(--nevoa); border-radius: 14px; padding: 12px; margin-bottom: 14px; }
-.preview-func canvas { width: 104px; height: 168px; image-rendering: pixelated; }
+.preview-func canvas { width: 105px; height: 161px; image-rendering: pixelated; }
 .temas { display: flex; flex-wrap: wrap; gap: 8px; }
 .temas button { border: 2px solid var(--linha); border-radius: 12px; padding: 8px 12px; font-weight: 800; font-size: 13px; background: #fff; display: flex; align-items: center; gap: 8px; }
 .temas button i { width: 18px; height: 18px; border-radius: 5px; display: inline-block; }
@@ -338,7 +338,7 @@ dialog::backdrop { background: rgba(17,26,25,.55); backdrop-filter: blur(2px); }
         <div class="card">
           <h3>Funcionário</h3>
           <div class="func">
-            <canvas class="avatar" id="avatarLateral" width="26" height="34"></canvas>
+            <canvas class="avatar" id="avatarLateral" width="30" height="36"></canvas>
             <div>
               <b id="latNome">Léo</b>
               <span id="latCargo">Analista de Notícias</span><br>
@@ -386,7 +386,7 @@ dialog::backdrop { background: rgba(17,26,25,.55); backdrop-filter: blur(2px); }
         <h2>👤 Funcionário</h2>
         <p class="sub">Nome, visual e roupa. As mudanças aparecem na hora no escritório.</p>
         <div class="preview-func">
-          <canvas id="previewFunc" width="26" height="42"></canvas>
+          <canvas id="previewFunc" width="30" height="46"></canvas>
           <div style="display:flex;flex-direction:column;gap:8px">
             <button class="bt peq" data-anim="ss1">⚡ Testar Super Sayajin</button>
             <button class="bt peq" data-anim="danca">🕺 Testar dança</button>
@@ -432,6 +432,7 @@ dialog::backdrop { background: rgba(17,26,25,.55); backdrop-filter: blur(2px); }
 </dialog>
 
 <script src="js/cena.js"></script>
+<script src="js/boneco.js"></script>
 <script src="js/nuvem.js"></script>
 <script src="js/efeitos.js"></script>
 <script src="js/app.js"></script>

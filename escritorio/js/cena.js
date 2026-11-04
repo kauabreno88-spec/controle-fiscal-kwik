@@ -371,28 +371,28 @@
     prisma(ctx, { X: 33, Y: 32, Z: 16, w: 8, d: 6, h: 2, cor: '#2E8B45' });
     prisma(ctx, { X: 32, Y: 33, Z: 18, w: 8, d: 5, h: 2, cor: '#e2b33c' });
     // caneca KWIK
-    prisma(ctx, { X: 39, Y: 46, Z: 14, w: 3, d: 3, h: 4, cor: '#ffffff', corDir: '#dcdcd5', corEsq: '#efefea' });
-    const [mx, my] = P(41, 48, 18);
+    prisma(ctx, { X: 29, Y: 63, Z: 14, w: 3, d: 3, h: 4, cor: '#ffffff', corDir: '#dcdcd5', corEsq: '#efefea' });
+    const [mx, my] = P(31, 65, 18);
     ctx.fillStyle = VERDE; ctx.fillRect(Math.round(mx) - 2, Math.round(my) + 2, 1, 1);
     if (estado.cafe) for (let i = 0; i < 3; i++) {
       const fy = (t * 8 + i * 4) % 10;
       ctx.fillStyle = `rgba(255,255,255,${0.6 - fy / 18})`; ctx.fillRect(Math.round(mx) - 2 + Math.round(Math.sin(t * 3 + i) * 1), Math.round(my) - 2 - fy, 1, 1);
     }
     // teclado
-    prisma(ctx, { X: 27, Y: 55, Z: 14, w: 5, d: 12, h: 1, cor: '#2b3135' });
+    prisma(ctx, { X: 27, Y: 46, Z: 14, w: 5, d: 12, h: 1, cor: '#2b3135' });
     // monitor (costas para a gente, tela virada para o funcionário)
-    prisma(ctx, { X: 31, Y: 41, Z: 14, w: 4, d: 4, h: 1, cor: '#30363a' });
-    prisma(ctx, { X: 32, Y: 42, Z: 15, w: 2, d: 2, h: 5, cor: '#30363a' });
+    prisma(ctx, { X: 34, Y: 48, Z: 14, w: 4, d: 4, h: 1, cor: '#30363a' });
+    prisma(ctx, { X: 35, Y: 49, Z: 15, w: 2, d: 2, h: 5, cor: '#30363a' });
     const brilho = estado.tv && estado.tv.modo === 'trabalhando';
-    prisma(ctx, { X: 30, Y: 35, Z: 19, w: 3, d: 16, h: 12, cor: '#3a4246' });
-    const [lx, ly] = P(30, 51, 31);
+    prisma(ctx, { X: 33, Y: 42, Z: 19, w: 3, d: 16, h: 12, cor: '#3a4246' });
+    const [lx, ly] = P(33, 58, 31);
     if (e.itens.logo) { // adesivo KWIK nas costas do monitor
       const s = tex('adesivo', 6, 6, g => { g.fillStyle = '#ffffff'; g.fillRect(0, 0, 6, 6); simboloPixel(g, 0, 0, 0.5, VERDE); });
-      face(ctx, s, MAT.paredeE, ...P(33, 46, 28));
+      face(ctx, s, MAT.paredeE, ...P(36, 53, 28));
     }
     if (brilho || estado.matrix) {
       ctx.fillStyle = estado.matrix ? 'rgba(80,255,130,0.25)' : 'rgba(120,230,160,' + (0.18 + 0.08 * Math.sin(t * 10)) + ')';
-      ctx.fillRect(Math.round(lx) - 18, Math.round(ly) - 4, 18, 14);
+      ctx.fillRect(Math.round(lx) - 2, Math.round(ly) - 4, 16, 14);
     }
   }
 
@@ -464,10 +464,10 @@
     let c = spriteCache.get(chave);
     if (c) return c;
     if (spriteCache.size > 400) spriteCache.clear();
-    c = tela(26, 42);
+    c = tela(30, 46);
     const g = c.getContext('2d');
     g.translate(1, 2);
-    desenharCorpo(g, ap, est);
+    KM.desenharBoneco(g, ap, est);
     contorno(c);
     spriteCache.set(chave, c);
     return c;
@@ -488,148 +488,6 @@
       d[k] = r; d[k + 1] = gg; d[k + 2] = b; d[k + 3] = 255;
     }
     g.putImageData(img, 0, 0);
-  }
-
-  // Corpo de frente. Origem: grade 24x40, pés em y=37, centro x=12.
-  function desenharCorpo(g, ap, est) {
-    const r = (x, y, w, h, cor) => { g.fillStyle = cor; g.fillRect(x, y, w, h); };
-    const pele = ap.pele, peleE = tom(pele, 0.82);
-    const ss = est.saiyan || 0;
-    const corCab = ss === 'deus' ? '#e8344a' : ss === 'branco' ? '#dfe7f2' : ss ? '#ffd93b' : ap.corCabelo;
-    const cabE = tom(corCab, 0.72), cabC = tom(corCab, 1.35);
-    const camisa = ap.corCamisa, camE = tom(camisa, 0.78);
-    const calca = ap.calca, sapato = ap.sapato;
-    const sentado = est.pose === 'sentado';
-    const dy = est.dy || 0;
-    g.translate(0, dy);
-
-    // cabelo de trás (longo / SSJ3)
-    if (ss === 3) { r(4, 12, 4, 22, corCab); r(16, 12, 4, 22, corCab); r(5, 30, 2, 6, cabE); r(17, 30, 2, 6, cabE); }
-    else if (!ss && ap.cabelo === 'longo') { r(6, 12, 3, 12, corCab); r(15, 12, 3, 12, corCab); }
-
-    // pernas
-    if (!sentado) {
-      const p = est.passo || 0;
-      const le = p === 1 ? -1 : 0, ld = p === 2 ? -1 : 0;
-      r(8, 29, 8, 2, calca);
-      r(8, 31, 3, 4 + le, calca); r(13, 31, 3, 4 + ld, calca);
-      r(7, 35 + le, 4, 2, sapato); r(13, 35 + ld, 4, 2, sapato);
-      r(7, 35 + le, 4, 1, tom(sapato, 1.4)); r(13, 35 + ld, 4, 1, tom(sapato, 1.4));
-    } else {
-      r(8, 29, 8, 3, calca);
-    }
-
-    // tronco
-    const estilo = ap.estiloCamisa || 'kwik';
-    r(8, 21, 8, 8, camisa);
-    r(8, 27, 8, 1, camE);
-    if (estilo === 'kwik') {
-      r(13, 23, 2, 2, '#ffffff'); r(9, 21, 6, 1, camE); r(11, 21, 2, 2, '#ffffff');
-    } else if (estilo === 'social') {
-      r(10, 21, 1, 2, '#ffffff'); r(13, 21, 1, 2, '#ffffff'); r(11, 21, 2, 6, ap.corGravata || VERDE); r(11, 21, 2, 1, tom(ap.corGravata || VERDE, 0.7));
-    } else if (estilo === 'terno') {
-      r(10, 21, 4, 4, '#ffffff'); r(11, 21, 2, 6, ap.corGravata || '#b8322a'); r(9, 21, 1, 6, camE); r(14, 21, 1, 6, camE);
-    } else if (estilo === 'moletom') {
-      r(8, 20, 8, 1, camE); r(9, 25, 6, 2, camE); r(10, 21, 1, 3, '#f4f4f4'); r(13, 21, 1, 3, '#f4f4f4');
-    }
-    r(8, 28, 8, 1, '#2a2522'); // cinto
-
-    // braços
-    const mang = estilo === 'kwik' ? 2 : 7;
-    const braco = (x, y, w, h) => {
-      for (let i = 0; i < h; i++) r(x, y + i, w, 1, i < mang ? camisa : pele);
-    };
-    const b = est.bracos || 'baixo';
-    if (b === 'cima') {
-      braco(6, 13, 2, 8); braco(16, 13, 2, 8);
-      r(6, 11, 2, 2, pele); r(16, 11, 2, 2, pele);
-      r(6, 19, 2, 2, camisa); r(16, 19, 2, 2, camisa);
-    } else if (b === 'aceno') {
-      r(6, 21, 2, mang > 5 ? 7 : 2, camisa); if (mang < 5) r(6, 23, 2, 5, pele); r(6, 28, 2, 2, pele);
-      braco(16, 13 + (est.aceno || 0), 2, 8); r(16, 11 + (est.aceno || 0), 2, 2, pele);
-    } else if (b === 'poder') {
-      r(5, 21, 3, 3, camisa); r(16, 21, 3, 3, camisa);
-      r(5, 24, 2, 4, mang > 5 ? camisa : pele); r(17, 24, 2, 4, mang > 5 ? camisa : pele);
-      r(4, 28, 3, 3, pele); r(17, 28, 3, 3, pele); r(5, 29, 1, 1, peleE); r(18, 29, 1, 1, peleE);
-    } else if (b === 'frente') {
-      r(6, 21, 2, 5, camisa); r(16, 21, 2, 5, camisa);
-      r(7, 26, 2, 2, mang > 5 ? camisa : pele); r(15, 26, 2, 2, mang > 5 ? camisa : pele);
-    } else if (b === 'cafe') {
-      braco(6, 21, 2, 7); r(6, 28, 2, 2, pele);
-      r(16, 21, 2, 3, camisa); r(14, 24, 3, 2, mang > 5 ? camisa : pele); r(13, 23, 2, 2, pele);
-      r(12, 20, 3, 3, '#ffffff'); r(15, 21, 1, 1, '#ffffff'); r(12, 20, 3, 1, '#6b3a1e');
-    } else {
-      braco(6, 21, 2, 7); braco(16, 21, 2, 7);
-      r(6, 28, 2, 2, pele); r(16, 28, 2, 2, pele);
-    }
-
-    // pescoço e cabeça
-    const cy = est.cabecaDy || 0;
-    r(11, 20, 2, 1, peleE);
-    r(8, 12 + cy, 8, 8, pele);
-    r(7, 15 + cy, 1, 2, pele); r(16, 15 + cy, 1, 2, pele);
-    r(8, 19 + cy, 8, 1, peleE);
-
-    // barba
-    if (ap.barba && !ss) { r(8, 17 + cy, 8, 3, corCab); r(10, 16 + cy, 4, 1, corCab); r(9, 17 + cy, 6, 1, pele); }
-
-    // olhos
-    const olho = ss && ss !== 'deus' && ss !== 'branco' ? '#13a89e' : ss === 'deus' ? '#d81b3c' : ss === 'branco' ? '#9fb4d6' : '#1e1a17';
-    if (est.olhos === 'fechados' || est.piscar) { r(9, 16 + cy, 2, 1, peleE); r(13, 16 + cy, 2, 1, peleE); }
-    else if (est.olhos === 'feliz') { r(9, 15 + cy, 2, 1, '#1e1a17'); r(13, 15 + cy, 2, 1, '#1e1a17'); r(9, 16 + cy, 1, 1, pele); }
-    else { r(10, 15 + cy, 1, 2, olho); r(13, 15 + cy, 1, 2, olho); r(10, 15 + cy, 1, 1, ss ? '#ffffff' : olho); r(13, 15 + cy, 1, 1, ss ? '#ffffff' : olho); }
-    // sobrancelhas
-    if (ss) { r(9, 13 + cy, 2, 1, cabE); r(13, 13 + cy, 2, 1, cabE); r(11, 14 + cy, 1, 1, cabE); r(12, 14 + cy, 1, 1, cabE); }
-    // boca
-    const boca = est.boca || 'normal';
-    if (boca === 'sorriso') { r(10, 17 + cy, 1, 1, '#7a3b2a'); r(11, 18 + cy, 2, 1, '#7a3b2a'); r(13, 17 + cy, 1, 1, '#7a3b2a'); }
-    else if (boca === 'grito') { r(10, 17 + cy, 4, 2, '#5a1a1a'); r(11, 18 + cy, 2, 1, '#d84a4a'); }
-    else if (boca === 'o') { r(11, 17 + cy, 2, 2, '#5a1a1a'); }
-    else { r(11, 18 + cy, 2, 1, tom(pele, 0.6)); }
-    // bochechas
-    if (est.boca === 'sorriso') { r(8, 17 + cy, 1, 1, '#f08a8a'); r(15, 17 + cy, 1, 1, '#f08a8a'); }
-
-    // óculos
-    if (ap.oculos) {
-      const f = '#1b1b1b';
-      r(9, 14 + cy, 3, 1, f); r(9, 16 + cy, 3, 1, f); r(9, 15 + cy, 1, 1, f); r(11, 15 + cy, 1, 1, f);
-      r(12, 14 + cy, 3, 1, f); r(12, 16 + cy, 3, 1, f); r(12, 15 + cy, 1, 1, f); r(14, 15 + cy, 1, 1, f);
-      r(8, 15 + cy, 1, 1, f); r(15, 15 + cy, 1, 1, f);
-      if (est.brilhoOculos) { r(9, 14 + cy, 1, 1, '#ffffff'); r(12, 14 + cy, 1, 1, '#ffffff'); }
-    }
-
-    // cabelo
-    const estiloCab = ss ? 'ss' + ss : ap.cabelo;
-    const cab = (x, y, w, h, cor = corCab) => r(x, y + cy, w, h, cor);
-    switch (estiloCab) {
-      case 'curto': cab(7, 10, 10, 3); cab(7, 13, 1, 3); cab(16, 13, 1, 2); cab(8, 13, 4, 1); cab(8, 10, 8, 1, cabC); break;
-      case 'longo': cab(7, 10, 10, 3); cab(7, 13, 1, 6); cab(16, 13, 1, 6); cab(8, 13, 5, 1); cab(8, 10, 8, 1, cabC); break;
-      case 'cacheado':
-        cab(5, 7, 14, 7); cab(6, 6, 12, 1); cab(5, 14, 3, 4); cab(16, 14, 3, 4); cab(8, 13, 8, 1);
-        for (const [x, y] of [[6, 8], [9, 7], [12, 8], [15, 7], [7, 11], [11, 10], [16, 11], [6, 15], [17, 15]]) cab(x, y, 1, 1, cabC);
-        break;
-      case 'moicano': cab(11, 5, 2, 8); cab(10, 8, 4, 4); cab(11, 5, 1, 7, cabC); cab(8, 12, 1, 1, cabE); cab(15, 12, 1, 1, cabE); break;
-      case 'careca': r(8, 10 + cy, 8, 2, pele); r(9, 9 + cy, 6, 1, pele); r(10, 10 + cy, 2, 1, tom(pele, 1.25)); break;
-      case 'rabo': cab(7, 10, 10, 3); cab(7, 13, 1, 3); cab(16, 13, 1, 3); cab(8, 13, 3, 1); cab(17, 12, 2, 7); cab(18, 18, 1, 3, cabE); cab(8, 10, 8, 1, cabC); break;
-      case 'coque': cab(7, 10, 10, 3); cab(7, 13, 1, 3); cab(16, 13, 1, 3); cab(9, 6, 6, 4); cab(10, 6, 4, 1, cabC); cab(8, 13, 3, 1); break;
-      case 'ss1': case 'ss2': case 'ssdeus': case 'ssbranco':
-        cab(6, 9, 12, 4); cab(7, 5, 2, 4); cab(10, 2, 3, 7); cab(14, 4, 2, 5); cab(17, 6, 2, 4); cab(4, 9, 2, 3); cab(18, 10, 2, 3);
-        cab(8, 6, 1, 1, cabC); cab(11, 3, 1, 5, cabC); cab(15, 5, 1, 3, cabC);
-        cab(8, 13, 2, 2); cab(14, 13, 1, 2); cab(11, 13, 1, 1);
-        if (ss === 2) { cab(12, 13, 1, 3); }
-        break;
-      case 'ss3':
-        cab(5, 8, 14, 5); cab(6, 4, 3, 4); cab(10, 1, 4, 7); cab(15, 4, 3, 4); cab(8, 13, 2, 2); cab(14, 13, 2, 2);
-        cab(11, 2, 1, 5, cabC); cab(7, 5, 1, 2, cabC);
-        break;
-      default: cab(7, 10, 10, 3); cab(8, 13, 4, 1);
-    }
-    // acessórios de cabeça
-    if (!ss) {
-      if (ap.bone) { r(7, 9 + cy, 10, 4, ap.corBone || VERDE); r(6, 12 + cy, 12, 1, tom(ap.corBone || VERDE, 0.7)); r(11, 10 + cy, 2, 2, '#ffffff'); }
-      if (ap.fone) { r(7, 9 + cy, 10, 1, '#202426'); r(6, 14 + cy, 2, 3, VERDE); r(16, 14 + cy, 2, 3, VERDE); r(6, 10 + cy, 1, 4, '#202426'); r(17, 10 + cy, 1, 4, '#202426'); }
-    }
-    g.translate(0, -dy);
   }
 
   KM.sprite = sprite;
@@ -693,47 +551,62 @@
     return [Math.round(x), Math.round(y)];
   };
 
+  // Direção: fe = frente p/ baixo-esquerda (+Y), fd = frente p/ baixo-direita (+X),
+  //          ce = costas p/ cima-esquerda (-X), cd = costas p/ cima-direita (-Y).
+  KM.vistaDe = dir => ({ vista: dir === 'ce' || dir === 'cd' ? 'costas' : 'frente', espelho: dir === 'fd' || dir === 'cd' });
+  const SPR_W = 30;
+
   KM.desenharPersonagem = function (ctx, cfg, estado, t) {
     const pers = estado.personagem;
-    const f = cfg.funcionarios[0];
-    const ap = f.aparencia;
+    const ap = cfg.funcionarios[0].aparencia;
     const est = Object.assign({}, pers.est || {});
-    if (pers.modo === 'sentado') est.pose = 'sentado', est.bracos = est.bracos || 'frente';
+    const dir = pers.dir || (pers.modo === 'sentado' ? 'fd' : 'fe');
+    const v = KM.vistaDe(dir);
+    est.vista = v.vista;
+    if (pers.modo === 'sentado') { est.pose = 'sentado'; est.bracos = est.bracos || 'frente'; }
     const s = sprite(ap, est);
     const [ax, ay] = KM.ancora(pers);
     const chao = ay + (pers.Z || 0);
     if (pers.selecionado && pers.modo !== 'sentado') { // círculo verde no chão
       ctx.fillStyle = 'rgba(40,190,82,' + (0.35 + 0.2 * Math.sin(t * 5)) + ')';
-      ctx.fillRect(ax - 9, chao - 1, 18, 2); ctx.fillRect(ax - 7, chao - 2, 14, 4);
+      ctx.fillRect(ax - 10, chao - 1, 20, 2); ctx.fillRect(ax - 8, chao - 2, 16, 4);
     }
-    // sombra
-    if (pers.modo !== 'sentado') {
-      ctx.fillStyle = 'rgba(0,0,0,0.18)';
-      const so = (pers.Z || 0) > 0 ? 3 : 5;
-      ctx.fillRect(ax - so, chao - 1, so * 2, 2);
+    if (pers.modo !== 'sentado') { // sombra
+      ctx.fillStyle = 'rgba(0,0,0,0.2)';
+      const so = (pers.Z || 0) > 0 ? 4 : 7;
+      ctx.fillRect(ax - so, chao - 2, so * 2, 3); ctx.fillRect(ax - so + 2, chao - 3, so * 2 - 4, 5);
     }
     if (pers.auraAtras) pers.auraAtras(ctx, ax, ay, t);
-    const ox = ax - 13, oy = (pers.modo === 'sentado' ? ay - 34 : ay - 39);
-    if (pers.espelhar) {
-      ctx.save(); ctx.translate(ox + 26, oy); ctx.scale(-1, 1); ctx.drawImage(s, 0, 0); ctx.restore();
-    } else ctx.drawImage(s, ox, oy);
-    const topoCab = (est.saiyan ? 2 : (ap.cabelo === 'cacheado' ? 7 : ap.cabelo === 'moicano' || ap.cabelo === 'coque' ? 6 : 10)) + 2;
-    pers.cabecaTela = [ax, oy + topoCab];
+    const ox = ax - 15, oy = pers.modo === 'sentado' ? ay - 37 : ay - 45;
+    if (v.espelho) { ctx.save(); ctx.translate(ox + SPR_W, oy); ctx.scale(-1, 1); ctx.drawImage(s, 0, 0); ctx.restore(); }
+    else ctx.drawImage(s, ox, oy);
+    const topo = est.saiyan ? 0 : ({ cacheado: 3, moicano: 1, coque: 1, careca: 6 }[ap.cabelo] ?? 5);
+    pers.cabecaTela = [ax, oy + 2 + topo + (ap.bone && !est.saiyan ? -2 : 0)];
   };
 
-  // Mãos no teclado (desenhadas por cima da mesa).
+  // Antebraços e mãos no teclado (desenhados por cima da mesa). Sentado ele olha para a mesa (+X).
   KM.desenharMaos = function (ctx, cfg, estado, t) {
     const pers = estado.personagem;
-    if (!pers || pers.modo !== 'sentado' || pers.dormindo) return;
-    const pele = cfg.funcionarios[0].aparencia.pele;
+    if (!pers || pers.modo !== 'sentado' || pers.dormindo || (pers.est && pers.est.bracos && pers.est.bracos !== 'frente')) return;
+    const ap = cfg.funcionarios[0].aparencia, pele = ap.pele, peleS = KM.cor.tom(pele, 0.86);
     const [ax, ay] = KM.ancora(pers);
     const vel = pers.digitando ? (pers.turbo ? 26 : 12) : 0;
-    const a = vel ? (Math.floor(t * vel) % 2) : 0;
-    const b = vel ? 1 - a : 0;
-    ctx.fillStyle = CONTORNO;
-    ctx.fillRect(ax - 7, ay - 3 - a, 4, 3); ctx.fillRect(ax + 3, ay - 3 - b, 4, 3);
-    ctx.fillStyle = pele;
-    ctx.fillRect(ax - 6, ay - 2 - a, 2, 1); ctx.fillRect(ax + 4, ay - 2 - b, 2, 1);
+    const a = vel ? (Math.floor(t * vel) % 2) : 0, b = vel ? 1 - a : 0;
+    const mao = (x, y, cor) => {
+      ctx.fillStyle = CONTORNO; ctx.fillRect(x - 1, y - 1, 5, 4);
+      ctx.fillStyle = cor; ctx.fillRect(x, y, 3, 2);
+    };
+    const braco = (x0, y0, x1, y1, cor) => {
+      const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0));
+      for (let i = 0; i <= n; i++) { const x = Math.round(x0 + (x1 - x0) * i / n), y = Math.round(y0 + (y1 - y0) * i / n); ctx.fillStyle = CONTORNO; ctx.fillRect(x - 1, y - 1, 4, 4); }
+      for (let i = 0; i <= n; i++) { const x = Math.round(x0 + (x1 - x0) * i / n), y = Math.round(y0 + (y1 - y0) * i / n); ctx.fillStyle = cor; ctx.fillRect(x, y, 2, 2); }
+    };
+    const manga = ap.estiloCamisa === 'casual' || ap.estiloCamisa === 'kwik' || !ap.estiloCamisa;
+    const corBraco = manga ? pele : ap.corCamisa, corLonge = manga ? peleS : KM.cor.tom(ap.corCamisa, 0.84);
+    braco(ax - 7, ay - 9, ax + 1, ay - 5 - b, corLonge);
+    braco(ax + 6, ay - 10, ax + 9, ay - 7 - a, corBraco);
+    mao(ax + 1, ay - 5 - b, peleS);
+    mao(ax + 9, ay - 7 - a, pele);
   };
 
   // Ponto da tela → coordenadas lógicas (para cliques).
@@ -741,7 +614,7 @@
     const p = estado.personagem;
     if (!p) return false;
     const [ax, ay] = KM.ancora(p);
-    const topo = p.modo === 'sentado' ? ay - 34 : ay - 39;
-    return x >= ax - 9 && x <= ax + 9 && y >= topo + 4 && y <= ay;
+    const topo = p.modo === 'sentado' ? ay - 37 : ay - 45;
+    return x >= ax - 11 && x <= ax + 11 && y >= topo + 4 && y <= ay;
   };
 })();

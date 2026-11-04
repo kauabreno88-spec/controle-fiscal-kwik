@@ -205,7 +205,8 @@
       const s = Math.min(dist, vel * dt);
       p.X += dx / dist * s; p.Y += dy / dist * s;
       p.est.passo = [1, 0, 2, 0][Math.floor(t * 8) % 4];
-      p.espelhar = (dx - dy) < 0;
+      // vira para onde anda: +X baixo-direita, +Y baixo-esquerda, -X cima-esquerda, -Y cima-direita
+      p.dir = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 'fd' : 'ce') : (dy > 0 ? 'fe' : 'cd');
       return false;
     });
   }
@@ -214,20 +215,20 @@
     const p = pers();
     p.dormindo = false; p.digitando = false;
     if (p.modo !== 'sentado') return;
-    p.modo = 'em-pe'; p.X = LUGAR.X; p.Y = LUGAR.Y + 8; p.est = { bracos: 'baixo' };
+    p.modo = 'em-pe'; p.X = LUGAR.X; p.Y = LUGAR.Y + 8; p.est = { bracos: 'baixo' }; p.dir = 'fe';
     await esperar(120);
   }
-  async function irAoTapete() { await levantar(); await andarAte(DE_PE.X, DE_PE.Y); await andarAte(TAPETE.X, TAPETE.Y); pers().espelhar = false; }
+  async function irAoTapete() { await levantar(); await andarAte(DE_PE.X, DE_PE.Y); await andarAte(TAPETE.X, TAPETE.Y); pers().dir = 'fe'; }
   async function voltarSentar() {
     const p = pers();
     p.est = { bracos: 'baixo' };
     if (Math.abs(p.X - TAPETE.X) < 30 && p.Y > 60) { await andarAte(DE_PE.X + 10, TAPETE.Y); }
     await andarAte(DE_PE.X, DE_PE.Y); await andarAte(LUGAR.X, LUGAR.Y + 8);
-    p.modo = 'sentado'; p.X = LUGAR.X; p.Y = LUGAR.Y; p.espelhar = false; p.est = {}; p.Z = 0;
+    p.modo = 'sentado'; p.X = LUGAR.X; p.Y = LUGAR.Y; p.dir = 'fd'; p.est = {}; p.Z = 0;
   }
   KM.voltarSentar = voltarSentar;
 
-  function cabeca() { const p = pers(); const [x, y] = KM.ancora(p); return [x, p.modo === 'sentado' ? y - 26 : y - 30]; }
+  function cabeca() { const p = pers(); const [x, y] = KM.ancora(p); return [x, p.modo === 'sentado' ? y - 27 : y - 35]; }
   function pes() { return KM.ancora(pers()); }
 
   // ---------------- efeitos sem movimento
@@ -295,7 +296,7 @@
       const k = (performance.now() - ini) / 2300;
       st.tremor = 0.5 + k * 2.5;
       const [x, y] = pes();
-      KM.emitir('aura', Math.round(2 + k * 6), i => ({ x: x + rnd(-8 - k * 4, 8 + k * 4), y: y - rnd(0, 34), vy: rnd(-60, -30), vida: rnd(0.25, 0.5), cor: corAura, atras: true }));
+      KM.emitir('aura', Math.round(2 + k * 6), i => ({ x: x + rnd(-8 - k * 4, 8 + k * 4), y: y - rnd(0, 42), vy: rnd(-60, -30), vida: rnd(0.25, 0.5), cor: corAura, atras: true }));
       if (Math.random() < 0.35) KM.emitir('pedra', 1, { x: x + rnd(-30, 30), y: y + rnd(-4, 6), vy: rnd(-22, -10), vida: 2.5, g: 0 });
       if (Math.random() < 0.25 * k) KM.emitir('faisca', 4, { x: x + rnd(-10, 10), y: y - rnd(10, 30), dvx: 60, dvy: 60, vida: 0.25, cor: '#ffffff' });
       p.est.dy = Math.floor(performance.now() / 60) % 2;
@@ -314,8 +315,8 @@
     const ini2 = performance.now();
     while (performance.now() - ini2 < dur) {
       const [x, y] = pes();
-      KM.emitir('aura', 6, i => ({ x: x + rnd(-10, 10), y: y - rnd(-2, 36), vy: rnd(-70, -40), vida: rnd(0.25, 0.45), cor: corAura, atras: true }));
-      KM.emitir('aura', 1, i => ({ x: x + rnd(-11, 11), y: y - rnd(0, 30), vy: rnd(-70, -40), vida: 0.2, cor: corAura }));
+      KM.emitir('aura', 6, i => ({ x: x + rnd(-10, 10), y: y - rnd(-2, 44), vy: rnd(-70, -40), vida: rnd(0.25, 0.45), cor: corAura, atras: true }));
+      KM.emitir('aura', 1, i => ({ x: x + rnd(-12, 12), y: y - rnd(0, 38), vy: rnd(-70, -40), vida: 0.2, cor: corAura }));
       if ((nivel === 2 || nivel === 3 || nivel === 'deus') && Math.random() < 0.3) {
         const pts = []; for (let k = 0; k < 4; k++) pts.push([rnd(-5, 5), rnd(3, 7)]);
         KM.emitir('raio', 1, { x: x + rnd(-12, 12), y: y - rnd(20, 40), vida: 0.12, pts, cor: corRaio });
@@ -345,13 +346,14 @@
       st.disco = k;
       const fase = Math.floor((performance.now() - ini) / 260) % 4;
       p.est = { bracos: ['cima', 'aceno', 'cima', 'baixo'][fase], boca: 'sorriso', olhos: fase % 2 ? 'feliz' : undefined, dy: fase % 2, aceno: fase === 1 ? 1 : 0, passo: [1, 0, 2, 0][fase] };
-      p.espelhar = fase >= 2;
+      // gira: frente, lado, costas, outro lado
+      p.dir = ['fe', 'fd', 'cd', 'ce'][Math.floor((performance.now() - ini) / 520) % 4];
       if (Math.random() < 0.3) KM.emitir('estrela', 1, { x: KM.W / 2 + rnd(-80, 80), y: rnd(40, 160), vida: 0.5, cor: ['#ff5c8a', '#3fb6ff', '#ffd93b'][Math.floor(Math.random() * 3)] });
       await esperar(60);
     }
     KM.confete(80);
     for (let k = 1; k >= 0; k -= 0.1) { st.disco = k; await esperar(40); }
-    p.espelhar = false;
+    p.dir = 'fe';
     await voltarSentar();
   });
 
@@ -450,21 +452,21 @@
     const p = pers();
     const cores = () => { const a = KM.config().funcionarios[0].aparencia; return [a.pele, a.corCamisa, a.corCabelo, a.calca, '#ffffff']; };
     const sumir = () => {
-      const [x, y] = pes(); const cs = cores(); const alto = p.modo === 'sentado' ? 30 : 36;
+      const [x, y] = pes(); const cs = cores(); const alto = p.modo === 'sentado' ? 32 : 42;
       KM.emitir('pixel', 70, i => ({ x: x + rnd(-6, 6), y: y - rnd(0, alto), vx: rnd(-10, 10), vy: rnd(-70, -20), vida: rnd(0.5, 0.9), cor: cs[i % cs.length] }));
       KM.emitir('estrela', 4, { x, y: y - 18, dx: 8, dy: 12, vida: 0.5, cor: '#b0f0ff' });
     };
     KM.tocar('teleporte');
     sumir(); p.visivel = false;
     await esperar(700);
-    p.modo = 'em-pe'; p.X = TAPETE.X; p.Y = TAPETE.Y; p.est = { bracos: 'aceno', boca: 'sorriso' };
+    p.modo = 'em-pe'; p.X = TAPETE.X; p.Y = TAPETE.Y; p.dir = 'fe'; p.est = { bracos: 'aceno', boca: 'sorriso' };
     p.visivel = true; sumir(); st.flash = 0.35; st.corFlash = '#b0f0ff';
     KM.onFala('Teletransporte contábil! ✨', 1800);
     for (let i = 0; i < 6; i++) { p.est.aceno = i % 2; await esperar(220); }
     KM.tocar('teleporte');
     sumir(); p.visivel = false;
     await esperar(700);
-    p.modo = 'sentado'; p.X = LUGAR.X; p.Y = LUGAR.Y; p.est = {}; p.visivel = true; sumir();
+    p.modo = 'sentado'; p.X = LUGAR.X; p.Y = LUGAR.Y; p.dir = 'fd'; p.est = {}; p.visivel = true; sumir();
   });
 
   // Comemoração quando entrega uma tarefa.

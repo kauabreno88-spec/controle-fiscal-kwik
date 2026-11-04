@@ -20,7 +20,7 @@
 
   // ------------------------------------------------------------------ configuração
   const PADRAO = {
-    versao: 1,
+    versao: 2,
     escritorio: {
       nome: 'Mini Escritório', parede: '#EBDCCB', rodape: '#6B4A35', piso: 'madeira', corPiso: '#B98A62',
       tapete: true, corTapete: '#F5C27E', padraoTapete: 'losango', mesa: '#9C5B3A', cadeira: '#2A2F33', estante: '#2b2f33', ceu: 'auto',
@@ -29,8 +29,9 @@
     funcionarios: [{
       id: 'f1', nome: 'Léo', cargo: 'Analista de Notícias',
       aparencia: {
-        pele: '#E0AC82', cabelo: 'curto', corCabelo: '#3B2416', estiloCamisa: 'kwik', corCamisa: '#28BE52', corGravata: '#28BE52',
-        calca: '#2B3A55', sapato: '#1A1A1A', oculos: false, fone: false, bone: false, barba: false, corBone: '#28BE52',
+        pele: '#E8B48F', cabelo: 'curto', corCabelo: '#5A3825', estiloCamisa: 'casual', corCamisa: '#E9D5B7', corGravata: '#28BE52',
+        calca: '#2F3A4A', sapato: '#5A3A22', oculos: false, fone: false, bone: false, barba: false, corBone: '#28BE52',
+        cracha: true, corCordao: '#E8613C',
       },
       xp: 0, tarefas: 0, ganhos: 0,
     }],
@@ -136,7 +137,7 @@
     const g = canvas.getContext('2d');
     g.imageSmoothingEnabled = false;
     g.clearRect(0, 0, canvas.width, canvas.height);
-    if (recorte) g.drawImage(s, 0, recorte, 26, canvas.height, 0, 0, 26, canvas.height);
+    if (recorte) g.drawImage(s, 0, recorte, 30, canvas.height, 0, 0, 30, canvas.height);
     else g.drawImage(s, 0, 0);
   }
 
@@ -172,7 +173,7 @@
   function abrirEquipe() {
     const box = $('#equipe'); box.innerHTML = '';
     for (const f of cfg.funcionarios) {
-      const cv = el('canvas', { width: 26, height: 42 });
+      const cv = el('canvas', { width: 30, height: 46 });
       const n = nivelDe(f.xp);
       const card = el('button', {
         class: 'membro' + (estado.selecionado === f.id ? ' sel' : ''), onclick: () => {
@@ -455,10 +456,10 @@
   }
 
   // ------------------------------------------------------------------ personalização
-  const PELES = ['#FFDBAC', '#F5D0B5', '#E0AC82', '#C68642', '#8D5524', '#5C3A21'];
-  const CABELOS = ['#1C1C1C', '#2B1B12', '#3B2416', '#6B4226', '#B5651D', '#E6C35C', '#9E9E9E', '#C0392B', '#28BE52', '#7B4FBF', '#3fb6ff'];
-  const ROUPAS = ['#28BE52', '#111A19', '#ffffff', '#2B3A55', '#3f7fc1', '#c9453a', '#e2b33c', '#7B4FBF', '#ff8fb1', '#8a8f94'];
-  const SAPATOS = ['#1A1A1A', '#5a3a22', '#ffffff', '#28BE52', '#c9453a'];
+  const PELES = ['#FFDBAC', '#F5D0B5', '#E8B48F', '#E0AC82', '#C68642', '#8D5524', '#5C3A21'];
+  const CABELOS = ['#1C1C1C', '#2B1B12', '#3B2416', '#5A3825', '#6B4226', '#B5651D', '#E6C35C', '#9E9E9E', '#C0392B', '#28BE52', '#7B4FBF', '#3fb6ff'];
+  const ROUPAS = ['#E9D5B7', '#28BE52', '#111A19', '#ffffff', '#2B3A55', '#3f7fc1', '#c9453a', '#e2b33c', '#7B4FBF', '#ff8fb1', '#8a8f94'];
+  const SAPATOS = ['#1A1A1A', '#5A3A22', '#ffffff', '#28BE52', '#c9453a'];
   const PAREDES = ['#EBDCCB', '#DDF3E3', '#F4F4F2', '#2B3433', '#FFE3CC', '#D6E6F5', '#E9D8F2', '#FFF3C4'];
   const RODAPES = ['#6B4A35', '#1E8A45', '#111A19', '#cfcfc9', '#8f3f22', '#ffffff'];
   const PISOS = ['#B98A62', '#8B5E3C', '#D8C3A5', '#E4EAE5', '#5a4636', '#9aa3a1', '#6c7a89'];
@@ -475,13 +476,14 @@
       { c: A + 'cabelo', t: 'sel', r: 'Cabelo', op: { curto: 'Curto', longo: 'Longo', cacheado: 'Black power / cacheado', moicano: 'Moicano', rabo: 'Rabo de cavalo', coque: 'Coque', careca: 'Careca' } },
       { c: A + 'corCabelo', t: 'cor', r: 'Cor do cabelo', op: CABELOS },
       { sec: 'Roupa' },
-      { c: A + 'estiloCamisa', t: 'sel', r: 'Estilo', op: { kwik: 'Polo KWIK', social: 'Camisa social + gravata', terno: 'Terno', moletom: 'Moletom' } },
+      { c: A + 'estiloCamisa', t: 'sel', r: 'Estilo', op: { casual: 'Camisa casual (manga dobrada)', kwik: 'Polo KWIK', social: 'Camisa social + gravata', terno: 'Terno', moletom: 'Moletom' } },
       { c: A + 'corCamisa', t: 'cor', r: 'Cor da roupa', op: ROUPAS },
       { c: A + 'corGravata', t: 'cor', r: 'Gravata', op: ROUPAS },
       { c: A + 'calca', t: 'cor', r: 'Calça', op: ROUPAS },
       { c: A + 'sapato', t: 'cor', r: 'Sapato', op: SAPATOS },
+      { c: A + 'corCordao', t: 'cor', r: 'Cordão do crachá', op: ['#E8613C', '#28BE52', '#111A19', '#3f7fc1', '#c9453a', '#e2b33c'] },
       { sec: 'Acessórios' },
-      { t: 'checks', itens: [[A + 'oculos', '👓 Óculos'], [A + 'fone', '🎧 Fone'], [A + 'bone', '🧢 Boné'], [A + 'barba', '🧔 Barba']] },
+      { t: 'checks', itens: [[A + 'oculos', '👓 Óculos'], [A + 'fone', '🎧 Fone'], [A + 'bone', '🧢 Boné'], [A + 'barba', '🧔 Barba'], [A + 'cracha', '🪪 Crachá']] },
     ],
     camposEsc: [
       { sec: 'Geral' },
@@ -688,11 +690,16 @@
     const remoto = j && j.config;
     const salvo = remoto && local ? ((local.salvoEm || 0) > (remoto.salvoEm || 0) ? local : remoto) : (remoto || local);
     cfg = mesclar(PADRAO, salvo || {});
+    let migrou = false;
+    if (salvo && (salvo.versao || 1) < 2) { // versão 2: boneco novo em 3/4 — aplica o visual novo, mantém nome e progresso
+      for (const f of cfg.funcionarios) f.aparencia = clone(PADRAO.funcionarios[0].aparencia);
+      cfg.versao = 2; migrou = true;
+    }
     estado.relatorios = (j && j.relatorios) || [];
     estado.caixa = cfg.economia.caixa; caixaMostrado = cfg.economia.caixa;
     $('#caixaValor').textContent = brl(caixaMostrado);
     $('#qtdRel').textContent = estado.relatorios.length;
-    if (remoto && salvo === local && online) salvar(true); // este aparelho tinha mudanças mais novas
+    if (online && (migrou || (remoto && salvo === local))) salvar(true); // visual novo ou mudanças mais novas deste aparelho
   }
 
   function abrirConexao() {
@@ -745,7 +752,10 @@
     montarCampos(); ligarEventos(); mudou(true); preencherCampos();
     mostrarAviso();
     renderUltimo(); renderListaRel();
-    if ('serviceWorker' in navigator && !KM.ehPC) navigator.serviceWorker.register('sw.js').catch(() => {});
+    if ('serviceWorker' in navigator) {
+      if (!KM.ehPC) navigator.serviceWorker.register('sw.js').catch(() => {});
+      else navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister())).catch(() => {}); // no PC, sempre os arquivos mais novos
+    }
     // ao voltar para o app (celular), recarrega a lista de relatórios
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible' && online && !estado.trabalhando) carregarRelatorios();
