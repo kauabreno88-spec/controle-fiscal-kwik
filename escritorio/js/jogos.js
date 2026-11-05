@@ -130,7 +130,7 @@
   }
   function atualizarBotao() {
     const b = $('#btSalaJogos'); if (!b) return;
-    b.innerHTML = A().estado.luzJogos ? '🌙 <span class="so-pc">Apagar sala de </span>jogos' : '💡 <span class="so-pc">Sala de </span>jogos';
+    b.innerHTML = A().estado.luzJogos ? '🌙<small>Apagar</small>' : '💡<small>Jogos</small>';
   }
   // Clique na cena: devolve true se foi na sala de jogos.
   function cliqueArea(x, y) {

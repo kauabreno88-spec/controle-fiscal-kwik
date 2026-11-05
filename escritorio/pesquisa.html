@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#111A19">
+<title>Pesquisa de satisfação · KWIK Contabilidade</title>
+<link rel="icon" href="assets/kwik.ico">
+<style>
+@font-face { font-family: 'Montserrat'; src: url('assets/fontes/Montserrat-Bold.ttf') format('truetype'); font-weight: 700; }
+@font-face { font-family: 'Montserrat'; src: url('assets/fontes/Montserrat-Black.ttf') format('truetype'); font-weight: 900; }
+@font-face { font-family: 'Montserrat'; src: url('assets/fontes/Montserrat-Medium.ttf') format('truetype'); font-weight: 500; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: 'Montserrat', system-ui, sans-serif; background: #F1F5F0; color: #111A19; }
+header { background: #111A19; color: #fff; padding: 28px 20px 70px; position: relative; overflow: hidden; }
+header::after { content: ''; position: absolute; right: -40px; bottom: -40px; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(circle, rgba(40,190,82,.45), transparent 70%); }
+.marca { display: flex; align-items: center; gap: 10px; max-width: 560px; margin: 0 auto; }
+.marca img { width: 44px; height: 44px; border-radius: 10px; background: #fff; }
+.marca b { font-weight: 900; font-size: 22px; letter-spacing: .5px; display: block; }
+.marca small { color: #28BE52; font-weight: 700; font-size: 11px; letter-spacing: 1.6px; }
+h1 { max-width: 560px; margin: 22px auto 0; font-weight: 900; font-size: 28px; line-height: 1.15; }
+h1 span { background: #28BE52; color: #111A19; padding: 0 6px; }
+main { max-width: 560px; margin: -46px auto 40px; padding: 0 14px; position: relative; z-index: 1; }
+.cartao { background: #fff; border-radius: 18px; padding: 18px; margin-bottom: 12px; box-shadow: 0 6px 24px rgba(17,26,25,.08); }
+.cartao h2 { margin: 0 0 12px; font-size: 16px; font-weight: 700; line-height: 1.35; }
+.cartao h2 i { color: #28BE52; font-style: normal; font-weight: 900; margin-right: 4px; }
+.nps { display: grid; grid-template-columns: repeat(11, 1fr); gap: 4px; }
+.nps button, .estrelas button, .sim-nao button { border: 2px solid #dde5dc; background: #fff; border-radius: 10px; font: inherit; font-weight: 900; padding: 10px 0; cursor: pointer; }
+.nps button.on, .sim-nao button.on { background: #28BE52; border-color: #28BE52; }
+.nps-leg { display: flex; justify-content: space-between; font-size: 11px; color: #6b7774; margin-top: 6px; font-weight: 700; }
+.linha { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px dashed #dde5dc; font-weight: 700; font-size: 14px; }
+.linha:last-child { border: 0; }
+.estrelas { display: flex; gap: 4px; }
+.estrelas button { border: 0; background: none; font-size: 24px; padding: 0 2px; filter: grayscale(1) opacity(.35); }
+.estrelas button.on { filter: none; }
+textarea { width: 100%; border: 2px solid #dde5dc; border-radius: 12px; padding: 10px 12px; font: inherit; font-size: 15px; min-height: 90px; resize: vertical; }
+.sim-nao { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.enviar { width: 100%; border: 0; border-radius: 14px; background: #28BE52; color: #111A19; font: inherit; font-weight: 900; font-size: 18px; padding: 16px; box-shadow: 0 4px 0 #1E8A45; cursor: pointer; }
+.obrigado { text-align: center; padding: 40px 18px; }
+.obrigado .big { font-size: 60px; }
+footer { text-align: center; color: #6b7774; font-size: 12px; font-weight: 700; padding-bottom: 30px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="marca"><img src="assets/kwik-simbolo.png" alt=""><div><b>KWIK</b><small>CONTABILIDADE INTELIGENTE</small></div></div>
+  <h1 id="titulo">Como está a sua experiência com a <span>KWIK</span>?</h1>
+</header>
+<main id="form">
+  <div class="cartao"><h2><i>1.</i> De 0 a 10, o quanto você indicaria a KWIK para um amigo?</h2>
+    <div class="nps" id="nps"></div><div class="nps-leg"><span>Nada provável</span><span>Muito provável</span></div></div>
+  <div class="cartao"><h2><i>2.</i> Como você avalia…</h2><div id="notas"></div></div>
+  <div class="cartao"><h2><i>3.</i> O que você mais gosta no nosso serviço?</h2><textarea id="gosta" placeholder="Pode escrever à vontade 🙂"></textarea></div>
+  <div class="cartao"><h2><i>4.</i> O que devemos melhorar?</h2><textarea id="melhorar" placeholder="Sua sinceridade ajuda muito"></textarea></div>
+  <div class="cartao"><h2><i>5.</i> Quer marcar uma conversa com a gente?</h2><div class="sim-nao" id="conversa"><button data-v="Sim">Sim, quero</button><button data-v="Não">Agora não</button></div></div>
+  <button class="enviar" id="enviar">💬 Enviar respostas</button>
+</main>
+<main id="fim" hidden><div class="cartao obrigado"><div class="big">💚</div><h2>Obrigado pela sua opinião!</h2><p>O WhatsApp abriu com as suas respostas. É só tocar em enviar. A equipe KWIK agradece!</p></div></main>
+<footer>KWIK Contabilidade · Contabilidade, BPO e consultoria</footer>
+<script>
+const q = new URLSearchParams(location.search), cliente = (q.get('c') || '').slice(0, 80), destino = (q.get('w') || '5598988663080').replace(/\D/g, '');
+if (cliente) document.getElementById('titulo').innerHTML = `${cliente.replace(/[<>&]/g, '')}, como está a sua experiência com a <span>KWIK</span>?`;
+const r = { nps: null, notas: {}, conversa: '' };
+const nps = document.getElementById('nps');
+for (let i = 0; i <= 10; i++) { const b = document.createElement('button'); b.textContent = i; b.onclick = () => { r.nps = i; [...nps.children].forEach(x => x.classList.toggle('on', x === b)); }; nps.append(b); }
+const itens = ['Atendimento', 'Prazos e entregas', 'Clareza das explicações', 'Custo-benefício'];
+const notas = document.getElementById('notas');
+for (const it of itens) {
+  const linha = document.createElement('div'); linha.className = 'linha'; linha.innerHTML = `<span>${it}</span>`;
+  const est = document.createElement('div'); est.className = 'estrelas';
+  for (let i = 1; i <= 5; i++) { const b = document.createElement('button'); b.textContent = '⭐'; b.onclick = () => { r.notas[it] = i; [...est.children].forEach((x, k) => x.classList.toggle('on', k < i)); }; est.append(b); }
+  linha.append(est); notas.append(linha);
+}
+document.querySelectorAll('#conversa button').forEach(b => b.onclick = () => { r.conversa = b.dataset.v; document.querySelectorAll('#conversa button').forEach(x => x.classList.toggle('on', x === b)); });
+document.getElementById('enviar').onclick = () => {
+  if (r.nps === null) { alert('Escolha uma nota de 0 a 10 na pergunta 1 🙂'); return; }
+  const l = ['*Pesquisa de satisfação — KWIK*', cliente ? `Cliente: ${cliente}` : '', '', `⭐ Nota (0 a 10): *${r.nps}*`];
+  for (const it of itens) l.push(`• ${it}: ${r.notas[it] ? '⭐'.repeat(r.notas[it]) + ` (${r.notas[it]}/5)` : '—'}`);
+  l.push('', `💚 O que mais gosta: ${document.getElementById('gosta').value.trim() || '—'}`, `🛠️ O que melhorar: ${document.getElementById('melhorar').value.trim() || '—'}`, `🗓️ Quer conversar: ${r.conversa || '—'}`);
+  location.href = `https://wa.me/${destino}?text=${encodeURIComponent(l.filter((x, i) => x || i > 1).join('\n'))}`;
+  document.getElementById('form').hidden = true; document.getElementById('fim').hidden = false;
+};
+</script>
+</body>
+</html>

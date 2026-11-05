@@ -141,6 +141,13 @@
     r(8, 21, 12, 11, cam); r(7, 22, 14, 3, cam);
     r(17, 21, 3, 11, camS); r(19, 22, 2, 3, camS); r(8, 29, 12, 1, camS);
     r(9, 31, 10, 1, '#3a2a1e');
+    const est2 = ap.estampa || 'lisa', ce = ap.corEstampa || '#ffffff';
+    if (est2 !== 'lisa' && estilo !== 'terno' && !fant) {
+      if (est2 === 'listras') for (const y of [23, 26, 29]) r(8, y, 12, 1, ce);
+      else if (est2 === 'xadrez') { for (const y of [23, 27]) r(8, y, 12, 1, ce); for (const x of [10, 14, 18]) r(x, 21, 1, 10, ce); }
+      else if (!costas && est2 === 'bolinhas') for (const [x, y] of [[9, 23], [13, 25], [17, 23], [10, 28], [16, 29], [12, 30]]) p(x, y, ce);
+      else if (!costas && est2 === 'kwik') KM.simboloPixel(g, 12, 24, 0.5, ce);
+    }
     if (costas) {
       r(10, 21, 8, 1, camH); r(13, 24, 1, 5, camS); r(10, 26, 1, 3, camS);
       if (ap.cracha !== false) r(10, 21, 8, 1, cordao);
@@ -171,6 +178,7 @@
       } else if (estilo === 'vestido') {
         r(11, 21, 5, 1, pele); p(12, 22, pele); p(14, 22, pele); r(8, 28, 12, 1, camD); p(13, 28, '#ffd43b');
       }
+      if (ap.colar && !fant) { const cc = ap.corColar || '#e2b33c'; p(11, 22, cc); p(12, 23, cc); p(13, 23, cc); p(14, 23, cc); p(15, 22, cc); r(13, 24, 1, 2, ap.corColar ? tom(cc, 1.25) : '#ffffff'); }
       if (ap.cracha !== false) { // cordão com crachá
         p(11, 22, cordao); p(11, 23, cordao); p(12, 24, cordao); p(16, 22, cordao); p(16, 23, cordao); p(15, 24, cordao);
         p(13, 25, '#9aa3a1'); r(12, 26, 3, 4, '#ffffff'); p(13, 27, '#6aa5d8'); r(12, 29, 3, 1, '#c9c9c2');
@@ -195,6 +203,7 @@
       if (fant === 'astronauta') { r(9, 22, 10, 9, '#ced4da'); r(10, 23, 8, 1, '#adb5bd'); }
     }
     bracoPerto();
+    if (ap.relogio && !fant && (b === 'baixo' || b === 'poder')) { r(5, 30, 3, 1, ap.corRelogio || '#212529'); p(6, 30, '#ffffff'); }
 
     // ---------------------------------------------------------------- cabeça
     r(12, 19 + cy, 4, 2, peleS);
@@ -203,11 +212,13 @@
       r(9, Y(9), 11, 11, pele); r(8, Y(10), 13, 9, pele);
       cabeloCostas();
       p(7, Y(13), pele); p(7, Y(14), pele); p(7, Y(15), peleS);
+      if (ap.brinco && !fant) p(7, Y(16), ap.corBrinco || '#e2b33c');
       acessoriosCostas();
     } else {
       r(9, Y(9), 11, 11, pele); r(8, Y(10), 13, 9, pele); r(10, Y(20), 8, 1, pele);
       r(18, Y(11), 2, 8, peleS); p(17, Y(19), peleS);
       r(19, Y(13), 2, 4, pele); p(20, Y(14), peleD); p(20, Y(15), peleD);
+      if (ap.brinco && !fant) { p(20, Y(17), ap.corBrinco || '#e2b33c'); p(20, Y(18), tom(ap.corBrinco || '#e2b33c', 1.3)); }
       if (ap.barba && !ss) { r(9, Y(17), 10, 3, cab); r(10, Y(20), 8, 1, cab); r(17, Y(13), 2, 4, cab); r(11, Y(17), 4, 1, pele); }
       rosto();
       cabeloFrente();
@@ -282,23 +293,35 @@
       const olho = ss === 'deus' ? '#d81b3c' : ss === 'branco' ? '#9fb4d6' : ss ? '#13a89e' : '#2a1d16';
       const esc = '#2a1d16';
       if (ss) { p(9, Y(12), cabS); p(10, Y(13), cabS); p(16, Y(12), cabS); p(15, Y(13), cabS); }
+      else if (ap.sobrancelha === 'grossa') { r(9, Y(11), 3, 2, cabS); r(14, Y(11), 3, 2, cabS); }
+      else if (ap.sobrancelha === 'fina') { r(9, Y(12), 2, 1, tom(cab, 0.9)); r(14, Y(12), 2, 1, tom(cab, 0.9)); }
+      else if (ap.sobrancelha === 'brava') { p(9, Y(11), cabS); r(10, Y(12), 2, 1, cabS); r(14, Y(12), 2, 1, cabS); p(16, Y(11), cabS); }
+      else if (ap.sobrancelha === 'surpresa') { r(9, Y(10), 3, 1, cabS); r(14, Y(10), 3, 1, cabS); }
       else { r(9, Y(12), 2, 1, cabS); r(14, Y(12), 3, 1, cabS); }
-      if (est.olhos === 'fechados' || est.piscar) { r(9, Y(15), 2, 1, peleD); r(15, Y(15), 2, 1, peleD); }
+      const olhosAp = est.olhos || (est.piscar ? undefined : { grandes: 'grandes', sonolentos: 'sonolentos', felizes: 'feliz', piscadinha: 'piscadinha' }[ap.olhos]);
+      if (olhosAp === 'fechados' || est.piscar) { r(9, Y(15), 2, 1, peleD); r(15, Y(15), 2, 1, peleD); }
+      else if (olhosAp === 'grandes') { r(10, Y(13), 2, 3, olho); r(15, Y(13), 2, 3, olho); p(10, Y(13), '#ffffff'); p(15, Y(13), '#ffffff'); }
+      else if (olhosAp === 'sonolentos') { r(9, Y(14), 3, 1, peleD); r(14, Y(14), 3, 1, peleD); p(10, Y(15), olho); p(15, Y(15), olho); }
+      else if (olhosAp === 'piscadinha') { r(10, Y(14), 1, 2, olho); p(9, Y(15), peleS); p(14, Y(15), esc); p(15, Y(14), esc); p(16, Y(15), esc); }
       else if (est.olhos === 'vermelhos') { r(10, Y(14), 1, 2, '#ff2a2a'); r(15, Y(14), 1, 2, '#ff2a2a'); p(10, Y(14), '#ffd0d0'); p(15, Y(14), '#ffd0d0'); p(9, Y(13), '#ff6b6b'); p(16, Y(13), '#ff6b6b'); }
-      else if (est.olhos === 'feliz') { p(9, Y(15), esc); p(10, Y(14), esc); p(11, Y(15), esc); p(14, Y(15), esc); p(15, Y(14), esc); p(16, Y(15), esc); }
+      else if (olhosAp === 'feliz') { p(9, Y(15), esc); p(10, Y(14), esc); p(11, Y(15), esc); p(14, Y(15), esc); p(15, Y(14), esc); p(16, Y(15), esc); }
       else {
         r(10, Y(14), 1, 2, olho); r(15, Y(14), 1, 2, olho);
         if (ss) { p(10, Y(14), '#ffffff'); p(15, Y(14), '#ffffff'); }
         else { p(9, Y(15), peleS); p(14, Y(15), peleS); }
       }
       p(12, Y(16), peleD);
-      const boca = est.boca || 'normal';
+      const boca = est.boca || { sorriso: 'sorriso', serio: 'serio', aberta: 'o', lingua: 'lingua' }[ap.boca] || 'normal';
       if (boca === 'sorriso') { p(11, Y(17), '#7a3b2a'); r(12, Y(18), 2, 1, '#7a3b2a'); p(14, Y(17), '#7a3b2a'); }
       else if (boca === 'grito') { r(11, Y(17), 4, 2, '#5a1a1a'); r(12, Y(18), 2, 1, '#d84a4a'); }
       else if (boca === 'o') r(12, Y(17), 2, 2, '#5a1a1a');
       else if (boca === 'sorrisao') { r(10, Y(17), 6, 2, '#3a0a0a'); r(11, Y(17), 4, 1, '#ffffff'); p(9, Y(16), '#3a0a0a'); p(16, Y(16), '#3a0a0a'); }
+      else if (boca === 'serio') r(11, Y(18), 4, 1, peleD);
+      else if (boca === 'lingua') { p(11, Y(17), '#7a3b2a'); r(12, Y(18), 2, 1, '#7a3b2a'); p(14, Y(17), '#7a3b2a'); p(13, Y(19), '#ff6b9a'); }
       else r(12, Y(18), 2, 1, peleD);
-      if (boca === 'sorriso' || est.olhos === 'feliz') { p(9, Y(17), '#f0a08a'); p(16, Y(17), '#f0a08a'); }
+      if (boca === 'sorriso' || olhosAp === 'feliz' || ap.bochechas) { p(9, Y(17), '#f0a08a'); p(16, Y(17), '#f0a08a'); if (ap.bochechas) { p(10, Y(17), '#f4b4a0'); p(15, Y(17), '#f4b4a0'); } }
+      if (ap.sardas) { const sd = tom(pele, 0.72); p(9, Y(16), sd); p(11, Y(16), sd); p(10, Y(17), sd); p(15, Y(16), sd); p(17, Y(16), sd); p(16, Y(17), sd); }
+      if (ap.pinta) p(15, Y(18), '#5a3a2a');
     }
 
     function cabeloFrente() {
@@ -362,7 +385,7 @@
 
     function acessoriosFrente() {
       if (ap.oculos) {
-        const f = '#1b1b1b', mod = ap.oculos === true ? 'quadrado' : ap.oculos;
+        const mod = ap.oculos === true ? 'quadrado' : ap.oculos, f = mod === 'escuro' ? '#1b1b1b' : ap.corOculos || '#1b1b1b';
         if (mod === 'escuro') {
           r(9, Y(13), 3, 3, f); r(14, Y(13), 3, 3, f); r(12, Y(13), 2, 1, f); r(17, Y(14), 2, 1, f); p(9, Y(13), '#6c757d'); p(14, Y(13), '#6c757d');
         } else if (mod === 'redondo') {
@@ -392,7 +415,7 @@
       if (ap.fone) {
         const f = '#202426';
         r(8, Y(4), 13, 1, f); r(7, Y(5), 1, 7, f); r(21, Y(5), 1, 7, f);
-        r(6, Y(12), 2, 4, VERDE); r(20, Y(12), 2, 4, VERDE); p(6, Y(12), tom(VERDE, 1.3));
+        const cf = ap.corFone || VERDE; r(6, Y(12), 2, 4, cf); r(20, Y(12), 2, 4, cf); p(6, Y(12), tom(cf, 1.3));
       }
     }
     function acessoriosCostas() {
@@ -402,7 +425,7 @@
       else if (chapeu === 'gorro') { r(8, Y(3), 13, 7, cb); r(9, Y(2), 11, 1, cb); r(8, Y(8), 13, 2, tom(cb, 0.75)); r(13, Y(0), 3, 2, '#f8f9fa'); }
       else if (chapeu === 'chapeu') { r(9, Y(2), 11, 5, cb); r(9, Y(5), 11, 1, '#1b1b1b'); r(5, Y(7), 19, 2, tom(cb, 0.72)); }
       else if (chapeu === 'tiara') { r(8, Y(6), 13, 1, cb); r(9, Y(5), 11, 1, cb); }
-      if (ap.fone) { const f = '#202426'; r(8, Y(4), 13, 1, f); r(7, Y(5), 1, 7, f); r(21, Y(5), 1, 7, f); r(6, Y(12), 2, 4, VERDE); r(21, Y(12), 2, 4, VERDE); }
+      if (ap.fone) { const f = '#202426'; r(8, Y(4), 13, 1, f); r(7, Y(5), 1, 7, f); r(21, Y(5), 1, 7, f); r(6, Y(12), 2, 4, ap.corFone || VERDE); r(21, Y(12), 2, 4, ap.corFone || VERDE); }
     }
   };
 })();

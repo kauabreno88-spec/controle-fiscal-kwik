@@ -35,7 +35,8 @@ a { color: inherit; }
 .marca b { font-weight: 900; letter-spacing: .5px; font-size: 18px; }
 .marca small { display: block; font-size: 11px; font-weight: 700; color: var(--verde); letter-spacing: 1.5px; text-transform: uppercase; }
 .abas { display: flex; gap: 4px; margin-left: 10px; }
-.abas button { background: transparent; border: 0; color: #b9c6c2; padding: 9px 14px; border-radius: 10px; font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+.abas button { background: transparent; border: 0; color: #b9c6c2; padding: 9px 14px; border-radius: 10px; font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 6px; position: relative; }
+.abas .ic { font-style: normal; }
 .abas button:hover { color: #fff; background: rgba(255,255,255,.06); }
 .abas button.ativa { color: var(--grafite); background: var(--verde); }
 .contador { background: rgba(255,255,255,.15); border-radius: 99px; padding: 1px 7px; font-size: 11px; }
@@ -88,7 +89,7 @@ main { max-width: 1320px; margin: 0 auto; padding: 18px 20px 40px; }
 .cracha.sel { border-color: var(--verde); }
 .cracha small { color: var(--verde); font-size: 10px; font-weight: 800; }
 .balao { position: absolute; transform: translate(-50%, -100%); max-width: 170px; background: #fff; color: var(--grafite); border: 1.5px solid var(--grafite);
-  border-radius: 9px; padding: 3px 7px; font-size: 11px; line-height: 1.3; font-weight: 700; box-shadow: 2px 2px 0 rgba(17,26,25,.8); pointer-events: none;
+  border-radius: 9px; padding: 3px 7px; font-size: 10px; line-height: 1.25; font-weight: 700; letter-spacing: .1px; box-shadow: 2px 2px 0 rgba(17,26,25,.8); pointer-events: none;
   opacity: 0; transition: opacity .2s; text-align: center; z-index: 2; }
 .balao.on { opacity: 1; }
 .banner { position: absolute; left: 50%; top: 18%; transform: translate(-50%, -50%) scale(.2); font-weight: 900; font-size: clamp(26px, 5vw, 54px);
@@ -369,6 +370,58 @@ dialog.prancheta { background: transparent; box-shadow: none; max-width: 560px; 
 .lead.contato textarea.msg { width: 100%; border: 1px solid var(--linha); border-radius: 10px; padding: 8px 10px; font: inherit; font-size: 13px; line-height: 1.45; resize: vertical; margin-top: 4px; }
 .lead.contato.enviado { background: #f1fbf4; border-color: #b9e8c6; }
 
+/* ---------- barra de ações compacta */
+.acoes { display: flex; gap: 8px; margin-top: 10px; align-items: stretch; flex-wrap: nowrap; }
+.acoes #btTrabalhar { flex: 1; justify-content: center; font-size: 15px; padding: 10px 14px; min-height: 48px; }
+.bt.icone { flex-direction: column; gap: 0; padding: 4px 10px; min-width: 62px; justify-content: center; font-size: 19px; line-height: 1.1; min-height: 48px; }
+.bt.icone small { font-size: 10.5px; font-weight: 800; color: var(--cinza); }
+.bt.icone.jogos small { color: #e9d5ff; }
+.fechar-card { border: 0; background: none; font-size: 20px; color: var(--cinza); line-height: 1; padding: 0 4px; }
+
+/* ---------- aba Equipe */
+.equipe-cab h2 { margin: 0 0 4px; font-weight: 900; }
+.equipe-cab { margin: 0 4px 14px; }
+.equipe2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.membro2 { background: #fff; border: 1px solid var(--linha); border-radius: 18px; padding: 14px; box-shadow: var(--sombra); display: flex; flex-direction: column; gap: 10px; }
+.membro2.sel { border: 2px solid var(--verde); }
+.m2-topo { display: flex; gap: 12px; align-items: center; }
+.m2-topo canvas { width: 60px; height: 92px; image-rendering: pixelated; background: var(--nevoa); border-radius: 12px; flex: none; }
+.m2-topo b { display: block; font-size: 17px; font-weight: 900; }
+.m2-topo > div > span { font-size: 12px; color: var(--cinza); font-weight: 700; }
+.m2-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.m2-tags .nivel { margin: 0; }
+.st { font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 99px; background: var(--nevoa); color: var(--cinza); }
+.st.trab { background: #e3f7e9; color: var(--verde-esc); } .st.dorme { background: #e7f5ff; color: #1864ab; } .st.joga { background: #f3e8ff; color: #6b2a7a; } .st.anda { background: #fff4d6; color: #6b4b00; }
+.membro2 .xp { margin: 0; }
+.m2-nums { display: flex; gap: 12px; font-size: 12.5px; font-weight: 700; color: var(--tinta); }
+.m2-bts { display: flex; gap: 6px; }
+.m2-bts .prim { flex: 1; justify-content: center; }
+
+/* ---------- escolher / perguntar */
+#dlgEscolha { max-width: 460px; }
+.opcao { width: 100%; display: flex; gap: 12px; align-items: center; text-align: left; border: 2px solid var(--linha); background: #fff; border-radius: 14px; padding: 12px 14px; margin-bottom: 8px; }
+.opcao:hover { border-color: var(--verde); background: #f1fbf4; }
+.opcao .ic { font-size: 28px; }
+.opcao b { display: block; font-size: 15px; font-weight: 900; }
+.opcao small { color: var(--cinza); font-weight: 600; font-size: 12.5px; }
+.perg { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; font-size: 13px; }
+.perg textarea, .perg input { border: 1px solid var(--linha); border-radius: 10px; padding: 9px 11px; font: inherit; font-size: 14px; width: 100%; }
+
+/* ---------- clientes e relacionamento */
+.clientes-box { display: flex; flex-direction: column; gap: 6px; }
+.cliente-linha { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto; gap: 6px; }
+.cliente-linha input { border: 1px solid var(--linha); border-radius: 10px; padding: 8px 10px; font: inherit; font-size: 13.5px; min-width: 0; }
+.enviar-cliente { background: var(--nevoa); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.enviar-cliente h3 { margin: 0; font-size: 16px; font-weight: 900; }
+.linha-envio { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+.linha-envio select, .linha-envio input { border: 1px solid var(--linha); border-radius: 10px; padding: 8px 10px; font: inherit; font-size: 13.5px; min-width: 0; background: #fff; }
+.enviar-cliente textarea.msg { width: 100%; border: 1px solid var(--linha); border-radius: 10px; padding: 10px; font: inherit; font-size: 13.5px; line-height: 1.45; }
+.bt.whats { background: #25d366; border-color: #25d366; color: #0b3d1e; text-decoration: none; }
+.form-previa { margin-top: 16px; }
+.form-previa h3 { font-size: 16px; font-weight: 900; margin: 0 0 6px; }
+.form-previa ol { font-size: 13.5px; line-height: 1.6; padding-left: 20px; }
+.video-cv.vertical { max-width: 320px; aspect-ratio: 9 / 16; }
+
 /* ---------- foto */
 .polaroid { background: #fff; padding: 12px 12px 34px; box-shadow: 0 10px 30px rgba(0,0,0,.25); transform: rotate(-1.5deg); display: inline-block; max-width: 100%; position: relative; }
 .polaroid img { display: block; max-width: 100%; image-rendering: pixelated; }
@@ -385,28 +438,37 @@ dialog.prancheta { background: transparent; box-shadow: none; max-width: 560px; 
   body { padding-bottom: calc(68px + env(safe-area-inset-bottom)); }
   .topo { padding: calc(8px + env(safe-area-inset-top)) 12px 8px; }
   .marca img { width: 30px; height: 30px; }
-  .abas { position: fixed; left: 0; right: 0; bottom: 0; margin: 0; z-index: 40; background: var(--grafite); justify-content: space-around;
-    padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); border-top: 1px solid #2b3a37; }
-  .abas button { flex-direction: column; gap: 2px; font-size: 20px; padding: 6px 4px; flex: 1; position: relative; }
-  .abas button span.txt { display: block !important; font-size: 11px; }
-  .abas .contador { position: absolute; top: 2px; right: calc(50% - 26px); }
+  .abas { position: fixed; left: 10px; right: 10px; bottom: calc(8px + env(safe-area-inset-bottom)); margin: 0; z-index: 40; background: rgba(17,26,25,.94);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); justify-content: space-around; padding: 6px; border-radius: 22px; box-shadow: 0 10px 30px rgba(0,0,0,.3); }
+  .abas button { flex-direction: column; gap: 1px; padding: 6px 2px; flex: 1; border-radius: 16px; color: #8fa19c; }
+  .abas .ic { font-size: 20px; transition: transform .2s; }
+  .abas button.ativa { background: var(--verde); color: var(--grafite); }
+  .abas button.ativa .ic { transform: translateY(-1px) scale(1.08); }
+  .abas button span.txt { display: block !important; font-size: 10.5px; font-weight: 800; }
+  .abas .contador { position: absolute; top: 2px; right: calc(50% - 24px); background: #e03131; color: #fff; }
+  body { padding-bottom: calc(86px + env(safe-area-inset-bottom)) !important; }
+  .grade-escritorio .lateral .card:not(#cardTarefa):not(.painel-jogos) { display: none; }
+  .acoes { display: flex !important; position: sticky; bottom: calc(84px + env(safe-area-inset-bottom)); z-index: 30; background: rgba(255,255,255,.94); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); padding: 6px; margin: 8px -4px 0; border-radius: 18px; box-shadow: 0 6px 20px rgba(17,26,25,.15); }
+  .jogando .acoes { display: none !important; }
+  .acoes .bt.icone { min-width: 56px; padding: 4px 6px; }
+  .linha-envio, .cliente-linha { grid-template-columns: 1fr; }
+  .equipe2 { grid-template-columns: 1fr; }
   main { padding: 10px 10px 20px; }
   .palco-card { padding: 10px; }
   .palco-topo h1 { font-size: 15px; }
   .status-pill { font-size: 11px; }
-  .acoes { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 8px; }
-  .acoes .bt { justify-content: center; padding: 12px 6px; font-size: 13px; }
+  .acoes .bt { font-size: 13px; }
   .so-pc { display: none; }
   .menu-anim { position: fixed; left: 8px; right: 8px; bottom: calc(76px + env(safe-area-inset-bottom)); grid-template-columns: 1fr 1fr; max-height: 62vh; overflow: auto; }
   .menu-anim button { padding: 11px 10px; }
   .cracha { font-size: 11px; padding: 3px 8px 3px 6px; }
-  .balao { font-size: 10px; max-width: 42vw; padding: 2px 6px; }
+  .balao { font-size: 9px; max-width: 40vw; padding: 2px 5px; border-radius: 7px; }
   .rel { padding: 16px 14px; }
   .rel-cab h2 { font-size: 18px; }
   .campo { grid-template-columns: 1fr; gap: 4px; }
   .pers { padding: 16px; }
   .toasts { left: 10px; right: 10px; bottom: calc(78px + env(safe-area-inset-bottom)); align-items: stretch; }
-  .acoes { grid-template-columns: 1fr 1fr; }
+
   .form-tarefa { grid-template-columns: 1fr 1fr; }
   .form-tarefa #tarefaTexto { grid-column: 1 / -1; }
   .form-tarefa button { grid-column: 1 / -1; justify-content: center; }
@@ -427,9 +489,10 @@ dialog.prancheta { background: transparent; box-shadow: none; max-width: 560px; 
 <header class="topo">
   <a class="marca" href="#escritorio"><img src="assets/kwik-simbolo.svg" alt=""><div><b>KWIK</b><small id="nomeEscritorio">Mini Escritório</small></div></a>
   <nav class="abas">
-    <button data-aba="escritorio" class="ativa">🏢 <span class="txt">Escritório</span></button>
-    <button data-aba="relatorios">📑 <span class="txt">Relatórios</span> <span class="contador" id="qtdRel">0</span></button>
-    <button data-aba="personalizar">🎨 <span class="txt">Personalizar</span></button>
+    <button data-aba="escritorio" class="ativa"><i class="ic">🏢</i> <span class="txt">Escritório</span></button>
+    <button data-aba="equipe"><i class="ic">👥</i> <span class="txt">Equipe</span></button>
+    <button data-aba="relatorios"><i class="ic">📑</i> <span class="txt">Relatórios</span> <span class="contador" id="qtdRel">0</span></button>
+    <button data-aba="personalizar"><i class="ic">🎨</i> <span class="txt">Visual</span></button>
   </nav>
   <div class="dir">
     <div class="caixa" id="caixa" title="Caixa do escritório: cresce a cada tarefa enviada"><span class="rotulo">Caixa</span>💰 <span class="valor" id="caixaValor">R$ 0,00</span></div>
@@ -479,10 +542,10 @@ dialog.prancheta { background: transparent; box-shadow: none; max-width: 560px; 
           <p class="jogo-dica"><b>Arraste as caminhas</b> pelo tabuleiro. Quando uma caminha passa por cima de gatinhos da <b>mesma cor</b>, eles pulam para dentro. O número é quantos ainda faltam; caminha cheia vai embora. Gatos de outra cor e outras caminhas bloqueiam o caminho. A seta ⇕ ⇔ indica que a caminha só anda naquela direção. Leve todos para casa antes do tempo acabar!</p>
         </div>
         <div class="acoes">
-          <button class="bt" id="btSelecionar">👤 <span class="so-pc">Selecionar </span>funcionário</button>
+          <button class="bt icone" id="btSelecionar" title="Escolher funcionário">👤<small>Equipe</small></button>
           <button class="bt prim" id="btTrabalhar">▶ Trabalhar</button>
-          <button class="bt" id="btAnimacoes">✨ Animações</button>
-          <button class="bt jogos" id="btSalaJogos">💡 <span class="so-pc">Sala de </span>jogos</button>
+          <button class="bt icone" id="btAnimacoes" title="Animações">✨<small>Animar</small></button>
+          <button class="bt icone jogos" id="btSalaJogos" title="Sala de jogos">💡<small>Jogos</small></button>
           <div class="menu-anim" id="menuAnim">
             <h4>Transformações</h4>
             <button class="ss" data-anim="ss1">⚡ Super Sayajin</button>
@@ -540,22 +603,25 @@ dialog.prancheta { background: transparent; box-shadow: none; max-width: 560px; 
             <div><small>Ganhou</small><b id="latGanhos">R$ 0</b></div>
           </div>
         </div>
-        <div class="card">
-          <h3>Tarefa atual</h3>
-          <div id="tarefaVazia" class="vazio">Toque em um funcionário (ou em <b>Selecionar</b>) e aperte o botão verde. <b>Notícias</b> busca o dia, <b>Clara</b> abre a prancheta, <b>Maycon</b> procura clientes, <b>Enzo</b> faz o vídeo do Instagram e <b>Lena</b> prepara o WhatsApp.</div>
+        <div class="card" id="cardTarefa" hidden>
+          <h3 style="display:flex;justify-content:space-between;align-items:center">Tarefa atual <button class="fechar-card" id="fecharTarefa" title="Fechar">×</button></h3>
+          <div id="tarefaVazia" class="vazio">Toque em alguém e aperte o botão verde.</div>
           <div id="tarefaAtiva" hidden>
             <b id="tarefaTitulo" style="font-weight:800;font-size:14px">📰 Notícias contábeis do dia</b>
             <div class="barra"><div id="tarefaBarra"></div></div>
             <ul class="log" id="tarefaLog"></ul>
           </div>
         </div>
-        <div class="card">
-          <h3>Último relatório</h3>
-          <div id="ultimoRel" class="vazio">Nenhum relatório ainda.</div>
-        </div>
+
       </aside>
       
     </div>
+  </section>
+
+  <!-- EQUIPE -->
+  <section class="aba" id="aba-equipe">
+    <div class="equipe-cab"><h2>👥 Equipe KWIK</h2><p class="vazio">Toque no botão verde para mandar a pessoa trabalhar. O status atualiza sozinho.</p></div>
+    <div class="equipe2" id="equipeLista"></div>
   </section>
 
   <!-- RELATÓRIOS -->
@@ -596,6 +662,15 @@ dialog.prancheta { background: transparent; box-shadow: none; max-width: 560px; 
           <div id="camposEsc" style="margin-top:12px"></div>
           <div class="objetos" id="objEsc"></div>
           <div class="painel-obj" id="painelEsc" hidden></div>
+        </div>
+        <div class="card pers" style="margin-top:18px">
+          <h2>👥 Clientes ativos</h2>
+          <p class="sub">Aparecem rodando no telão da sala de Relacionamento e na hora da Bia enviar mensagens.</p>
+          <div id="clientesBox" class="clientes-box"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+            <button class="bt peq" id="btNovoCliente">＋ Adicionar cliente</button>
+            <button class="bt peq" id="btPuxarFiscal">📥 Puxar do KWIK Fiscal</button>
+          </div>
         </div>
         <div class="card pers" style="margin-top:18px">
           <h2>⚙️ Equipe e dinheiro</h2>
@@ -658,6 +733,11 @@ dialog.prancheta { background: transparent; box-shadow: none; max-width: 560px; 
   </div>
 </dialog>
 
+<dialog id="dlgEscolha">
+  <div class="dlg-topo"><h2 id="escolhaTitulo">Escolha</h2><button data-fechar aria-label="Fechar">×</button></div>
+  <div class="dlg-corpo" id="escolhaOpcoes"></div>
+</dialog>
+
 <div class="toasts" id="toasts"></div>
 
 <dialog id="dlgGithub">
@@ -674,6 +754,9 @@ dialog.prancheta { background: transparent; box-shadow: none; max-width: 560px; 
 <script src="js/filmes.js"></script>
 <script src="js/jogos.js"></script>
 <script src="js/marketing.js"></script>
+<script src="js/enzo.js"></script>
+<script src="js/relacionamento.js"></script>
+<script src="js/rotinas.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

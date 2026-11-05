@@ -35,7 +35,7 @@
     U: '101101101101111', V: '101101101101010', W: '101101111111101', X: '101101010101101', Y: '101101010010010',
     Z: '111001010100111', $: '011110010011110', '+': '000010111010000', '-': '000000111000000', '%': '101001010100101',
     ':': '000010000010000', '.': '000000000000010', ',': '000000000010100', '!': '010010010000010', '/': '001001010100100',
-    ' ': '000000000000000', '?': '111001010000010', '<': '001010100010001', '>': '100010001010100',
+    ' ': '000000000000000', '?': '111001010000010', '*': '000101010101000', '&': '010101010101011', '<': '001010100010001', '>': '100010001010100',
   };
   const semAcento = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
   function texto(g, s, x, y, cor) {
@@ -89,10 +89,10 @@
   // ------------------------------------------------------------------ planta do prédio
   const G = 4, T = 4, RW = 136, RH = 124, NB = 20, CH = 40, TOPO = 34, BAIXO = 48;
   const PORTA = [8, 32]; // a porta de cada sala fica sempre à esquerda; essa faixa nunca tem móveis
-  const NOMES = { recepcao: 'Recepção', contabil: 'Contábil', comercial: 'Comercial', copa: 'Copa', jogos: 'Sala de jogos', marketing: 'Marketing' };
+  const NOMES = { recepcao: 'Recepção', contabil: 'Contábil', comercial: 'Comercial', copa: 'Copa', jogos: 'Sala de jogos', marketing: 'Marketing', relacionamento: 'Relacionamento', reuniao: 'Reunião' };
   const PLANTAS = {
-    largo: { margem: 30, linhas: [['recepcao', 'contabil', 'comercial'], ['copa', 'jogos', 'marketing']] },
-    alto: { margem: 12, linhas: [['recepcao', 'contabil'], ['comercial', 'marketing'], ['copa', 'jogos']] },
+    largo: { margem: 30, linhas: [['recepcao', 'contabil', 'comercial', 'relacionamento'], ['copa', 'jogos', 'marketing', 'reuniao']] },
+    alto: { margem: 12, linhas: [['recepcao', 'contabil'], ['comercial', 'relacionamento'], ['marketing', 'reuniao'], ['copa', 'jogos']] },
   };
   KM.P = (X, Y, Z = 0) => [X, Y - Z];
   KM.chaoEm = (x, y) => [x, y];
@@ -122,7 +122,7 @@
       s.porta = [s.fx + (PORTA[0] + PORTA[1]) / 2, cor === s.corrBaixo ? s.y + RH + T + 14 : s.y - 14];
     }
     const c0 = lay.corredores[0];
-    lay.centro = [Math.round(lay.predio.x + lay.predio.w / 2 + (nome === 'largo' ? 40 : 18)), c0.y + 26];
+    lay.centro = [Math.round(lay.predio.x + lay.predio.w / 2 + (nome === 'largo' ? 0 : 18)), c0.y + 26];
     lay.palco = (nome === 'largo' ? [-56, -28, 0, 28, 56] : [-48, -24, 0, 24, 48]).map((dx, i) => [lay.centro[0] + dx, lay.centro[1] + (i % 2 ? -6 : 2)]);
     mobiliar(lay, cfg);
     montarGrade(lay);
@@ -193,6 +193,25 @@
     if (lay.salas.comercial.linha === 0 && it.janela !== false) parede('comercial', 'janela', 42, 24, { din: true });
     parede('comercial', 'mural', 98, 26, { din: true });
     parede('comercial', 'mapa', 70, 18);
+
+    // Relacionamento: Bia (feedback e contato com os clientes ativos)
+    assento('relacionamento', 'relacionamento', 62, 36, ['caneca', 'flor'], 'monitor');
+    parede('relacionamento', 'telao', 86, 46, { din: true });
+    add('relacionamento', 'poltrona', 92, 60, 15, 13, 10);
+    add('relacionamento', 'mesinha', 110, 64, 12, 8, 6, { redonda: true });
+    add('relacionamento', 'arquivo', 42, 88, 12, 10, 16);
+    planta('relacionamento', 124, 88);
+    if (e.tapete) add('relacionamento', 'tapete', 82, 52, 50, 32, 0, { bloq: false, redondo: true });
+    parede('relacionamento', 'coracao', 44, 12);
+
+    // Reunião
+    add('reuniao', 'mesaReuniao', 52, 36, 66, 26, 10, { ordenar: true });
+    for (const rx of [58, 76, 94]) { add('reuniao', 'banco', rx, 26, 9, 6, 6, { bloq: false }); add('reuniao', 'banco', rx, 66, 9, 6, 6, { bloq: false }); }
+    add('reuniao', 'bebedouro', 124, 4, 9, 7, 16);
+    planta('reuniao', 42, 90);
+    planta('reuniao', 124, 88);
+    parede('reuniao', 'tvReuniao', 64, 36, { din: true });
+    if (lay.salas.reuniao.linha === 0 && it.janela !== false) parede('reuniao', 'janela', 108, 22, { din: true });
 
     // Marketing: Enzo (vídeo) e Lena (contatos)
     assento('video', 'marketing', 62, 40, ['caneca'], 'duplo');
@@ -567,6 +586,13 @@
       const { X, Y, w, d, h } = m; sombra(g, X, Y, w, d); caixa(g, X, Y, w, d, h, '#7048e8', { frente: '#5f3dc4' });
       r(g, X + 1, Y + d - h + 13, w - 2, 3, '#212529'); r(g, X + 3, Y + d - h + 13, 2, 1, '#e03131'); r(g, X + 7, Y + d - h + 14, 2, 1, '#ffd43b');
     },
+    mesaReuniao(g, m) {
+      const { X, Y, w, d, h } = m; sombra(g, X, Y, w, d); caixa(g, X, Y, w, d, h, '#3d2b20');
+      r(g, X + 3, Y - h + 3, w - 6, d - 6, '#5a3f2e');
+      for (const [x, y] of [[8, 4], [26, 4], [44, 4], [8, 14], [26, 14], [44, 14]]) { r(g, X + x, Y - h + y, 7, 5, '#ffffff'); r(g, X + x + 1, Y - h + y + 1, 4, 1, '#9aa3a1'); }
+      r(g, X + w - 12, Y - h + 9, 6, 5, '#212529'); r(g, X + w - 11, Y - h + 10, 4, 3, '#4dabf7');
+    },
+    coracao(g, m) { const { X, Y } = m; r(g, X, Y + 1, 12, 13, '#111A19'); for (const [x, y, w] of [[2, 4, 3], [7, 4, 3], [1, 5, 10], [2, 7, 8], [3, 8, 6], [4, 9, 4], [5, 10, 2]]) r(g, X + x, Y + y, w, 1, '#ff6b9a'); r(g, X + 1, Y + 6, 10, 1, '#ff6b9a'); },
     // ----- na parede (Y = topo da face, h = 16)
     logo(g, m) { const { X, Y } = m; r(g, X, Y + 1, 16, 13, CONTORNO); r(g, X + 1, Y + 2, 14, 11, '#ffffff'); simboloPixel(g, X + 2, Y + 2, 0.84, VERDE); },
     grafico(g, m) {
@@ -608,6 +634,7 @@
     else if (funcao === 'checklist') { r(ctx, x, y, w, h, '#fffdf6'); for (let i = 0; i < 3; i++) { r(ctx, x + 1, y + 1 + i * 3, 2, 2, (f >> 2) % 4 > i ? VERDE : '#ced4da'); r(ctx, x + 4, y + 1 + i * 3, w - 6, 1, '#9aa3a1'); } }
     else if (funcao === 'prospeccao') { r(ctx, x, y, w, h, '#d0ebff'); r(ctx, x + 2, y + 2, w - 6, h - 4, '#b2f2bb'); for (let i = 0; i < 3; i++) if ((f + i) % 4) r(ctx, x + 3 + ((i * 5 + 2) % (w - 6)), y + 2 + ((i * 3) % (h - 4)), 1, 2, '#e03131'); }
     else if (funcao === 'video') { r(ctx, x, y, w, h - 4, '#1b1f22'); r(ctx, x + 2, y + 1, w - 4, h - 6, (f >> 2) % 2 ? '#28BE52' : '#111A19'); r(ctx, x + 4, y + 3, w - 8, 1, '#ffffff'); r(ctx, x, y + h - 4, w, 4, '#343a40'); for (let i = 0; i < 4; i++) r(ctx, x + 1 + i * 5, y + h - 3, 4, 1, ['#ff6b6b', '#4dabf7', '#ffd43b', '#b197fc'][i]); r(ctx, x + (f % w), y + h - 4, 1, 4, '#ffffff'); }
+    else if (funcao === 'relacionamento') { r(ctx, x, y, w, h, '#fff0f6'); r(ctx, x, y, w, 2, VERDE); for (let i = 0; i < 3; i++) { r(ctx, x + 1, y + 3 + i * 3, 2, 2, (f >> 1) % 4 > i ? '#f06595' : '#ced4da'); r(ctx, x + 4, y + 3 + i * 3, w - 6, 1, '#adb5bd'); } }
     else if (funcao === 'contato') { r(ctx, x, y, w, h, '#ece5dd'); r(ctx, x, y, w, 2, '#075e54'); for (let i = 0; i < 3; i++) if ((f >> 1) % 5 >= i) r(ctx, i % 2 ? x + 2 : x + w - 8, y + 3 + i * 3, 6, 2, i % 2 ? '#ffffff' : '#dcf8c6'); }
     else r(ctx, x, y, w, h, '#14352a');
   }
@@ -619,6 +646,19 @@
     if (per === 'noite') { r(ctx, X + w - 6, Y + 3, 3, 3, '#fffbe0'); for (let i = 0; i < 5; i++) if ((Math.floor(t * 2) + i) % 4) r(ctx, X + 2 + i * 5, Y + 4 + (i % 3) * 2, 1, 1, '#ffffff'); }
     else { r(ctx, X + 3, Y + 3, 3, 3, per === 'dia' ? '#fff3a3' : '#ffd36b'); const nx = X + (((t * 3) % (w + 10)) | 0) - 8; ctx.save(); ctx.beginPath(); ctx.rect(X, Y + 2, w, h); ctx.clip(); r(ctx, nx, Y + 5, 8, 2, '#ffffff'); r(ctx, nx + 2, Y + 4, 4, 1, '#ffffff'); ctx.restore(); }
     r(ctx, X + (w >> 1), Y + 2, 1, h, '#f2f2ee'); r(ctx, X - 1, Y + h + 2, w + 2, 1, '#c9c9c2');
+  }
+  // Telão com a lista de clientes ativos rodando (Relacionamento).
+  function telao(ctx, m, cfg, t) {
+    const { X, Y, w } = m, y = Y + 1, h = 13;
+    r(ctx, X - 1, y - 1, w + 2, h + 2, '#0b0f10'); r(ctx, X, y, w, h, '#111A19'); r(ctx, X, y, w, 5, VERDE);
+    texto(ctx, 'CLIENTES', X + 2, y, '#111A19');
+    const lista = (cfg.clientes || []).map(c => c.nome).filter(Boolean);
+    const txt = (lista.length ? lista.join(' * ') : 'CADASTRE SEUS CLIENTES ATIVOS') + ' * ';
+    const larg = KM.larguraTexto(txt) + 4, off = Math.floor(t * 14) % larg;
+    ctx.save(); ctx.beginPath(); ctx.rect(X + 1, y + 6, w - 2, 6); ctx.clip();
+    for (let x = X + 1 - off; x < X + w; x += larg) texto(ctx, txt, x, y + 7, '#9be3ad');
+    ctx.restore();
+    texto(ctx, String(lista.length), X + w - 4 * String(lista.length).length - 1, y, '#ffffff');
   }
   function relogio(ctx, m) {
     const x = m.X, y = m.Y + 3;
@@ -662,7 +702,7 @@
   }
   function monitorDe(ctx, m, estado, t) {
     const p = Object.values(estado.pessoas || {}).find(q => q.funcao === m.funcao);
-    const modo = !p || p.visivel === false ? 'off' : p.dormindo ? 'off' : (estado.trabalhoDe && estado.trabalhoDe[m.funcao]) || (p && p.trabalhando) ? 'trab' : 'idle';
+    const modo = !p || p.visivel === false ? 'off' : p.dormindo ? 'off' : (estado.trabalhoDe && estado.trabalhoDe[m.funcao]) || (p && (p.trabalhando || (p.digitando && p.modo === 'sentado'))) ? 'trab' : 'idle';
     const ty = m.Y - m.h, cx = m.X + (m.w >> 1);
     if (m.tela === 'notebook') {
       const x = m.X + m.w - 15, y = ty - 8;
@@ -677,6 +717,8 @@
   function desenharDinamicos(ctx, cfg, estado, t) {
     for (const d of L.decor) {
       if (d.tipo === 'janela') janela(ctx, d, cfg, t);
+      else if (d.tipo === 'telao') telao(ctx, d, cfg, t);
+      else if (d.tipo === 'tvReuniao') { r(ctx, d.X, d.Y + 1, d.w, 13, '#111'); r(ctx, d.X + 1, d.Y + 2, d.w - 2, 11, '#14352a'); const k = Math.floor(t / 4) % 3; [[4, 7, 5, 9], [6, 4, 8, 5], [3, 6, 8, 10]][k].forEach((a, i) => r(ctx, d.X + 4 + i * 6, d.Y + 12 - a, 4, a, i === 3 ? VERDE : '#2E8B45')); texto(ctx, 'KWIK', d.X + d.w - 18, d.Y + 3, '#ffffff'); }
       else if (d.tipo === 'relogio') relogio(ctx, d);
       else if (d.tipo === 'painel') painelTV(ctx, d, estado, t);
       else if (d.tipo === 'mural') mural(ctx, d, cfg);

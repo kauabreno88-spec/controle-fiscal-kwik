@@ -34,6 +34,7 @@
         pele: '#E8B48F', cabelo: 'curto', corCabelo: '#5A3825', estiloCamisa: 'casual', corCamisa: '#E9D5B7', corGravata: '#28BE52',
         calca: '#2F3A4A', sapato: '#5A3A22', oculos: false, fone: false, bone: false, barba: false, corBone: '#28BE52',
         cracha: true, corCordao: '#E8613C', chapeu: '', baixo: 'calca', calcado: 'sapato', altura: 'normal', cachecol: false, corCachecol: '#c9453a',
+        olhos: 'normal', sobrancelha: 'normal', boca: 'normal', sardas: false, bochechas: false, pinta: false, estampa: 'lisa', corEstampa: '#ffffff', relogio: false, corRelogio: '#212529', colar: false, corColar: '#e2b33c', brinco: false, corBrinco: '#e2b33c', corFone: '#28BE52', corOculos: '#1b1b1b',
       },
       xp: 0, tarefas: 0, ganhos: 0,
     }, {
@@ -42,6 +43,7 @@
         pele: '#F1C9A5', cabelo: 'longo', corCabelo: '#3B2416', estiloCamisa: 'casual', corCamisa: '#F4B6C2', corGravata: '#28BE52',
         calca: '#3b4a6b', sapato: '#7a3b2a', oculos: false, fone: false, bone: false, barba: false, corBone: '#28BE52',
         cracha: true, corCordao: '#28BE52', chapeu: '', baixo: 'calca', calcado: 'sapato', altura: 'normal', cachecol: false, corCachecol: '#c9453a',
+        olhos: 'normal', sobrancelha: 'normal', boca: 'normal', sardas: false, bochechas: false, pinta: false, estampa: 'lisa', corEstampa: '#ffffff', relogio: false, corRelogio: '#212529', colar: false, corColar: '#e2b33c', brinco: false, corBrinco: '#e2b33c', corFone: '#28BE52', corOculos: '#1b1b1b',
       },
       xp: 0, tarefas: 0, ganhos: 0,
     }, {
@@ -50,6 +52,7 @@
         pele: '#E0AC82', cabelo: 'curto', corCabelo: '#8a8a8a', estiloCamisa: 'social', corCamisa: '#cfe0f5', corGravata: '#1f3a68',
         calca: '#3a3f47', sapato: '#2b1d12', oculos: true, fone: false, bone: false, barba: true, corBone: '#28BE52',
         cracha: true, corCordao: '#3f7fc1', chapeu: '', baixo: 'calca', calcado: 'sapato', altura: 'normal', cachecol: false, corCachecol: '#c9453a',
+        olhos: 'normal', sobrancelha: 'normal', boca: 'normal', sardas: false, bochechas: false, pinta: false, estampa: 'lisa', corEstampa: '#ffffff', relogio: false, corRelogio: '#212529', colar: false, corColar: '#e2b33c', brinco: false, corBrinco: '#e2b33c', corFone: '#28BE52', corOculos: '#1b1b1b',
       },
       xp: 0, tarefas: 0, ganhos: 0,
     }, {
@@ -58,6 +61,7 @@
         pele: '#C68642', cabelo: 'topete', corCabelo: '#2B1B12', estiloCamisa: 'camiseta', corCamisa: '#111A19', corGravata: '#28BE52',
         calca: '#3b5b8a', sapato: '#ffffff', oculos: false, fone: false, bone: false, barba: false, corBone: '#28BE52',
         cracha: true, corCordao: '#28BE52', chapeu: 'bone', baixo: 'calca', calcado: 'tenis', altura: 'baixo', cachecol: false, corCachecol: '#c9453a',
+        olhos: 'normal', sobrancelha: 'normal', boca: 'normal', sardas: false, bochechas: false, pinta: false, estampa: 'lisa', corEstampa: '#ffffff', relogio: false, corRelogio: '#212529', colar: false, corColar: '#e2b33c', brinco: false, corBrinco: '#e2b33c', corFone: '#28BE52', corOculos: '#1b1b1b',
       },
       xp: 0, tarefas: 0, ganhos: 0,
     }, {
@@ -66,16 +70,28 @@
         pele: '#F5D0B5', cabelo: 'longo', corCabelo: '#E6C35C', estiloCamisa: 'jaqueta', corCamisa: '#E64980', corGravata: '#28BE52',
         calca: '#2B3A55', sapato: '#ffffff', oculos: false, fone: false, bone: false, barba: false, corBone: '#E64980',
         cracha: true, corCordao: '#E64980', chapeu: '', baixo: 'calca', calcado: 'tenis', altura: 'normal', cachecol: false, corCachecol: '#c9453a',
+        olhos: 'normal', sobrancelha: 'normal', boca: 'normal', sardas: false, bochechas: false, pinta: false, estampa: 'lisa', corEstampa: '#ffffff', relogio: false, corRelogio: '#212529', colar: false, corColar: '#e2b33c', brinco: false, corBrinco: '#e2b33c', corFone: '#28BE52', corOculos: '#1b1b1b',
+      },
+      xp: 0, tarefas: 0, ganhos: 0,
+    }, {
+      id: 'bia', nome: 'Bia', cargo: 'Relacionamento com o cliente', funcao: 'relacionamento',
+      aparencia: {
+        pele: '#8D5524', cabelo: 'cacheado', corCabelo: '#1C1C1C', estiloCamisa: 'casual', corCamisa: '#28BE52', corGravata: '#28BE52',
+        calca: '#111A19', sapato: '#E64980', oculos: 'redondo', fone: true, bone: false, barba: false, corBone: '#28BE52',
+        cracha: true, corCordao: '#111A19', chapeu: '', baixo: 'saia', calcado: 'tenis', altura: 'normal', cachecol: false, corCachecol: '#c9453a',
+        olhos: 'grandes', sobrancelha: 'normal', boca: 'sorriso', sardas: false, bochechas: true, pinta: false, estampa: 'lisa', corEstampa: '#ffffff', relogio: true, corRelogio: '#E64980', colar: false, corColar: '#e2b33c', brinco: true, corBrinco: '#e2b33c', corFone: '#E64980', corOculos: '#8a5a2b',
       },
       xp: 0, tarefas: 0, ganhos: 0,
     }],
+    clientes: [],
+    relacionamento: { enviados: {} },
     checklist: [],
     maycon: { cidade: '', uf: '', fotos: 0 },
     marketing: { whats: '98988663080', dono: 'Kauã', empresa: 'KWIK Contabilidade', usadas: [], ultima: '', ultimoFundo: '' },
     contatos: { enviados: {} },
     jogos: { gatos: { fase: 1, estrelas: {} } },
     economia: { valorTarefa: 150, caixa: 0 },
-    opcoes: { comemorar: true, soneca: true, som: true, fotos: true },
+    opcoes: { comemorar: true, soneca: true, som: true, fotos: true, rotinas: true },
   };
   const TEMAS = {
     'KWIK Clássico': { parede: '#EBDCCB', rodape: '#6B4A35', piso: 'madeira', corPiso: '#B98A62', corTapete: '#F5C27E', padraoTapete: 'losango', mesa: '#9C5B3A', cadeira: '#2A2F33', estante: '#2b2f33' },
@@ -129,7 +145,7 @@
   KM.estado = estado;
   const func = id => cfg.funcionarios.find(f => f.id === (id || estado.selecionado || estado.principal)) || cfg.funcionarios[0];
   const pessoaDe = id => estado.pessoas[id || estado.selecionado || estado.principal];
-  const ROTULO_TRABALHO = { noticias: '📰 Buscar notícias', checklist: '📋 Abrir prancheta', prospeccao: '📞 Buscar clientes', video: '🎬 Criar vídeo', contato: '💬 Preparar contatos' };
+  const ROTULO_TRABALHO = { noticias: '📰 Buscar notícias', checklist: '📋 Abrir prancheta', prospeccao: '📞 Buscar clientes', video: '🎬 Criar conteúdo', contato: '💬 Preparar contatos', relacionamento: '💚 Falar com clientes' };
 
   // Cria/atualiza os bonecos da cena a partir dos funcionários da configuração.
   const doms = {};
@@ -263,6 +279,7 @@
     prospeccao: 'Opa! Sou o {n}. Vou achar clientes novos 📞',
     video: 'E aí! Sou o {n}. Faço os vídeos do Instagram 🎬',
     contato: 'Oi! Sou a {n}. Faço o primeiro contato com os clientes 💬',
+    relacionamento: 'Oi! Sou a {n}. Cuido dos nossos clientes 💚',
   };
   function selecionar(id) {
     estado.selecionado = id;
@@ -322,6 +339,7 @@
     if (f.funcao === 'prospeccao') return KM.maycon.trabalhar(f, p);
     if (f.funcao === 'video') return KM.marketing.trabalharVideo(f, p);
     if (f.funcao === 'contato') return KM.marketing.trabalharContato(f, p);
+    if (f.funcao === 'relacionamento') return KM.relacionamento.trabalhar(f, p);
     return trabalharNoticias(f, p);
   }
 
@@ -377,6 +395,7 @@
 
   // Painel "Tarefa atual" + moedinhas enquanto trabalha (usado por Léo e Maycon).
   function iniciarPainelTarefa(titulo) {
+    $('#cardTarefa').hidden = false;
     $('#tarefaVazia').hidden = true; $('#tarefaAtiva').hidden = false;
     $('#tarefaTitulo').textContent = titulo;
     $('#tarefaLog').innerHTML = ''; $('#tarefaBarra').style.width = '0%';
@@ -448,6 +467,7 @@
 
   function renderUltimo() {
     const r = estado.relatorios[0], box = $('#ultimoRel');
+    if (!box) return;
     box.innerHTML = '';
     if (!r) { box.className = 'vazio'; box.textContent = 'Nenhum relatório ainda.'; return; }
     box.className = 'ultimo';
@@ -457,10 +477,14 @@
   }
 
   const tituloRel = r => r.tipo === 'prospeccao' ? `📞 Clientes em ${r.cidade || '—'}${r.uf ? '-' + r.uf : ''}`
-    : r.tipo === 'video' ? `🎬 Vídeo: ${(r.titulo || '').slice(0, 60)}${(r.titulo || '').length > 60 ? '…' : ''}`
+    : r.tipo === 'video' ? `🎬 ${r.tarefa && /Reels/.test(r.tarefa) ? 'Reels' : r.tarefa && /Stories/.test(r.tarefa) ? 'Stories' : 'Vídeo'}: ${(r.titulo || '').slice(0, 56)}${(r.titulo || '').length > 56 ? '…' : ''}`
+    : r.tipo === 'post' ? `🖼️ Post: ${(r.titulo || '').slice(0, 56)}`
+    : r.tipo === 'relacionamento' ? `💚 ${r.titulo || 'Relacionamento'}`
     : r.tipo === 'contatos' ? `💬 Contatos em ${r.cidade || '—'}${r.uf ? '-' + r.uf : ''}` : `📰 Notícias de ${fmtDia(r.diaData)}`;
   const resumoRel = r => r.tipo === 'prospeccao' ? `🏥 ${r.qtdClinicas || 0} clínicas · ☎️ ${r.qtdComTelefone || 0} com telefone`
-    : r.tipo === 'video' ? '🎞️ Vídeo 4:5 + legenda para o Instagram'
+    : r.tipo === 'video' ? '🎞️ Vídeo com música + legenda para o Instagram'
+    : r.tipo === 'post' ? '🖼️ Arte 4:5 + legenda para o Instagram'
+    : r.tipo === 'relacionamento' ? '💬 Pronto para enviar aos clientes'
     : r.tipo === 'contatos' ? `💬 ${r.qtdContatos || 0} mensagens de primeiro contato` : `⭐ ${r.qtdPrincipais} principais · 📅 ${r.qtdDia} do dia`;
   function renderListaRel() {
     const box = $('#listaRel'); box.innerHTML = '';
@@ -515,6 +539,8 @@
     if (r.tipo === 'prospeccao') return KM.maycon.renderRel(r, box);
     if (r.tipo === 'video') return KM.marketing.renderVideo(r, box);
     if (r.tipo === 'contatos') return KM.marketing.renderContatos(r, box);
+    if (r.tipo === 'post') return KM.marketing.renderPost(r, box);
+    if (r.tipo === 'relacionamento') return KM.relacionamento.renderRel(r, box);
     const rel = el('div', { class: 'rel' });
     const chips = el('div', { class: 'chips' }, (r.fontes || []).map(f => el('span', { class: 'chip ' + (f.ok ? 'ok' : 'erro') }, `${f.ok ? '✓' : '✗'} ${f.nome}${f.ok ? ` · ${f.itens} lidas` : ' · falhou'}`)));
     rel.append(el('div', { class: 'rel-cab' },
@@ -588,7 +614,8 @@
   // Toque num objeto (cabelo, roupa, mesa, piso…) e escolha o modelo e a cor dele.
   const PELES = ['#FFDBAC', '#F5D0B5', '#E8B48F', '#E0AC82', '#C68642', '#8D5524', '#5C3A21'];
   const CABELOS = ['#1C1C1C', '#3B2416', '#6B4226', '#B5651D', '#E6C35C', '#9E9E9E', '#C0392B', '#7B4FBF'];
-  const ROUPAS = ['#ffffff', '#111A19', '#28BE52', '#2B3A55', '#3f7fc1', '#c9453a', '#E64980', '#e2b33c'];
+  const ROUPAS = ['#ffffff', '#111A19', '#28BE52', '#1E8A45', '#2B3A55', '#3f7fc1', '#74c0fc', '#c9453a', '#ff8c5a', '#E64980', '#f783ac', '#7B4FBF', '#e2b33c', '#E9D5B7', '#8a8f94', '#6b4a2a'];
+  const ACESSORIOS = ['#e2b33c', '#c0c0c0', '#111A19', '#ffffff', '#28BE52', '#E64980', '#3f7fc1', '#c9453a', '#8a5a2b'];
   const CALCAS = ['#2F3A4A', '#3b5b8a', '#111A19', '#6b4a2a', '#d8c3a5', '#ffffff', '#7a7f87', '#28BE52'];
   const SAPATOS = ['#1A1A1A', '#5A3A22', '#ffffff', '#28BE52', '#c9453a', '#3f7fc1'];
   const CORDOES = ['#E8613C', '#28BE52', '#111A19', '#3f7fc1', '#c9453a', '#E64980'];
@@ -615,18 +642,28 @@
   const itemE = (r, it) => liga(r, () => escAtual().itens[it] !== false, v => { escAtual().itens[it] = v; });
 
   const OBJ_FUNC = [
-    { id: 'pele', ic: '🙂', nome: 'Pele', cores: [{ op: PELES, ...cA('pele') }] },
+    { id: 'rosto', ic: '🙂', nome: 'Rosto', modelos: [
+      { nome: 'Olhos', op: { normal: 'Normal', grandes: 'Grandes', sonolentos: 'Sonolentos', felizes: 'Felizes', piscadinha: 'Piscadinha' }, ...mA('olhos', 'normal') },
+      { nome: 'Sobrancelhas', op: { normal: 'Normal', grossa: 'Grossa', fina: 'Fina', brava: 'Brava', surpresa: 'Surpresa' }, ...mA('sobrancelha', 'normal') },
+      { nome: 'Boca', op: { normal: 'Neutra', sorriso: 'Sorriso', serio: 'Séria', aberta: 'Aberta', lingua: 'Língua' }, ...mA('boca', 'normal') }],
+      cores: [{ nome: 'Pele', op: PELES, ...cA('pele') }],
+      liga: [liga('✨ Sardas', () => !!apAtual().sardas, v => { apAtual().sardas = v; }), liga('🌸 Bochechas rosadas', () => !!apAtual().bochechas, v => { apAtual().bochechas = v; }), liga('• Pinta', () => !!apAtual().pinta, v => { apAtual().pinta = v; })] },
     { id: 'cabelo', ic: '💇', nome: 'Cabelo', modelos: { op: { curto: 'Curto', longo: 'Longo', franja: 'Franja', cacheado: 'Cacheado', rabo: 'Rabo de cavalo', coque: 'Coque', tranca: 'Trança', topete: 'Topete', moicano: 'Moicano', careca: 'Careca' }, ...mA('cabelo', 'curto') },
       cores: [{ op: CABELOS, ...cA('corCabelo') }], liga: [liga('🧔 Barba', () => !!apAtual().barba, v => { apAtual().barba = v; })] },
-    { id: 'roupa', ic: '👕', nome: 'Roupa', modelos: { op: { casual: 'Camisa casual', camiseta: 'Camiseta', kwik: 'Polo KWIK', social: 'Social e gravata', terno: 'Terno', moletom: 'Moletom', jaqueta: 'Jaqueta', regata: 'Regata', vestido: 'Vestido' }, ...mA('estiloCamisa', 'casual') },
-      cores: [{ op: ROUPAS, ...cA('corCamisa') }, { nome: 'Gravata', op: ROUPAS, quando: () => ['social', 'terno'].includes(apAtual().estiloCamisa), ...cA('corGravata') }] },
-    { id: 'baixo', ic: '👖', nome: 'Calça', modelos: { op: { calca: 'Calça', bermuda: 'Bermuda', saia: 'Saia' }, ...mA('baixo', 'calca') }, cores: [{ op: CALCAS, ...cA('calca') }] },
-    { id: 'pes', ic: '👟', nome: 'Calçado', modelos: { op: { sapato: 'Sapato', tenis: 'Tênis', bota: 'Bota' }, ...mA('calcado', 'sapato') }, cores: [{ op: SAPATOS, ...cA('sapato') }] },
+    { id: 'roupa', ic: '👕', nome: 'Roupa', modelos: [{ nome: 'Modelo', op: { casual: 'Camisa casual', camiseta: 'Camiseta', kwik: 'Polo KWIK', social: 'Social e gravata', terno: 'Terno', moletom: 'Moletom', jaqueta: 'Jaqueta', regata: 'Regata', vestido: 'Vestido' }, ...mA('estiloCamisa', 'casual') },
+      { nome: 'Estampa', op: { lisa: 'Lisa', listras: 'Listras', xadrez: 'Xadrez', bolinhas: 'Bolinhas', kwik: 'Logo KWIK' }, ...mA('estampa', 'lisa') }],
+      cores: [{ op: ROUPAS, ...cA('corCamisa') }, { nome: 'Cor da estampa', op: ROUPAS, quando: () => (apAtual().estampa || 'lisa') !== 'lisa', ...cA('corEstampa') }, { nome: 'Gravata', op: ROUPAS, quando: () => ['social', 'terno'].includes(apAtual().estiloCamisa), ...cA('corGravata') }] },
+    { id: 'baixo', ic: '👖', nome: 'Calça', modelos: { op: { calca: 'Calça', bermuda: 'Bermuda', saia: 'Saia' }, ...mA('baixo', 'calca') }, cores: [{ op: [...new Set([...CALCAS, ...ROUPAS])], ...cA('calca') }] },
+    { id: 'pes', ic: '👟', nome: 'Calçado', modelos: { op: { sapato: 'Sapato', tenis: 'Tênis', bota: 'Bota' }, ...mA('calcado', 'sapato') }, cores: [{ op: [...new Set([...SAPATOS, ...ROUPAS])], ...cA('sapato') }] },
     { id: 'chapeu', ic: '🧢', nome: 'Chapéu', modelos: { op: { '': 'Nenhum', bone: 'Boné', gorro: 'Gorro', chapeu: 'Chapéu', tiara: 'Tiara' }, ler: (a = apAtual()) => a.chapeu ?? (a.bone ? 'bone' : ''), por: (v, a = apAtual()) => { a.chapeu = v; a.bone = false; } },
       cores: [{ op: ROUPAS, ...cA('corBone'), quando: () => !!(apAtual().chapeu ?? apAtual().bone) }] },
-    { id: 'oculos', ic: '👓', nome: 'Óculos', modelos: { op: { '': 'Sem óculos', quadrado: 'Quadrado', redondo: 'Redondo', escuro: 'Escuro' }, ler: (a = apAtual()) => (a.oculos === true ? 'quadrado' : a.oculos || ''), por: (v, a = apAtual()) => { a.oculos = v || false; } } },
-    { id: 'acess', ic: '🎧', nome: 'Acessórios', liga: [liga('🎧 Fone', () => !!apAtual().fone, v => { apAtual().fone = v; }), liga('🪪 Crachá', () => apAtual().cracha !== false, v => { apAtual().cracha = v; }), liga('🧣 Cachecol', () => !!apAtual().cachecol, v => { apAtual().cachecol = v; })],
-      cores: [{ nome: 'Cordão do crachá', op: CORDOES, quando: () => apAtual().cracha !== false, ...cA('corCordao') }, { nome: 'Cachecol', op: ROUPAS, quando: () => !!apAtual().cachecol, ...cA('corCachecol') }] },
+    { id: 'oculos', ic: '👓', nome: 'Óculos', modelos: { op: { '': 'Sem óculos', quadrado: 'Quadrado', redondo: 'Redondo', escuro: 'Escuro' }, ler: (a = apAtual()) => (a.oculos === true ? 'quadrado' : a.oculos || ''), por: (v, a = apAtual()) => { a.oculos = v || false; } },
+      cores: [{ nome: 'Cor da armação', op: ACESSORIOS, quando: () => ['quadrado', 'redondo', true].includes(apAtual().oculos), ...cA('corOculos') }] },
+    { id: 'acess', ic: '⌚', nome: 'Acessórios', liga: [liga('🎧 Fone', () => !!apAtual().fone, v => { apAtual().fone = v; }), liga('🪪 Crachá', () => apAtual().cracha !== false, v => { apAtual().cracha = v; }), liga('🧣 Cachecol', () => !!apAtual().cachecol, v => { apAtual().cachecol = v; }),
+      liga('⌚ Relógio', () => !!apAtual().relogio, v => { apAtual().relogio = v; }), liga('📿 Colar', () => !!apAtual().colar, v => { apAtual().colar = v; }), liga('💎 Brinco', () => !!apAtual().brinco, v => { apAtual().brinco = v; })],
+      cores: [{ nome: 'Fone', op: ACESSORIOS, quando: () => !!apAtual().fone, ...cA('corFone') }, { nome: 'Cordão do crachá', op: CORDOES, quando: () => apAtual().cracha !== false, ...cA('corCordao') },
+        { nome: 'Cachecol', op: ROUPAS, quando: () => !!apAtual().cachecol, ...cA('corCachecol') }, { nome: 'Relógio', op: ACESSORIOS, quando: () => !!apAtual().relogio, ...cA('corRelogio') },
+        { nome: 'Colar', op: ACESSORIOS, quando: () => !!apAtual().colar, ...cA('corColar') }, { nome: 'Brinco', op: ACESSORIOS, quando: () => !!apAtual().brinco, ...cA('corBrinco') }] },
     { id: 'altura', ic: '📏', nome: 'Altura', modelos: { op: { normal: 'Normal', baixo: 'Baixinho' }, ...mA('altura', 'normal') } },
   ];
   const OBJ_ESC = [
@@ -660,7 +697,7 @@
       { c: 'marketing.dono', t: 'texto', r: 'Seu nome nas mensagens' },
       { c: 'marketing.empresa', t: 'texto', r: 'Nome da empresa' },
       { sec: 'Comemorações' },
-      { t: 'checks', itens: [['opcoes.comemorar', '⚡ Vira Super Sayajin ao entregar'], ['opcoes.soneca', '😴 Cochila se ficar parado (3 min)'], ['opcoes.fotos', '📸 Maycon tira fotos quando está livre'], ['opcoes.som', '🔊 Sons']] },
+      { t: 'checks', itens: [['opcoes.comemorar', '⚡ Vira Super Sayajin ao entregar'], ['opcoes.soneca', '😴 Cochila se ficar parado (3 min)'], ['opcoes.fotos', '📸 Maycon tira fotos quando está livre'], ['opcoes.rotinas', '🚶 Equipe circula e conversa pelo prédio'], ['opcoes.som', '🔊 Sons']] },
     ],
   };
 
@@ -688,16 +725,16 @@
       }, el('span', { class: 'ic' }, o.ic), el('span', {}, o.nome)));
     }
   }
-  function previaModelo(tipo, o, v) {
+  function previaModelo(tipo, o, v, grupo) {
     if (tipo === 'func') {
-      const a2 = clone(apAtual()); o.modelos.por(v, a2);
-      const cab = ['cabelo', 'chapeu', 'oculos'].includes(o.id);
+      const a2 = clone(apAtual()); grupo.por(v, a2);
+      const cab = ['cabelo', 'chapeu', 'oculos', 'rosto'].includes(o.id);
       const cv = el('canvas', { width: 30, height: cab ? 26 : 46, class: cab ? 'pv-cab' : 'pv-corpo' });
       const g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
       g.drawImage(KM.sprite(a2, { boca: 'sorriso' }), 0, 0);
       return cv;
     }
-    const c2 = clone(cfg); o.modelos.por(v, c2.escritorio);
+    const c2 = clone(cfg); grupo.por(v, c2.escritorio);
     const cv = el('canvas', { width: 48, height: 40, class: 'pv-obj' });
     KM.previewObjeto(cv, o.id, c2);
     return cv;
@@ -708,10 +745,10 @@
     box.hidden = !o; box.innerHTML = '';
     if (!o) return;
     const refazer = () => { mudou(); montarPainel(tipo); };
-    if (o.modelos) {
-      const atual = String(o.modelos.ler() ?? '');
-      box.append(el('h5', {}, 'Modelo'), el('div', { class: 'modelos' }, Object.entries(o.modelos.op).map(([v, rot]) =>
-        el('button', { type: 'button', class: 'modelo' + (atual === v ? ' on' : ''), onclick: () => { o.modelos.por(v); KM.tocar('clique'); refazer(); } }, previaModelo(tipo, o, v), el('small', {}, rot)))));
+    for (const grupo of [].concat(o.modelos || [])) {
+      const atual = String(grupo.ler() ?? '');
+      box.append(el('h5', {}, grupo.nome || 'Modelo'), el('div', { class: 'modelos' }, Object.entries(grupo.op).map(([v, rot]) =>
+        el('button', { type: 'button', class: 'modelo' + (atual === v ? ' on' : ''), onclick: () => { grupo.por(v); KM.tocar('clique'); refazer(); } }, previaModelo(tipo, o, v, grupo), el('small', {}, rot)))));
     }
     for (const c of o.cores || []) {
       if (c.quando && !c.quando()) continue;
@@ -757,6 +794,97 @@
     if (objAberto.esc) montarPainel('esc');
   }
 
+  // ------------------------------------------------------------------ aba Equipe
+  function statusDe(q) {
+    if (!q) return ['', 'Fora'];
+    if (q.trabalhando) return ['trab', 'Trabalhando'];
+    if (q.dormindo) return ['dorme', 'Cochilando'];
+    if (q.lugarJogo) return ['joga', 'Na sala de jogos'];
+    if (q.acao) return ['anda', 'Pelo prédio'];
+    return ['livre', 'Na mesa'];
+  }
+  function renderEquipe() {
+    const box = $('#equipeLista'); if (!box) return;
+    box.innerHTML = '';
+    for (const f of cfg.funcionarios) {
+      const q = estado.pessoas[f.id], n = nivelDe(f.xp), [cls, st] = statusDe(q);
+      const cv = el('canvas', { width: 30, height: 46 });
+      box.append(el('div', { class: 'membro2' + (estado.selecionado === f.id ? ' sel' : '') },
+        el('div', { class: 'm2-topo' }, cv, el('div', {},
+          el('b', {}, f.nome), el('span', {}, f.cargo),
+          el('div', { class: 'm2-tags' }, el('span', { class: 'nivel' }, `Nv. ${n.i + 1} · ${n.nome}`), el('span', { class: 'st ' + cls }, st)))),
+        el('div', { class: 'xp' }, el('div', { style: `width:${n.pct}%` })),
+        el('div', { class: 'm2-nums' }, el('span', {}, `✅ ${f.tarefas} tarefas`), el('span', {}, `💰 ${brlCurto(f.ganhos)}`)),
+        el('div', { class: 'm2-bts' },
+          el('button', { class: 'bt prim peq', onclick: () => { irPara('escritorio'); selecionar(f.id); trabalhar(); } }, ROTULO_TRABALHO[f.funcao] || '▶ Trabalhar'),
+          el('button', { class: 'bt peq', onclick: () => { irPara('escritorio'); selecionar(f.id); window.scrollTo({ top: 0, behavior: 'smooth' }); } }, '📍 Ver'))));
+      desenharAvatar(cv, { bracos: 'aceno', boca: 'sorriso' }, 0, f.id);
+    }
+  }
+
+  // ------------------------------------------------------------------ clientes ativos (Relacionamento)
+  function renderClientes() {
+    const box = $('#clientesBox'); if (!box) return;
+    cfg.clientes = cfg.clientes || [];
+    box.innerHTML = '';
+    cfg.clientes.forEach((c, i) => box.append(el('div', { class: 'cliente-linha' },
+      el('input', { type: 'text', value: c.nome || '', placeholder: 'Nome do cliente', oninput: e => { c.nome = e.target.value; salvar(); } }),
+      el('input', { type: 'tel', value: c.telefone || '', placeholder: 'WhatsApp (com DDD)', oninput: e => { c.telefone = e.target.value; salvar(); } }),
+      el('button', { class: 'bt peq perigo', title: 'Remover', onclick: () => { cfg.clientes.splice(i, 1); salvar(); renderClientes(); } }, '🗑️'))));
+    if (!cfg.clientes.length) box.append(el('p', { class: 'vazio' }, 'Nenhum cliente ainda. Adicione à mão ou puxe do KWIK Fiscal.'));
+  }
+  async function puxarFiscal() {
+    try {
+      let lista;
+      if (BK && BK.nome === 'local') {
+        const r = await fetch('/api/clientes-fiscal', { cache: 'no-store' }); const j = await r.json();
+        if (!r.ok) throw new Error(j.erro || r.status); lista = j.clientes;
+      } else {
+        const c = (() => { try { return JSON.parse(localStorage.getItem('kwik-despesas-github') || '{}'); } catch (e) { return {}; } })();
+        const token = c.token || KM.backends.github.conf().token, repo = c.repo || 'kauabreno88-spec/Panilha-CLIENTES-DESPESAS-';
+        if (!token) throw new Error('conecte o KWIK Fiscal neste aparelho primeiro');
+        const r = await fetch(`https://api.github.com/repos/${repo}/contents/${c.caminho || 'dados/kwik-despesas.json'}`, { headers: { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github.raw+json' }, cache: 'no-store' });
+        if (!r.ok) throw new Error('GitHub respondeu ' + r.status + (r.status === 404 ? ' (o token não tem acesso ao KWIK Fiscal)' : ''));
+        const d = await r.json(), excl = d.excluidos || {};
+        lista = (d.empresas || []).filter(e => !(e.id in excl)).map(e => ({ nome: e.razao || e.codigo || '', telefone: e.contato || '' })).filter(e => e.nome);
+      }
+      let novos = 0;
+      for (const c of lista) {
+        const ja = cfg.clientes.find(x => (x.nome || '').trim().toLowerCase() === c.nome.trim().toLowerCase());
+        if (ja) { if (!ja.telefone && c.telefone) ja.telefone = c.telefone; } else { cfg.clientes.push({ nome: c.nome, telefone: c.telefone }); novos++; }
+      }
+      salvar(); renderClientes();
+      toast(`📥 ${lista.length} clientes no KWIK Fiscal · ${novos} novos adicionados`);
+    } catch (e) { toast('Não consegui puxar do KWIK Fiscal: ' + e.message, { erro: true, ms: 8000 }); }
+  }
+
+  // ------------------------------------------------------------------ escolher uma opção / perguntar (diálogos)
+  function escolher(titulo, opcoes) {
+    return new Promise(res => {
+      const d = $('#dlgEscolha'); $('#escolhaTitulo').textContent = titulo;
+      const box = $('#escolhaOpcoes'); box.innerHTML = '';
+      let valor = null;
+      for (const o of opcoes) box.append(el('button', { class: 'opcao', type: 'button', onclick: () => { valor = o.v; d.close(); } }, el('span', { class: 'ic' }, o.ic), el('span', {}, el('b', {}, o.nome), el('small', {}, o.desc || ''))));
+      d.onclose = () => res(valor);
+      d.showModal();
+    });
+  }
+  function perguntar(titulo, campos, botao = 'OK') {
+    return new Promise(res => {
+      const d = $('#dlgEscolha'); $('#escolhaTitulo').textContent = titulo;
+      const box = $('#escolhaOpcoes'); box.innerHTML = '';
+      const ins = {};
+      for (const c of campos) {
+        ins[c.id] = c.area ? el('textarea', { rows: 4, placeholder: c.placeholder || '' }) : el('input', { type: 'text', placeholder: c.placeholder || '' });
+        box.append(el('label', { class: 'perg' }, el('b', {}, c.rotulo), ins[c.id]));
+      }
+      let valor = null;
+      box.append(el('button', { class: 'bt prim', type: 'button', style: 'width:100%;justify-content:center;margin-top:6px', onclick: () => { valor = Object.fromEntries(Object.entries(ins).map(([k, i]) => [k, i.value])); d.close(); } }, botao));
+      d.onclose = () => res(valor);
+      d.showModal(); setTimeout(() => ins[campos[0].id].focus(), 50);
+    });
+  }
+
   // ------------------------------------------------------------------ abas
   function irPara(aba) {
     $$('.abas button').forEach(b => b.classList.toggle('ativa', b.dataset.aba === aba));
@@ -764,6 +892,8 @@
     if (location.hash !== '#' + aba) history.replaceState(null, '', '#' + aba);
     if (aba === 'personalizar') preencherCampos();
     if (aba === 'relatorios') renderListaRel();
+    if (aba === 'equipe') renderEquipe();
+    if (aba === 'personalizar') renderClientes();
   }
 
   // ------------------------------------------------------------------ inatividade (soneca)
@@ -873,7 +1003,7 @@
       tela.style.cursor = KM.pessoaEm(estado, x, y) || KM.jogos.sobre(x, y) ? 'pointer' : 'default';
     });
     document.addEventListener('keydown', ativo);
-    window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (['escritorio', 'relatorios', 'personalizar'].includes(h)) irPara(h); });
+    window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (['escritorio', 'equipe', 'relatorios', 'personalizar'].includes(h)) irPara(h); });
     $$('[data-fechar]').forEach(b => b.addEventListener('click', () => b.closest('dialog').close()));
   }
 
@@ -914,10 +1044,10 @@
       for (const f of cfg.funcionarios) f.aparencia = clone(PADRAO.funcionarios[0].aparencia);
       cfg.versao = 2; migrou = true;
     }
-    if ((cfg.versao || 1) < 4 || cfg.funcionarios.length < PADRAO.funcionarios.length) { // versão 3: Clara e Maycon; versão 4: Enzo e Lena (Marketing)
+    if ((cfg.versao || 1) < 5 || cfg.funcionarios.length < PADRAO.funcionarios.length) { // versão 3: Clara e Maycon; versão 4: Enzo e Lena (Marketing)
       for (const pf of PADRAO.funcionarios) if (!cfg.funcionarios.some(f => f.id === pf.id)) { cfg.funcionarios.push(clone(pf)); migrou = true; }
-      if ((cfg.versao || 1) < 4) migrou = true;
-      cfg.versao = 4;
+      if ((cfg.versao || 1) < 5) migrou = true;
+      cfg.versao = 5;
     }
     for (const f of cfg.funcionarios) if (!f.funcao) f.funcao = (PADRAO.funcionarios.find(x => x.id === f.id) || { funcao: 'noticias' }).funcao;
     sincronizarPessoas();
@@ -991,22 +1121,27 @@
     $('#btGithub').addEventListener('click', abrirConexao);
     $('#dlgGithub [data-fechar]').addEventListener('click', () => $('#dlgGithub').close());
     const h = location.hash.slice(1);
-    if (['relatorios', 'personalizar'].includes(h)) irPara(h);
+    if (['equipe', 'relatorios', 'personalizar'].includes(h)) irPara(h);
     requestAnimationFrame(quadro);
-    KM.clara.iniciar(); KM.maycon.iniciar(); KM.jogos.iniciar();
+    KM.clara.iniciar(); KM.maycon.iniciar(); KM.jogos.iniciar(); KM.rotinas.iniciar();
+    $('#btPuxarFiscal').addEventListener('click', puxarFiscal);
+    $('#btNovoCliente').addEventListener('click', () => { cfg.clientes = cfg.clientes || []; cfg.clientes.push({ nome: '', telefone: '' }); renderClientes(); const ins = $$('#clientesBox input[type=text]'); ins.at(-1) && ins.at(-1).focus(); });
+    $('#fecharTarefa').addEventListener('click', () => { $('#cardTarefa').hidden = true; });
+    setInterval(() => { if ($('#aba-equipe').classList.contains('ativa')) renderEquipe(); }, 3000);
     const hh = new Date().getHours(), sauda = hh < 12 ? 'Bom dia' : hh < 18 ? 'Boa tarde' : 'Boa noite';
     setTimeout(() => falar('f1', `${sauda}! Clique em um de nós para mandar trabalhar 👋`, 3800), 700);
     setTimeout(() => falar('clara', 'Oi! Eu cuido da sua prancheta de tarefas 📋', 3400), 2300);
     setTimeout(() => falar('maycon', 'E eu acho clientes novos! 📞📸', 3400), 3900);
     setTimeout(() => falar('enzo', 'Eu transformo as notícias em vídeo! 🎬', 3400), 5400);
     setTimeout(() => falar('lena', 'E eu chamo os clientes no WhatsApp 💬', 3400), 6900);
+    setTimeout(() => falar('bia', 'E eu cuido de quem já é cliente 💚', 3400), 8400);
   }
 
   // API para os módulos (Clara, Maycon, jogos, filmes).
   KM.app = {
     el, toast, salvar, mudou, cfg: () => cfg, estado, func, pessoaDe, pagar, concluir, falar, irPara, brl, fmtData,
     BK: () => BK, online: () => online, abrirConexao, carregarRelatorios, abrirRelatorio, animarCaixa, atualizarBotoes, atualizarFuncionario,
-    iniciarPainelTarefa, callbacksTarefa, esperarLivre, apagarRel: r => apagarRel(r), desenharAvatar, obterRelatorio,
+    iniciarPainelTarefa, callbacksTarefa, esperarLivre, apagarRel: r => apagarRel(r), desenharAvatar, obterRelatorio, escolher, perguntar,
   };
   iniciar();
 })();
