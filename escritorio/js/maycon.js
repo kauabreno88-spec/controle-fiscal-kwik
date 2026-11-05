@@ -276,23 +276,22 @@ out center tags;`;
   }
 
   // ------------------------------------------------------------------ rotina: fotos pelo escritório
-  const PONTOS = [[50, 50], [46, 98], [72, 70], [30, 46], [90, 68], [58, 60]];
   async function rotinaFotos() {
     for (;;) {
       await KM.esperar(25000 + Math.random() * 25000);
       const est = A().estado, cfg = A().cfg();
       const p = Object.values(est.pessoas || {}).find(q => q.funcao === 'prospeccao');
-      if (!p || !cfg.opcoes.fotos || p.acao || p.trabalhando || p.dormindo || est.sala === 'jogos' || p.modo !== 'sentado' || document.hidden) continue;
+      if (!p || !cfg.opcoes.fotos || p.acao || p.trabalhando || p.dormindo || est.jogando || p.modo !== 'sentado' || document.hidden) continue;
       p.acao = 'rotina';
       try {
         const m = KM.mov;
-        const [x, y] = PONTOS[Math.floor(Math.random() * PONTOS.length)];
+        const pontos = KM.LAYOUT.pontos.fotos.filter(q => q[2] !== 'jogos' || est.luzJogos);
+        const [x, y] = pontos[Math.floor(Math.random() * pontos.length)];
         await m.irAte(p, x, y);
         if (p.pararRotina) continue;
         const outros = Object.values(est.pessoas).filter(q => q !== p && q.visivel !== false);
         const alvo = outros[Math.floor(Math.random() * outros.length)];
-        if (alvo) { const dx = alvo.X - p.X, dy = alvo.Y - p.Y; p.dir = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 'fd' : 'ce') : (dy > 0 ? 'fe' : 'cd'); }
-        if (p.dir === 'ce' || p.dir === 'cd') p.dir = p.dir === 'ce' ? 'fe' : 'fd'; // de costas não dá pra ver a câmera
+        p.dir = alvo ? (alvo.X >= p.X ? 'fd' : 'fe') : 'fe'; // sempre de frente, para ver a câmera
         p.prop = 'camera';
         A().falar(p.id, alvo ? `${A().func(alvo.id).nome.split(' ')[0]}, sorria! 📸` : 'Olha o passarinho! 📸', 1800);
         const antes = alvo && !alvo.acao ? Object.assign({}, alvo.est) : null;

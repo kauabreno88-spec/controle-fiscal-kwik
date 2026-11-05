@@ -10,6 +10,7 @@
     id: r.id, criadoEm: r.criadoEm, funcionario: r.funcionario, tarefa: r.tarefa, diaData: r.diaData, ganho: r.ganho,
     duracao: r.duracao, qtdPrincipais: (r.principais || []).length, qtdDia: (r.dia || []).length,
     tipo: r.tipo || 'noticias', cidade: r.cidade, uf: r.uf, qtdClinicas: r.qtdClinicas, qtdComTelefone: r.qtdComTelefone,
+    titulo: r.titulo, qtdContatos: r.qtdContatos,
   });
   KM.resumoRelatorio = resumo;
 

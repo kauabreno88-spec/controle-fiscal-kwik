@@ -176,7 +176,8 @@
       ctx.fillStyle = `rgba(10,8,30,${0.45 * st.disco})`; ctx.fillRect(0, 0, W, H);
       const cores = ['rgba(255,60,120,0.35)', 'rgba(60,200,255,0.35)', 'rgba(255,220,60,0.35)', 'rgba(40,190,82,0.4)'];
       for (let i = 0; i < 4; i++) {
-        const x = W / 2 + Math.sin(t * 1.3 + i * 1.7) * 70, y = 130 + Math.cos(t * 1.1 + i * 2.1) * 28;
+        const cy = KM.LAYOUT ? KM.LAYOUT.centro[1] - 10 : 130;
+        const x = W / 2 + Math.sin(t * 1.3 + i * 1.7) * 90, y = cy + Math.cos(t * 1.1 + i * 2.1) * 34;
         ctx.fillStyle = cores[i];
         for (let r = 14; r > 0; r -= 4) ctx.fillRect(Math.round(x - r * 1.6), Math.round(y - r * 0.8), Math.round(r * 3.2), Math.round(r * 1.6));
       }
@@ -208,6 +209,8 @@
   const alvo = id => pessoa(id || KM.estado.selecionado || KM.estado.principal) || Object.values(KM.estado.pessoas || {})[0];
   const todas = () => Object.values(KM.estado.pessoas || {});
   const assento = p => KM.LAYOUT.assentos[p.funcao] || KM.LAYOUT.assentos.noticias;
+  // Olhar para alguém (sempre de frente, para a gente ver o rosto).
+  KM.olhar = (p, alvo) => { p.dir = alvo.X >= p.X ? 'fd' : 'fe'; };
   KM.pessoa = pessoa; KM.alvo = alvo; KM.todas = todas;
 
   function andarAte(p, X, Y, vel = 46) {
@@ -218,8 +221,8 @@
       const s = Math.min(dist, vel * dt);
       p.X += dx / dist * s; p.Y += dy / dist * s;
       p.est.passo = [1, 0, 2, 0][Math.floor(t * 8 + (p.fase || 0)) % 4];
-      // vira para onde anda: +X baixo-direita, +Y baixo-esquerda, -X cima-esquerda, -Y cima-direita
-      p.dir = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 'fd' : 'ce') : (dy > 0 ? 'fe' : 'cd');
+      // vira para onde anda (vista de cima): subindo = de costas; direita = espelhado
+      p.dir = (dy < -Math.abs(dx) * 0.6 ? 'c' : 'f') + (Math.abs(dx) > 0.3 ? (dx > 0 ? 'd' : 'e') : (p.dir || 'fe')[1]);
       return false;
     });
   }
@@ -230,11 +233,11 @@
     p.modo = 'em-pe'; p.X = a.pe[0]; p.Y = a.pe[1]; p.est = {}; p.dir = 'fe';
     await esperar(120);
   }
-  // Sai da mesa pelo corredor e anda até (X, Y).
+  // Anda pelo prédio até (X, Y), desviando de paredes e móveis (caminho calculado em cena.js).
   async function irAte(p, X, Y, vel) {
     await levantar(p);
-    if (!p.foraDaMesa) { for (const [x, y] of assento(p).caminho) await andarAte(p, x, y, vel); p.foraDaMesa = true; }
-    await andarAte(p, X, Y, vel);
+    p.foraDaMesa = true;
+    for (const [x, y] of KM.rota(p.X, p.Y, X, Y)) await andarAte(p, x, y, vel);
   }
   async function irAoTapete(p, ponto) { const [x, y] = ponto || assento(p).tapete; await irAte(p, x, y); p.dir = 'fe'; }
   async function voltarSentar(p) {
@@ -242,8 +245,8 @@
     if (!p || p.modo === 'sentado') return;
     p.est = {};
     const a = assento(p);
-    if (p.foraDaMesa) { const c = a.caminho; for (let i = c.length - 1; i >= 0; i--) await andarAte(p, c[i][0], c[i][1]); p.foraDaMesa = false; }
-    await andarAte(p, a.pe[0], a.pe[1]);
+    for (const [x, y] of KM.rota(p.X, p.Y, a.pe[0], a.pe[1])) await andarAte(p, x, y);
+    p.foraDaMesa = false;
     p.modo = 'sentado'; p.X = a.X; p.Y = a.Y; p.dir = a.dir; p.est = {}; p.Z = 0;
   }
   function cabeca(p) { const [x, y] = KM.ancora(p); return [x, p.modo === 'sentado' ? y - 27 : y - 35]; }
@@ -255,7 +258,7 @@
   // ---------------- efeitos sem movimento
   KM.explosaoDinheiro = function (valor, id) {
     const [x, y] = cabeca(alvo(id));
-    KM.emitir('moeda', 26, i => ({ x: x + rnd(-4, 4), y: y + rnd(-2, 4), vx: rnd(-55, 75), vy: rnd(-120, -60), g: 220, vida: rnd(0.9, 1.4), chao: KM.H - 8 }));
+    KM.emitir('moeda', 26, i => ({ x: x + rnd(-4, 4), y: y + rnd(-2, 4), vx: rnd(-55, 75), vy: rnd(-120, -60), g: 220, vida: rnd(0.9, 1.4), chao: y + 40 }));
     KM.emitir('nota', 12, i => ({ x: x + rnd(-30, 30), y: y - rnd(10, 50), vy: rnd(-10, 5), g: 40, vida: rnd(1.6, 2.4) }));
     KM.emitir('estrela', 6, i => ({ x: x + rnd(-14, 14), y: y + rnd(-14, 4), vy: -12, vida: 0.6, cor: '#fff3a0' }));
     if (valor) KM.emitir('texto', 1, { x, y: y - 10, vy: -16, vida: 1.8, s: '+R$' + Math.round(valor), cor: '#ffd93b' });
@@ -387,12 +390,24 @@
   }, [id || (alvo() && alvo().id)]);
 
   KM.cafe = id => rodar('cafe', async p => {
-    if (p.modo !== 'sentado') await voltarSentar(p);
     p.dormindo = false;
+    const pc = KM.LAYOUT.pontos.cafe;
+    if (pc && !p.trabalhando) {
+      fala(p, 'Vou pegar um café ☕', 1600);
+      await irAte(p, pc.X, pc.Y); p.dir = pc.dir;
+      KM.estado.cafeCopa = true; KM.tocar('bip');
+      await esperar(1400);
+      KM.estado.cafeCopa = false; p.dir = 'fe';
+      p.est = { bracos: 'cafe', olhos: 'fechados' };
+      KM.tocar('gole');
+      await esperar(1300);
+      p.est = {};
+    }
+    if (p.modo !== 'sentado') await voltarSentar(p);
     p.est = { bracos: 'cafe', olhos: 'fechados' };
     KM.estado.cafe = true;
     KM.tocar('gole');
-    await esperar(1300);
+    await esperar(900);
     p.est = { boca: 'o' };
     fala(p, 'CAFÉ TURBO ATIVADO! ☕⚡', 2000);
     p.digitando = true; p.turbo = true;

@@ -34,6 +34,7 @@
     const cy = est.cabecaDy || 0;
 
     const pele = ap.pele, peleS = tom(pele, 0.86), peleD = tom(pele, 0.7);
+    const hexEscuro = h => { const [a, b, c] = KM.cor.hex(h); return a * 0.3 + b * 0.59 + c * 0.11 < 70; };
     const cab = ss === 'deus' ? '#e8344a' : ss === 'branco' ? '#dfe7f2' : ss ? '#ffd93b' : ap.corCabelo;
     const cabS = tom(cab, 0.72), cabH = tom(cab, 1.32);
     const estilo = ap.estiloCamisa || 'casual';
@@ -42,10 +43,14 @@
     const sap = ap.sapato, sapH = tom(sap, 1.6), sola = tom(sap, 0.55);
     const gravata = ap.corGravata || VERDE;
     const cordao = ap.corCordao || '#E8613C';
-    // comprimento da manga (linhas a partir do ombro): polo curta, casual dobrada, resto comprida
-    const manga = estilo === 'kwik' ? 3 : estilo === 'casual' ? 5 : 9;
+    // comprimento da manga (linhas a partir do ombro): polo/camiseta curta, casual dobrada, regata sem manga, resto comprida
+    const manga = estilo === 'regata' ? 0 : estilo === 'kwik' || estilo === 'camiseta' || estilo === 'vestido' ? 3 : estilo === 'casual' ? 5 : 9;
+    const parteBaixo = estilo === 'vestido' ? 'vestido' : ap.baixo || 'calca';
+    const calcado = ap.calcado || 'sapato';
+    const chapeu = ap.chapeu || (ap.bone ? 'bone' : '');
+    const enc = ap.altura === 'baixo' ? 4 : 0; // baixinho: pernas mais curtas, corpo mais perto do chão
 
-    g.translate(0, est.dy || 0);
+    g.translate(0, (est.dy || 0) + enc);
 
     // ---------------------------------------------------------------- braços
     function bracoDesce(x, longe) {
@@ -59,9 +64,9 @@
       for (let i = 0; i < 9; i++) r(x + (i > 5 ? dx : 0), 22 - i, 3, 1, i < manga ? c : pl);
       r(x + dx, 11, 3, 2, pl);
     }
-    function bracoFrente(x, longe) { // digitando: só até o cotovelo; antebraço e mão vêm depois da mesa
-      const c = longe ? camS : cam;
-      for (let i = 0; i < 5; i++) r(x, 22 + i, 3, 1, i < manga ? (estilo === 'casual' && i === manga - 1 ? camH : c) : (longe ? peleS : pele));
+    function bracoFrente(x, longe) { // digitando: só até o cotovelo; antebraço e mão ficam na mesa
+      const c = longe ? camS : cam, dx = est.tecla && costas ? (longe ? -1 : 1) : 0;
+      for (let i = 0; i < 5; i++) r(x + (i > 2 ? dx : 0), 22 + i, 3, 1, i < manga ? (estilo === 'casual' && i === manga - 1 ? camH : c) : (longe ? peleS : pele));
     }
     const PROP_BRACOS = { camera: 'camera', prancheta: 'segura', disco: 'segura', cartas: 'cartas', claquete: 'aceno', desejo: 'aceno', taco: 'taco', varinha: 'aceno' };
     const b = est.bracos || PROP_BRACOS[prop] || 'baixo';
@@ -101,17 +106,31 @@
     }
 
     // ---------------------------------------------------------------- pernas
+    const perna = (x, y, w, h, cor, sombraC) => { // calça, bermuda (joelho para baixo é pele) ou saia/vestido (pernas de fora)
+      if (parteBaixo === 'calca') { r(x, y, w, h, cor); return; }
+      const cobre = parteBaixo === 'bermuda' ? Math.min(h, 3) : 0;
+      r(x, y, w, cobre, cor); r(x, y + cobre, w, h - cobre, sombraC ? peleS : pele);
+    };
+    const sapato = (x, y, cor, frente) => {
+      r(x, y, 5, 2, cor);
+      if (calcado === 'tenis') { r(x, y + 2, 5, 1, '#f8f9fa'); p(x + (costas ? 1 : 2), y, '#ffffff'); }
+      else if (calcado === 'bota') { r(x, y - 2, 4, 2, cor); r(x, y + 2, 5, 1, sola); }
+      else { r(x, y + 2, 5, 1, sola); if (frente) p(x + (costas ? 3 : 0), y, sapH); }
+    };
     if (!sentado) {
       const ps = est.passo || 0, a = ps === 1 ? 1 : ps === 2 ? -1 : 0, bb = -a;
-      r(9, 31, 10, 2, calca);
-      r(14, 33, 4, 6 + bb, calS); r(14, 33, 1, 6 + bb, calca);
-      const yb = 39 + bb, xb = costas ? 14 : 13;
-      r(xb, yb, 5, 2, tom(sap, 0.85)); r(xb, yb + 2, 5, 1, sola);
-      r(9, 33, 4, 7 + a, calca); r(12, 33, 1, 7 + a, calS); p(10, 34, tom(calca, 1.25));
-      const ya = 40 + a, xa = costas ? 9 : 8;
-      r(xa, ya, 5, 2, sap); p(xa + (costas ? 3 : 0), ya, sapH); r(xa, ya + 2, 5, 1, sola);
+      r(9, 31, 10, 2, parteBaixo === 'vestido' ? cam : calca);
+      perna(14, 33, 4, 6 + bb - enc, calS, true); if (parteBaixo === 'calca') r(14, 33, 1, 6 + bb - enc, calca);
+      const yb = 39 + bb - enc, xb = costas ? 14 : 13;
+      sapato(xb, yb, tom(sap, 0.85), false);
+      perna(9, 33, 4, 7 + a - enc, calca, false); if (parteBaixo === 'calca') { r(12, 33, 1, 7 + a - enc, calS); p(10, 34, tom(calca, 1.25)); }
+      const ya = 40 + a - enc, xa = costas ? 9 : 8;
+      sapato(xa, ya, sap, true);
+      if (parteBaixo === 'saia') { r(8, 31, 12, 3, calca); r(7, 33, 14, 3, calca); r(7, 35, 14, 1, calS); }
+      if (parteBaixo === 'vestido') { r(8, 30, 12, 3, cam); r(7, 32, 14, 4, cam); r(7, 35, 14, 1, camS); }
     } else {
-      r(8, 31, 12, 4, calca); r(8, 34, 12, 1, calS); r(16, 31, 4, 4, calS);
+      const cb = parteBaixo === 'vestido' ? cam : calca;
+      r(8, 31, 12, 4, cb); r(8, 34, 12, 1, tom(cb, 0.72)); r(16, 31, 4, 4, tom(cb, 0.72));
     }
 
     // ---------------------------------------------------------------- tronco
@@ -141,11 +160,26 @@
         p(11, 26, camD); p(15, 26, camD); p(13, 28, camD);
       } else if (estilo === 'moletom') {
         r(9, 20, 10, 2, camS); r(10, 26, 7, 3, camS); p(12, 22, '#f4f4f4'); p(12, 23, '#f4f4f4'); p(15, 22, '#f4f4f4'); p(15, 23, '#f4f4f4');
+      } else if (estilo === 'camiseta') {
+        r(12, 21, 3, 1, pele); p(11, 21, camH); p(15, 21, camH);
+        r(15, 24, 3, 3, tom(cam, cam === '#111A19' || hexEscuro(cam) ? 1.6 : 0.8)); p(16, 25, VERDE);
+      } else if (estilo === 'regata') {
+        r(11, 21, 5, 2, pele); p(12, 23, pele); p(14, 23, pele); r(9, 21, 1, 2, pele); r(17, 21, 1, 2, pele);
+      } else if (estilo === 'jaqueta') {
+        r(12, 21, 3, 10, '#f1f3f5'); r(11, 21, 1, 9, camD); r(15, 21, 1, 9, camD); p(13, 21, pele);
+        r(9, 27, 2, 1, camD); r(16, 27, 2, 1, camD);
+      } else if (estilo === 'vestido') {
+        r(11, 21, 5, 1, pele); p(12, 22, pele); p(14, 22, pele); r(8, 28, 12, 1, camD); p(13, 28, '#ffd43b');
       }
       if (ap.cracha !== false) { // cordão com crachá
         p(11, 22, cordao); p(11, 23, cordao); p(12, 24, cordao); p(16, 22, cordao); p(16, 23, cordao); p(15, 24, cordao);
         p(13, 25, '#9aa3a1'); r(12, 26, 3, 4, '#ffffff'); p(13, 27, '#6aa5d8'); r(12, 29, 3, 1, '#c9c9c2');
       }
+    }
+    if (ap.cachecol && !fant) {
+      const cc = ap.corCachecol || '#c9453a';
+      r(9, 19, 11, 3, cc); r(9, 21, 11, 1, tom(cc, 0.75));
+      if (!costas) { r(15, 22, 3, 6, cc); r(15, 27, 3, 1, tom(cc, 0.7)); p(16, 24, tom(cc, 1.3)); }
     }
     // enfeites da fantasia no tronco
     if (!costas) {
@@ -212,7 +246,7 @@
       r(15, 21, 2, 2, peleS);
       r(12, 18, 3, 4, '#ffffff'); r(12, 18, 3, 1, '#6b3a1e'); p(15, 19, '#ffffff'); p(15, 20, '#ffffff'); p(13, 20, VERDE);
     }
-    g.translate(0, -(est.dy || 0));
+    g.translate(0, -((est.dy || 0) + enc));
 
     // ---------------------------------------------------------------- partes
     function desenharProp() {
@@ -297,6 +331,9 @@
         case 'rabo': curto(); c(20, 10, 3, 3); c(21, 13, 3, 8); c(22, 14, 1, 6, cabS); break;
         case 'coque': curto(); c(12, 1, 5, 5); c(13, 1, 3, 1, cabH); c(12, 5, 5, 1, cabS); break;
         case 'careca': r(9, Y(7), 11, 3, pele); r(10, Y(6), 9, 1, pele); p(11, Y(7), tom(pele, 1.25)); p(12, Y(7), tom(pele, 1.25)); c(18, 12, 2, 2, cabS); break;
+        case 'franja': curto(); c(7, 10, 2, 9); c(9, 10, 9, 2); c(9, 12, 2, 1); c(13, 12, 2, 1); c(16, 12, 2, 1); c(10, 10, 6, 1, cabH); break;
+        case 'tranca': curto(); c(19, 12, 3, 3); for (let k = 0; k < 4; k++) { c(19 + (k % 2), 15 + k * 3, 3, 3); c(20, 15 + k * 3, 1, 1, cabS); } c(20, 27, 2, 1, '#ff6b9a'); break;
+        case 'topete': curto(); c(9, 1, 9, 4); c(10, 0, 6, 1); c(11, 1, 5, 1, cabH); c(10, 3, 7, 1, cabH); break;
         default: curto();
       }
     }
@@ -316,23 +353,41 @@
         case 'rabo': base(); c(13, 17, 3, 9); c(14, 18, 1, 7, cabS); break;
         case 'coque': base(); c(12, 1, 5, 5); c(13, 1, 3, 1, cabH); break;
         case 'careca': p(12, Y(9), tom(pele, 1.25)); break;
+        case 'franja': base(); c(7, 10, 15, 17); c(11, 12, 1, 14, cabS); c(16, 12, 1, 14, cabS); break;
+        case 'tranca': base(); for (let k = 0; k < 5; k++) { c(13 + (k % 2), 18 + k * 3, 3, 3); c(14, 18 + k * 3, 1, 1, cabS); } c(13, 33, 3, 1, '#ff6b9a'); break;
+        case 'topete': base(); c(9, 2, 9, 4); c(11, 2, 5, 1, cabH); break;
         default: base();
       }
     }
 
     function acessoriosFrente() {
       if (ap.oculos) {
-        const f = '#1b1b1b';
-        r(9, Y(13), 3, 1, f); r(9, Y(16), 3, 1, f); r(9, Y(14), 1, 2, f); r(11, Y(14), 1, 2, f);
-        r(14, Y(13), 3, 1, f); r(14, Y(16), 3, 1, f); r(14, Y(14), 1, 2, f); r(16, Y(14), 1, 2, f);
-        r(12, Y(14), 2, 1, f); r(17, Y(14), 2, 1, f);
+        const f = '#1b1b1b', mod = ap.oculos === true ? 'quadrado' : ap.oculos;
+        if (mod === 'escuro') {
+          r(9, Y(13), 3, 3, f); r(14, Y(13), 3, 3, f); r(12, Y(13), 2, 1, f); r(17, Y(14), 2, 1, f); p(9, Y(13), '#6c757d'); p(14, Y(13), '#6c757d');
+        } else if (mod === 'redondo') {
+          const cor = ap.corOculos || '#8a5a2b';
+          for (const x of [9, 14]) { p(x + 1, Y(13), cor); p(x + 1, Y(16), cor); r(x, Y(14), 1, 2, cor); r(x + 2, Y(14), 1, 2, cor); }
+          r(12, Y(14), 2, 1, cor); r(17, Y(14), 2, 1, cor);
+        } else {
+          r(9, Y(13), 3, 1, f); r(9, Y(16), 3, 1, f); r(9, Y(14), 1, 2, f); r(11, Y(14), 1, 2, f);
+          r(14, Y(13), 3, 1, f); r(14, Y(16), 3, 1, f); r(14, Y(14), 1, 2, f); r(16, Y(14), 1, 2, f);
+          r(12, Y(14), 2, 1, f); r(17, Y(14), 2, 1, f);
+        }
         if (est.brilhoOculos) { p(10, Y(14), '#ffffff'); p(15, Y(14), '#ffffff'); }
       }
       if (ss) return;
-      if (ap.bone) {
-        const cb = ap.corBone || VERDE;
+      const cb = ap.corBone || VERDE;
+      if (chapeu === 'bone') {
         r(8, Y(4), 13, 5, cb); r(9, Y(3), 11, 1, cb); r(17, Y(4), 4, 5, tom(cb, 0.82));
         r(4, Y(9), 10, 1, tom(cb, 0.65)); r(5, Y(8), 7, 1, tom(cb, 0.85)); p(13, Y(5), '#ffffff'); p(14, Y(6), '#ffffff');
+      } else if (chapeu === 'gorro') {
+        r(8, Y(3), 13, 6, cb); r(9, Y(2), 11, 1, cb); r(8, Y(8), 13, 2, tom(cb, 0.75)); for (let x = 9; x < 21; x += 2) p(x, Y(8), tom(cb, 0.6));
+        r(13, Y(0), 3, 2, '#f8f9fa'); r(10, Y(4), 3, 1, tom(cb, 1.25));
+      } else if (chapeu === 'chapeu') {
+        r(9, Y(2), 11, 5, cb); r(10, Y(1), 9, 1, cb); r(9, Y(5), 11, 1, '#1b1b1b'); r(5, Y(7), 19, 2, tom(cb, 0.72)); r(11, Y(2), 3, 1, tom(cb, 1.25));
+      } else if (chapeu === 'tiara') {
+        r(8, Y(6), 13, 1, cb); r(9, Y(5), 11, 1, cb); p(10, Y(5), tom(cb, 1.4)); r(14, Y(3), 3, 2, '#ff6b9a'); p(15, Y(3), '#ffd43b');
       }
       if (ap.fone) {
         const f = '#202426';
@@ -342,7 +397,11 @@
     }
     function acessoriosCostas() {
       if (ss) return;
-      if (ap.bone) { const cb = ap.corBone || VERDE; r(8, Y(4), 13, 6, cb); r(9, Y(3), 11, 1, cb); r(12, Y(9), 5, 1, tom(cb, 0.7)); }
+      const cb = ap.corBone || VERDE;
+      if (chapeu === 'bone') { r(8, Y(4), 13, 6, cb); r(9, Y(3), 11, 1, cb); r(12, Y(9), 5, 1, tom(cb, 0.7)); }
+      else if (chapeu === 'gorro') { r(8, Y(3), 13, 7, cb); r(9, Y(2), 11, 1, cb); r(8, Y(8), 13, 2, tom(cb, 0.75)); r(13, Y(0), 3, 2, '#f8f9fa'); }
+      else if (chapeu === 'chapeu') { r(9, Y(2), 11, 5, cb); r(9, Y(5), 11, 1, '#1b1b1b'); r(5, Y(7), 19, 2, tom(cb, 0.72)); }
+      else if (chapeu === 'tiara') { r(8, Y(6), 13, 1, cb); r(9, Y(5), 11, 1, cb); }
       if (ap.fone) { const f = '#202426'; r(8, Y(4), 13, 1, f); r(7, Y(5), 1, 7, f); r(21, Y(5), 1, 7, f); r(6, Y(12), 2, 4, VERDE); r(21, Y(12), 2, 4, VERDE); }
     }
   };

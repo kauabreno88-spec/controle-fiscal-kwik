@@ -1,209 +1,94 @@
-/* KWIK Mini Escritório · Sala de Jogos (cômodo ao lado do escritório) + mini jogo "Gatinhos em Casa".
-   A sala fica do lado direito, separada por uma mureta com passagem. Começa apagada; ao tocar nela a luz
-   acende e quem está livre entra para jogar sinuca, pingue-pongue ou cartas.
+/* KWIK Mini Escritório · Sala de Jogos (um dos cômodos do prédio) + mini jogo "Gatinhos em Casa".
+   A sala começa apagada; ao tocar nela a luz acende e quem está livre vai jogar sinuca, pingue-pongue ou cartas.
+   Os móveis são desenhados em cena.js; aqui ficam a luz, o letreiro, as bolinhas e quem vai jogar.
    Gatinhos em Casa (jogo original): arraste as caminhas coloridas pelo tabuleiro; ao passar sobre gatinhos
    da mesma cor, eles pulam para dentro. O número é quantos ainda faltam. Caminha cheia vai embora. */
 (function () {
   const KM = window.KM;
   const $ = s => document.querySelector(s);
   const A = () => KM.app;
-  const P = (...a) => KM.P(...a);
-  const X0 = 108, X1 = 186, FUNDO = 108, PAREDE = 78, PORTA = [62, 80];
 
-  // ------------------------------------------------------------------ desenho do cômodo
-  let camada = null, hotspots = [], luzK = 0, bola = 0;
-  function texCarpete() {
-    return KM.tex('carpeteJogos', X1 - X0, FUNDO, (g, w, h) => {
-      for (let v = 0; v < h; v += 12) for (let u = 0; u < w; u += 12) { g.fillStyle = ((u + v) / 12) % 2 ? '#3b2f66' : '#443774'; g.fillRect(u, v, 12, 12); }
-      g.fillStyle = 'rgba(255,79,216,0.16)'; for (let i = 6; i < w; i += 24) g.fillRect(i, 0, 1, h);
-    });
-  }
-  function texParedeJogos() {
-    return KM.tex('paredeJogos2', X1 - X0, PAREDE, (g, w, h) => {
-      g.fillStyle = '#2c2344'; g.fillRect(0, 0, w, h);
-      g.fillStyle = 'rgba(255,255,255,0.04)'; for (let u = 0; u < w; u += 9) g.fillRect(u, 0, 1, h);
-      g.fillStyle = '#ff4fd8'; g.fillRect(0, h - 6, w, 1); g.fillStyle = '#3fb6ff'; g.fillRect(0, h - 4, w, 1);
-      g.fillStyle = '#16102a'; g.fillRect(0, h - 3, w, 3);
-      const cx = 52, cy = 24; // alvo de dardos
-      for (let r = 7; r > 0; r -= 2) { g.fillStyle = r % 4 === 3 ? '#e03131' : '#f8f9fa'; g.fillRect(cx - r, cy - r, r * 2, r * 2); }
-      g.fillStyle = '#2f9e44'; g.fillRect(cx - 1, cy - 1, 2, 2);
-    });
-  }
-  function letreiro(t, acesa) {
-    const c = KM.tela(40, 12), g = c.getContext('2d');
-    g.fillStyle = '#16102a'; g.fillRect(0, 0, 40, 12);
-    const on = acesa && Math.floor(t * 3) % 9 !== 0;
-    KM.texto(g, 'KWIK', 2, 3, on ? '#ff4fd8' : '#4a2a50');
-    KM.texto(g, 'PLAY', 21, 3, on ? '#3fb6ff' : '#1d3a50');
-    return c;
-  }
-  function telaTV(t, acesa) {
-    const c = KM.tela(26, 15), g = c.getContext('2d');
-    g.fillStyle = '#111'; g.fillRect(0, 0, 26, 15);
-    g.fillStyle = acesa ? '#0b2a4a' : '#08080c'; g.fillRect(1, 1, 24, 13);
-    if (acesa) {
-      const f = Math.floor(t * 4);
-      g.fillStyle = '#69db7c'; g.fillRect(1, 11, 24, 3);
-      g.fillStyle = '#ffd43b'; g.fillRect(3 + (f % 16), 8 - (f % 4 === 0 ? 2 : 0), 3, 3);
-      g.fillStyle = '#ff6b6b'; g.fillRect(18 - (f % 10), 9, 3, 2);
-      KM.texto(g, String(10 + (f % 80)), 2, 2, '#ffffff');
-    }
-    return c;
-  }
-  function telaFliper(t, acesa) {
-    const c = KM.tela(10, 8), g = c.getContext('2d');
-    g.fillStyle = '#0b1020'; g.fillRect(0, 0, 10, 8);
-    if (acesa) { const f = Math.floor(t * 2) % 4; for (let i = 0; i < 3; i++) { g.fillStyle = CORES[(i + f) % 5]; g.fillRect(1 + i * 3, 2 + ((i + f) % 2), 2, 2); } g.fillStyle = '#ffffff'; g.fillRect(1, 6, 8, 1); }
-    return c;
-  }
-  function caixaTela(X, Y, w, d, h) {
-    const pts = [[X, Y, 0], [X + w, Y, 0], [X, Y + d, 0], [X + w, Y + d, 0], [X, Y, h], [X + w, Y, h], [X, Y + d, h], [X + w, Y + d, h]].map(q => P(...q));
-    return [Math.min(...pts.map(q => q[0])), Math.min(...pts.map(q => q[1])), Math.max(...pts.map(q => q[0])), Math.max(...pts.map(q => q[1]))];
-  }
+  // ------------------------------------------------------------------ desenho (partes que mudam)
+  let luzK = 0, bola = 0;
+  const sala = () => KM.LAYOUT && KM.LAYOUT.salas.jogos;
+  const movel = tipo => KM.LAYOUT.moveis.find(m => m.sala === 'jogos' && m.tipo === tipo);
+  const r = (g, x, y, w, h, c) => { g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), w, h); };
 
-  const MOVEIS = [
-    { p: 160, f: (c, t, on) => { // fliperama (abre o mini jogo)
-      const X = 172, Y = 4, w = 12, d = 12;
-      KM.prisma(c, { X, Y, w, d, h: 40, cor: '#7048e8', corEsq: '#5f3dc4', corDir: '#4c2fa3' });
-      KM.face(c, telaFliper(t, on), KM.MAT.paredeD, ...P(X + 1, Y + d, 34));
-      KM.prisma(c, { X: X + 1, Y: Y + d, Z: 20, w: w - 2, d: 3, h: 2, cor: '#212529' });
-      const [lx, ly] = P(X + 6, Y + d, 44); c.fillStyle = on && Math.floor(t * 4) % 2 ? '#ff4fd8' : '#7a3a8a'; c.fillRect(Math.round(lx) - 5, Math.round(ly) - 2, 10, 2);
-      hotspots.push({ nome: 'fliperama', box: caixaTela(X, Y, w, d + 3, 44) });
-    } },
-    { p: 132, f: c => { // sofá embaixo da TV
-      KM.prisma(c, { X: 118, Y: 2, w: 28, d: 4, h: 14, cor: '#a61e1e' });
-      KM.prisma(c, { X: 118, Y: 6, w: 28, d: 7, h: 7, cor: '#c92a2a' });
-      KM.prisma(c, { X: 116, Y: 2, w: 3, d: 11, h: 11, cor: '#a61e1e' }); KM.prisma(c, { X: 145, Y: 2, w: 3, d: 11, h: 11, cor: '#a61e1e' });
-    } },
-    { p: 166, f: c => { // sinuca
-      const X = 120, Y = 24, w = 30, d = 18;
-      for (const [x, y] of [[X + 1, Y + 1], [X + w - 3, Y + 1], [X + 1, Y + d - 3], [X + w - 3, Y + d - 3]]) KM.prisma(c, { X: x, Y: y, w: 2, d: 2, h: 10, cor: '#4a2a14' });
-      KM.prisma(c, { X, Y, Z: 10, w, d, h: 4, cor: '#6b3f22' });
-      const feltro = KM.tex('feltro2', w - 4, d - 4, (g, ww, hh) => {
-        g.fillStyle = '#2f9e44'; g.fillRect(0, 0, ww, hh);
-        g.fillStyle = '#111'; for (const [x, y] of [[0, 0], [ww - 2, 0], [0, hh - 2], [ww - 2, hh - 2], [ww / 2 - 1, 0], [ww / 2 - 1, hh - 2]]) g.fillRect(x, y, 2, 2);
-        for (const [cor, x, y] of [['#ffd43b', 16, 5], ['#e03131', 18, 7], ['#1971c2', 17, 10], ['#7048e8', 20, 6], ['#111111', 19, 9], ['#f76707', 21, 8]]) { g.fillStyle = cor; g.fillRect(x, y, 2, 2); }
-      });
-      KM.face(c, feltro, KM.MAT.chao, ...P(X + 2, Y + 2, 14));
-      const [bx, by] = P(X + 6 + Math.abs(Math.sin(bola * 0.7)) * 8, Y + 9, 14); c.fillStyle = '#ffffff'; c.fillRect(Math.round(bx), Math.round(by) - 1, 2, 2);
-      hotspots.push({ nome: 'sinuca', box: caixaTela(X, Y, w, d, 14) });
-    } },
-    { p: 207, f: c => { // mesa de cartas + banquinhos
-      const X = 160, Y = 30, w = 18, d = 16;
-      KM.prisma(c, { X: X + 8, Y: Y + 7, w: 3, d: 3, h: 11, cor: '#3a2a1e' });
-      KM.prisma(c, { X, Y, Z: 11, w, d, h: 2, cor: '#1864ab' });
-      const cartas = KM.tex('cartasMesa2', w - 2, d - 2, g => {
-        const cs = ['#e03131', '#f59f00', '#2f9e44', '#1971c2', '#111111'];
-        [[2, 3], [6, 2], [9, 6], [12, 3], [5, 9], [10, 10]].forEach(([x, y], i) => { g.fillStyle = '#ffffff'; g.fillRect(x, y, 3, 4); g.fillStyle = cs[i % cs.length]; g.fillRect(x + 1, y + 1, 1, 2); });
-      });
-      KM.face(c, cartas, KM.MAT.chao, ...P(X + 1, Y + 1, 13));
-      KM.prisma(c, { X: 180, Y: 36, w: 4, d: 4, h: 7, cor: '#862e9c' });
-      hotspots.push({ nome: 'cartas', box: caixaTela(X, Y, w, d, 13) });
-    } },
-    { p: 220, f: (c, t) => { // pingue-pongue
-      const X = 130, Y = 66, w = 30, d = 18;
-      for (const [x, y] of [[X + 2, Y + 2], [X + w - 4, Y + 2], [X + 2, Y + d - 4], [X + w - 4, Y + d - 4]]) KM.prisma(c, { X: x, Y: y, w: 2, d: 2, h: 10, cor: '#343a40' });
-      const mesa = KM.tex('pingue', w, d, (g, ww, hh) => { g.fillStyle = '#1971c2'; g.fillRect(0, 0, ww, hh); g.fillStyle = '#ffffff'; g.fillRect(0, 0, ww, 1); g.fillRect(0, hh - 1, ww, 1); g.fillRect(0, 0, 1, hh); g.fillRect(ww - 1, 0, 1, hh); g.fillRect(0, hh / 2, ww, 1); });
-      KM.prisma(c, { X, Y, Z: 10, w, d, h: 2, cor: '#1864ab', topo: mesa });
-      KM.prisma(c, { X: X + w / 2 - 1, Y, Z: 12, w: 2, d, h: 3, cor: '#f1f3f5' });
-      hotspots.push({ nome: 'pingue', box: caixaTela(X, Y, w, d, 15) });
-    } },
-    { p: 240, f: c => { KM.prisma(c, { X: 172, Y: 62, w: 10, d: 10, h: 6, cor: '#e03131' }); KM.prisma(c, { X: 174, Y: 80, w: 10, d: 10, h: 6, cor: '#3fb6ff' }); } },
-    { p: 282, f: (c, t) => planta(c, 180, 102, t) }, { p: 216, f: (c, t) => planta(c, 116, 100, t) },
-  ];
-  function planta(c, X, Y, t) {
-    KM.prisma(c, { X: X - 3, Y: Y - 3, w: 6, d: 6, h: 6, cor: '#b5532f' });
-    const [x0, y0] = P(X, Y, 6), x = Math.round(x0), y = Math.round(y0), b = Math.round(Math.sin(t * 1.3 + X) * 0.6);
-    c.fillStyle = '#2E8B45'; c.fillRect(x - 1 + b, y - 12, 2, 12);
-    c.fillStyle = '#28BE52'; c.fillRect(x - 5 + b, y - 9, 4, 2); c.fillRect(x + 1 + b, y - 11, 4, 2); c.fillRect(x - 4 + b, y - 5, 3, 2); c.fillRect(x + 2 + b, y - 6, 3, 2);
-  }
-
-  function desenharArea(ctx, cfg, estado, t) {
-    hotspots = [];
-    const alvo = estado.luzJogos ? 1 : 0;
-    luzK += (alvo - luzK) * 0.15;
+  function desenharFundo(ctx, cfg, estado, t) {
+    const s = sala(); if (!s) return;
+    luzK += ((estado.luzJogos ? 1 : 0) - luzK) * 0.15;
     bola += 0.08;
-    if (!camada) { camada = document.createElement('canvas'); }
-    if (camada.width !== KM.W || camada.height !== KM.H) { camada.width = KM.W; camada.height = KM.H; }
-    const c = camada.getContext('2d');
-    c.setTransform(1, 0, 0, 1, 0, 0); c.imageSmoothingEnabled = false; c.clearRect(0, 0, KM.W, KM.H);
     const on = luzK > 0.5;
-    // chão, parede do fundo e mureta
-    KM.prisma(c, { X: X0, Y: 0, Z: -6, w: X1 - X0, d: FUNDO, h: 6, topo: texCarpete(), corEsq: '#241c3f', corDir: '#1a1430' });
-    KM.prisma(c, { X: X0, Y: -4, Z: -6, w: X1 - X0, d: 4, h: PAREDE + 6, corTopo: '#16102a', corDir: '#1c1530', semEsq: true });
-    KM.face(c, texParedeJogos(), KM.MAT.paredeD, ...P(X0, 0, PAREDE));
-    KM.face(c, letreiro(t, on), KM.MAT.paredeD, ...P(150, 0, PAREDE - 12));
-    KM.face(c, telaTV(t, on), KM.MAT.paredeD, ...P(119, 0, PAREDE - 30));
-    const lista = MOVEIS.map(m => ({ p: m.p, f: cc => m.f(cc, t, on) }));
-    lista.push({ p: X0 + 62, f: cc => KM.prisma(cc, { X: X0, Y: 0, w: 4, d: PORTA[0], h: 12, cor: '#3b2a5c', corTopo: '#ff4fd8' }) });
-    lista.push({ p: X0 + 94, f: cc => KM.prisma(cc, { X: X0, Y: PORTA[1], w: 4, d: FUNDO - PORTA[1], h: 12, cor: '#3b2a5c', corTopo: '#ff4fd8' }) });
-    for (const p of Object.values(estado.pessoas || {})) if (p.visivel !== false && p.X >= 108) lista.push({ p: p.X + p.Y + 0.5, f: cc => KM.desenharPessoa(cc, cfg, p, t) });
-    lista.sort((a, b) => a.p - b.p);
-    for (const o of lista) o.f(c);
-    // bolinha do pingue-pongue quando tem dupla jogando
-    const dupla = Object.values(estado.pessoas || {}).filter(p => p.lugarJogo === 'pingA' || p.lugarJogo === 'pingB').filter(p => p.jogando);
-    if (dupla.length === 2) {
-      const k = (Math.sin(bola * 1.6) + 1) / 2, X = 128 + k * 34, Z = 16 + Math.abs(Math.sin(bola * 3.2)) * 8;
-      const [bx, by] = P(X, 75, Z); c.fillStyle = '#ffffff'; c.fillRect(Math.round(bx), Math.round(by), 2, 2);
+    const neon = KM.LAYOUT.decor.find(d => d.tipo === 'neon');
+    if (neon) {
+      const pisca = on && Math.floor(t * 3) % 9 !== 0;
+      r(ctx, neon.X, neon.Y + 2, 40, 11, '#16102a');
+      KM.texto(ctx, 'KWIK', neon.X + 3, neon.Y + 5, pisca ? '#ff4fd8' : '#4a2a50');
+      KM.texto(ctx, 'PLAY', neon.X + 21, neon.Y + 5, pisca ? '#3fb6ff' : '#1d3a50');
     }
-    // luz: escurece tudo o que foi desenhado na camada (só onde tem pixel)
-    c.globalCompositeOperation = 'source-atop';
-    c.fillStyle = `rgba(8,6,22,${0.72 * (1 - luzK)})`; c.fillRect(0, 0, KM.W, KM.H);
-    c.globalCompositeOperation = 'source-over';
-    // pendentes no teto
-    for (const [X, Y] of [[136, 34], [146, 74], [168, 38]]) {
-      const [lx, ly] = P(X, Y, 70);
-      c.fillStyle = '#1c1612'; c.fillRect(Math.round(lx), Math.round(ly) - 14, 1, 14);
-      c.fillStyle = on ? '#ffe066' : '#5c5470'; c.fillRect(Math.round(lx) - 2, Math.round(ly), 5, 2);
+    const fl = movel('fliperama');
+    if (fl) {
+      const x = fl.X + 2, y = fl.Y + fl.d - fl.h + 3;
+      r(ctx, x, y, fl.w - 4, 8, '#0b1020');
+      if (on) { const f = Math.floor(t * 2) % 4; for (let i = 0; i < 3; i++) r(ctx, x + 1 + i * 3, y + 2 + ((i + f) % 2), 2, 2, CORES[(i + f) % 5]); r(ctx, x + 1, y + 6, fl.w - 6, 1, '#ffffff'); }
+      r(ctx, fl.X + 1, fl.Y - fl.h + 1, fl.w - 2, 2, on && Math.floor(t * 4) % 2 ? '#ff4fd8' : '#7a3a8a');
     }
-    if (!estado.luzJogos && luzK < 0.1) { const [x, y] = P(150, 60, 30); KM.texto(c, 'TOQUE AQUI', Math.round(x) - 19, Math.round(y), Math.floor(t * 2) % 2 ? '#ff8ae6' : '#b37bd1'); }
-    ctx.drawImage(camada, 0, 0);
   }
 
-  function naArea(x, y) {
-    const [X, Y] = KM.chaoEm(x, y);
-    if (X >= X0 && X <= X1 + 2 && Y >= -6 && Y <= FUNDO + 2) return true;
-    const [xa, ya] = P(X0, 0, PAREDE), [xb] = P(X1, 0, PAREDE), [, yc] = P(X1, 0, 0);
-    return x >= xa && x <= xb && y >= ya && y <= yc + 30 && KM.chaoEm(x, y)[0] > X0 - 20;
+  function desenharFrente(ctx, cfg, estado, t) {
+    const s = sala(); if (!s) return;
+    const on = luzK > 0.5;
+    const sn = movel('sinuca');
+    if (sn) r(ctx, sn.X + 8 + Math.abs(Math.sin(bola * 0.7)) * 10, sn.Y - sn.h + 11, 2, 2, '#ffffff');
+    const dupla = Object.values(estado.pessoas || {}).filter(p => p.jogando && (p.lugarJogo === 'pingA' || p.lugarJogo === 'pingB'));
+    const pg = movel('pingue');
+    if (pg && dupla.length === 2) {
+      const k = (Math.sin(bola * 1.6) + 1) / 2, x = pg.X - 2 + k * (pg.w + 4), z = Math.abs(Math.sin(bola * 3.2)) * 8;
+      r(ctx, x, pg.Y - pg.h + (pg.d >> 1) - 1 - z, 2, 2, '#ffffff');
+    }
+    const W = KM.RW, H = KM.RH;
+    if (luzK < 0.99) { ctx.fillStyle = `rgba(8,6,22,${0.72 * (1 - luzK)})`; ctx.fillRect(s.x, s.y, W, H); }
+    if (on) { ctx.fillStyle = 'rgba(255,224,102,0.06)'; ctx.fillRect(s.fx + 40, s.fy + 20, 60, 44); ctx.fillRect(s.fx + 84, s.fy + 54, 44, 36); }
+    if (!estado.luzJogos && luzK < 0.1) {
+      const cx = s.fx + 68, cy = s.fy + 68, pisca = Math.floor(t * 2) % 2;
+      r(ctx, cx - 3, cy - 14, 7, 7, pisca ? '#ffe066' : '#8a7a3a'); r(ctx, cx - 2, cy - 7, 5, 2, '#adb5bd');
+      KM.texto(ctx, 'TOQUE AQUI', cx - 19, cy, pisca ? '#ff8ae6' : '#b37bd1');
+    }
   }
-  const alvoEm = (x, y) => { for (const h of hotspots.slice().reverse()) { const [a, b, c, d] = h.box; if (x >= a && x <= c && y >= b && y <= d) return h.nome; } return null; };
+
+  function naArea(x, y) { const s = sala(); return !!s && x >= s.x && x <= s.x + KM.RW && y >= s.y && y <= s.y + KM.RH; }
+  const alvoEm = (x, y) => {
+    const fl = KM.LAYOUT && movel('fliperama');
+    if (fl && x >= fl.X - 2 && x <= fl.X + fl.w + 2 && y >= fl.Y - fl.h - 2 && y <= fl.Y + fl.d + 2) return 'fliperama';
+    for (const tipo of ['sinuca', 'pingue', 'mesaCartas']) { const m = KM.LAYOUT && movel(tipo); if (m && x >= m.X && x <= m.X + m.w && y >= m.Y - m.h && y <= m.Y + m.d) return tipo; }
+    return null;
+  };
 
   // ------------------------------------------------------------------ luz + funcionários entrando
-  const LUGARES = {
-    sinuca: { X: 116, Y: 33, dir: 'fd', prop: 'taco', rota: [[118, 58]] },
-    pingA: { X: 126, Y: 75, dir: 'fd', rota: [] },
-    pingB: { X: 164, Y: 75, dir: 'ce', rota: [[124, 60], [164, 60]] },
-    cartas: { X: 169, Y: 26, dir: 'fe', prop: 'cartas', rota: [[118, 58], [155, 58], [155, 22]] },
-  };
-  const ENTRADA = [[68, 72], [104, 72], [118, 72]];
-  const FALAS = { sinuca: ['Bola sete na caçapa! 🎱', 'Essa foi de efeito 😎'], pingA: ['Ponto meu! 🏓', 'Saque!'], pingB: ['Devolve essa! 🏓', 'Quase! 😅'], cartas: ['Mais duas cartas pra você! 😂', 'Bati! 🃏'] };
+  const FALAS = { sinuca: ['Bola sete na caçapa! 🎱', 'Essa foi de efeito 😎'], sinuca2: ['Minha vez! 🎱', 'Errei de propósito 😅'], pingA: ['Ponto meu! 🏓', 'Saque!'], pingB: ['Devolve essa! 🏓', 'Quase! 😅'], cartas: ['Mais duas cartas pra você! 😂', 'Bati! 🃏'] };
 
   function escolherLugares(ps) {
-    const livres = ['sinuca', 'pingA', 'pingB', 'cartas'], out = new Map();
+    const out = new Map(), ordem = ['pingA', 'pingB', 'cartas', 'sinuca2'];
     const leo = ps.find(p => p.funcao === 'noticias');
-    if (leo) { out.set(leo, 'sinuca'); livres.splice(livres.indexOf('sinuca'), 1); }
+    if (leo) out.set(leo, 'sinuca');
     const outros = ps.filter(p => p !== leo);
-    if (outros.length >= 2) { out.set(outros[0], 'pingA'); out.set(outros[1], 'pingB'); outros.slice(2).forEach(p => out.set(p, 'cartas')); }
-    else if (outros.length === 1) out.set(outros[0], leo ? 'cartas' : 'sinuca');
+    if (outros.length === 1) out.set(outros[0], leo ? 'cartas' : 'sinuca');
+    else outros.forEach((p, i) => { if (ordem[i]) out.set(p, ordem[i]); });
     return out;
   }
 
   async function brincar(p, lugar) {
-    const L = LUGARES[lugar], m = KM.mov;
+    const L = KM.LAYOUT.pontos.jogos[lugar], m = KM.mov;
     p.acao = 'rotina'; p.lugarJogo = lugar;
     try {
-      await m.levantar(p);
-      if (!p.foraDaMesa) { for (const [x, y] of m.assento(p).caminho) await m.andarAte(p, x, y); p.foraDaMesa = true; }
-      for (const [x, y] of ENTRADA) { if (p.pararRotina) break; await m.andarAte(p, x, y); }
-      for (const [x, y] of L.rota) { if (p.pararRotina) break; await m.andarAte(p, x, y); }
+      await m.irAte(p, L.X, L.Y);
       if (!p.pararRotina) {
-        await m.andarAte(p, L.X, L.Y);
         p.dir = L.dir; p.prop = L.prop || null; p.jogando = true; p.est = {};
         let n = 0;
         while (!p.pararRotina) {
           n++;
-          if (lugar.startsWith('ping')) { p.est = { bracos: n % 2 ? 'aceno' : 'baixo', aceno: n % 2, boca: 'sorriso' }; }
-          else if (lugar === 'sinuca') { p.est = { dy: n % 4 === 0 ? 1 : 0, boca: n % 6 === 0 ? 'o' : 'sorriso' }; }
+          if (lugar.startsWith('ping')) p.est = { bracos: n % 2 ? 'aceno' : 'baixo', aceno: n % 2, boca: 'sorriso' };
+          else if (lugar.startsWith('sinuca')) p.est = { dy: n % 4 === 0 ? 1 : 0, boca: n % 6 === 0 ? 'o' : 'sorriso' };
           else p.est = { boca: n % 5 === 0 ? 'sorriso' : 'normal', olhos: n % 7 === 0 ? 'feliz' : undefined };
           if (Math.random() < 0.06) m.fala(p, FALAS[lugar][Math.floor(Math.random() * 2)], 2000);
           await KM.esperar(520);
@@ -211,8 +96,6 @@
       }
     } finally {
       p.jogando = false; p.prop = null; p.est = {};
-      for (const [x, y] of [...L.rota].reverse()) await m.andarAte(p, x, y);
-      for (const [x, y] of [...ENTRADA].reverse()) await m.andarAte(p, x, y);
       await KM.voltarSentar(p);
       p.lugarJogo = null; p.acao = null;
     }
@@ -225,15 +108,15 @@
     KM.tocar('clique'); setTimeout(() => KM.tocar('magia'), 120);
     document.body.classList.add('modo-jogos');
     atualizarBotao(); renderPainel();
-    const livres = Object.values(est.pessoas).filter(p => !p.trabalhando && (!p.acao || p.acao === 'soneca'));
+    const livres = Object.values(est.pessoas).filter(p => !p.trabalhando && (!p.acao || p.acao === 'soneca' || p.acao === 'rotina'));
     livres.forEach(p => { if (p.acao === 'soneca') p.dormindo = false; });
-    setTimeout(() => {
-      const lugares = escolherLugares(livres.filter(p => !p.acao));
+    Promise.all(livres.map(p => KM.pararRotina(p))).then(() => {
+      const lugares = escolherLugares(livres.filter(p => !p.acao && !p.trabalhando));
       let atraso = 0;
-      for (const [p, l] of lugares) { setTimeout(() => brincar(p, l), atraso); atraso += 500; }
+      for (const [p, l] of lugares) { setTimeout(() => brincar(p, l), atraso); atraso += 450; }
       if (lugares.size) A().falar([...lugares.keys()][0].id, 'Oba, sala de jogos! 🎮', 2200);
       else A().toast('A equipe está ocupada agora — mas você pode jogar no fliperama 🐱');
-    }, 300);
+    });
   }
   function apagar() {
     const est = A().estado;
@@ -251,12 +134,12 @@
   }
   // Clique na cena: devolve true se foi na sala de jogos.
   function cliqueArea(x, y) {
-    if (!naArea(x, y) && !alvoEm(x, y)) return false;
+    if (!naArea(x, y)) return false;
     const est = A().estado;
     if (!est.luzJogos) { acender(); return true; }
     const alvo = alvoEm(x, y);
     if (alvo === 'fliperama') abrir();
-    else if (alvo === 'sinuca' || alvo === 'pingue' || alvo === 'cartas') A().toast('🕹️ Os mini jogos ficam no fliperama (no canto da sala). A sinuca e as cartas chegam numa próxima atualização!');
+    else if (alvo) A().toast('🕹️ Os mini jogos ficam no fliperama (no canto da sala). A sinuca e as cartas chegam numa próxima atualização!');
     return true;
   }
   function renderPainel() {
@@ -599,7 +482,7 @@
 
   KM.jogos = {
     iniciar() { ligar(); atualizarBotao(); },
-    desenharArea, cliqueArea, acender, apagar, abrir, fecharJogo,
+    desenharFundo, desenharFrente, cliqueArea, acender, apagar, abrir, fecharJogo,
     sobre: (x, y) => naArea(x, y) || !!alvoEm(x, y),
     entrar: acender, sair: apagar,
     gerarFase, celulas, estadoJogo: () => J, _quadro: t => { cancelAnimationFrame(raf); loop(t); },

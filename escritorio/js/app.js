@@ -20,10 +20,12 @@
 
   // ------------------------------------------------------------------ configuração
   const PADRAO = {
-    versao: 3,
+    versao: 4,
     escritorio: {
       nome: 'Mini Escritório', parede: '#EBDCCB', rodape: '#6B4A35', piso: 'madeira', corPiso: '#B98A62',
       tapete: true, corTapete: '#F5C27E', padraoTapete: 'losango', mesa: '#9C5B3A', cadeira: '#2A2F33', estante: '#2b2f33', ceu: 'auto',
+      modeloParede: 'lisa', modeloMesa: 'classica', modeloCadeira: 'escritorio', modeloPlanta: 'costela', corVaso: '#b5532f',
+      modeloSofa: 'reto', corSofa: '#3f7fc1', modeloEstante: 'livros', modeloQuadro: 'paisagem', corMoldura: '#1c1612',
       itens: { planta: true, estante: true, janela: true, relogio: true, tv: true, grafico: true, logo: true, quadros: true, cofre: true, lixeira: true },
     },
     funcionarios: [{
@@ -31,7 +33,7 @@
       aparencia: {
         pele: '#E8B48F', cabelo: 'curto', corCabelo: '#5A3825', estiloCamisa: 'casual', corCamisa: '#E9D5B7', corGravata: '#28BE52',
         calca: '#2F3A4A', sapato: '#5A3A22', oculos: false, fone: false, bone: false, barba: false, corBone: '#28BE52',
-        cracha: true, corCordao: '#E8613C',
+        cracha: true, corCordao: '#E8613C', chapeu: '', baixo: 'calca', calcado: 'sapato', altura: 'normal', cachecol: false, corCachecol: '#c9453a',
       },
       xp: 0, tarefas: 0, ganhos: 0,
     }, {
@@ -39,7 +41,7 @@
       aparencia: {
         pele: '#F1C9A5', cabelo: 'longo', corCabelo: '#3B2416', estiloCamisa: 'casual', corCamisa: '#F4B6C2', corGravata: '#28BE52',
         calca: '#3b4a6b', sapato: '#7a3b2a', oculos: false, fone: false, bone: false, barba: false, corBone: '#28BE52',
-        cracha: true, corCordao: '#28BE52',
+        cracha: true, corCordao: '#28BE52', chapeu: '', baixo: 'calca', calcado: 'sapato', altura: 'normal', cachecol: false, corCachecol: '#c9453a',
       },
       xp: 0, tarefas: 0, ganhos: 0,
     }, {
@@ -47,22 +49,40 @@
       aparencia: {
         pele: '#E0AC82', cabelo: 'curto', corCabelo: '#8a8a8a', estiloCamisa: 'social', corCamisa: '#cfe0f5', corGravata: '#1f3a68',
         calca: '#3a3f47', sapato: '#2b1d12', oculos: true, fone: false, bone: false, barba: true, corBone: '#28BE52',
-        cracha: true, corCordao: '#3f7fc1',
+        cracha: true, corCordao: '#3f7fc1', chapeu: '', baixo: 'calca', calcado: 'sapato', altura: 'normal', cachecol: false, corCachecol: '#c9453a',
+      },
+      xp: 0, tarefas: 0, ganhos: 0,
+    }, {
+      id: 'enzo', nome: 'Enzo', cargo: 'Vídeos para o Instagram', funcao: 'video',
+      aparencia: {
+        pele: '#C68642', cabelo: 'topete', corCabelo: '#2B1B12', estiloCamisa: 'camiseta', corCamisa: '#111A19', corGravata: '#28BE52',
+        calca: '#3b5b8a', sapato: '#ffffff', oculos: false, fone: false, bone: false, barba: false, corBone: '#28BE52',
+        cracha: true, corCordao: '#28BE52', chapeu: 'bone', baixo: 'calca', calcado: 'tenis', altura: 'baixo', cachecol: false, corCachecol: '#c9453a',
+      },
+      xp: 0, tarefas: 0, ganhos: 0,
+    }, {
+      id: 'lena', nome: 'Lena', cargo: 'Primeiro contato com clientes', funcao: 'contato',
+      aparencia: {
+        pele: '#F5D0B5', cabelo: 'longo', corCabelo: '#E6C35C', estiloCamisa: 'jaqueta', corCamisa: '#E64980', corGravata: '#28BE52',
+        calca: '#2B3A55', sapato: '#ffffff', oculos: false, fone: false, bone: false, barba: false, corBone: '#E64980',
+        cracha: true, corCordao: '#E64980', chapeu: '', baixo: 'calca', calcado: 'tenis', altura: 'normal', cachecol: false, corCachecol: '#c9453a',
       },
       xp: 0, tarefas: 0, ganhos: 0,
     }],
     checklist: [],
     maycon: { cidade: '', uf: '', fotos: 0 },
+    marketing: { whats: '98988663080', dono: 'Kauã', empresa: 'KWIK Contabilidade', usadas: [], ultima: '', ultimoFundo: '' },
+    contatos: { enviados: {} },
     jogos: { gatos: { fase: 1, estrelas: {} } },
     economia: { valorTarefa: 150, caixa: 0 },
     opcoes: { comemorar: true, soneca: true, som: true, fotos: true },
   };
   const TEMAS = {
     'KWIK Clássico': { parede: '#EBDCCB', rodape: '#6B4A35', piso: 'madeira', corPiso: '#B98A62', corTapete: '#F5C27E', padraoTapete: 'losango', mesa: '#9C5B3A', cadeira: '#2A2F33', estante: '#2b2f33' },
-    'KWIK Verde': { parede: '#DDF3E3', rodape: '#1E8A45', piso: 'piso', corPiso: '#E4EAE5', corTapete: '#28BE52', padraoTapete: 'kwik', mesa: '#F2F2EE', cadeira: '#111A19', estante: '#111A19' },
-    'Grafite Noturno': { parede: '#2B3433', rodape: '#111A19', piso: 'madeira', corPiso: '#5a4636', corTapete: '#28BE52', padraoTapete: 'kwik', mesa: '#1f2524', cadeira: '#28BE52', estante: '#151a19', ceu: 'noite' },
-    'Minimalista': { parede: '#F4F4F2', rodape: '#cfcfc9', piso: 'taco', corPiso: '#D8C3A5', corTapete: '#e9e4d8', padraoTapete: 'listras', mesa: '#e8e2d6', cadeira: '#3b3b3b', estante: '#e8e2d6' },
-    'Pôr do sol': { parede: '#FFE3CC', rodape: '#8f3f22', piso: 'madeira', corPiso: '#c98b5b', corTapete: '#ff8c5a', padraoTapete: 'losango', mesa: '#7a4a2e', cadeira: '#3f7fc1', estante: '#5a3524', ceu: 'tarde' },
+    'KWIK Verde': { parede: '#DDF3E3', rodape: '#1E8A45', piso: 'piso', corPiso: '#E4EAE5', corTapete: '#28BE52', padraoTapete: 'kwik', mesa: '#F2F2EE', cadeira: '#111A19', estante: '#111A19', modeloMesa: 'moderna', modeloCadeira: 'escritorio', corSofa: '#28BE52', modeloParede: 'lisa' },
+    'Grafite Noturno': { parede: '#2B3433', rodape: '#111A19', piso: 'cimento', corPiso: '#7a7f87', corTapete: '#28BE52', padraoTapete: 'kwik', mesa: '#1f2524', cadeira: '#28BE52', estante: '#151a19', ceu: 'noite', modeloMesa: 'moderna', modeloCadeira: 'gamer', corSofa: '#111A19', modeloParede: 'tijolo' },
+    'Minimalista': { parede: '#F4F4F2', rodape: '#cfcfc9', piso: 'taco', corPiso: '#D8C3A5', corTapete: '#e9e4d8', padraoTapete: 'redondo', mesa: '#e8e2d6', cadeira: '#3b3b3b', estante: '#e8e2d6', modeloMesa: 'vidro', modeloCadeira: 'madeira', corSofa: '#e9e4d8', modeloParede: 'lisa', modeloPlanta: 'cacto' },
+    'Pôr do sol': { parede: '#FFE3CC', rodape: '#8f3f22', piso: 'madeira', corPiso: '#c98b5b', corTapete: '#ff8c5a', padraoTapete: 'losango', mesa: '#7a4a2e', cadeira: '#3f7fc1', estante: '#5a3524', ceu: 'tarde', modeloParede: 'madeira', corSofa: '#ff8c5a', modeloPlanta: 'palmeira' },
   };
   const NIVEIS = [[0, 'Estagiário'], [2, 'Assistente'], [5, 'Analista'], [10, 'Sênior'], [18, 'Especialista'], [30, 'Lenda KWIK']];
 
@@ -109,7 +129,7 @@
   KM.estado = estado;
   const func = id => cfg.funcionarios.find(f => f.id === (id || estado.selecionado || estado.principal)) || cfg.funcionarios[0];
   const pessoaDe = id => estado.pessoas[id || estado.selecionado || estado.principal];
-  const ROTULO_TRABALHO = { noticias: '📰 Buscar notícias', checklist: '📋 Abrir prancheta', prospeccao: '📞 Buscar clientes' };
+  const ROTULO_TRABALHO = { noticias: '📰 Buscar notícias', checklist: '📋 Abrir prancheta', prospeccao: '📞 Buscar clientes', video: '🎬 Criar vídeo', contato: '💬 Preparar contatos' };
 
   // Cria/atualiza os bonecos da cena a partir dos funcionários da configuração.
   const doms = {};
@@ -241,6 +261,8 @@
     noticias: 'Oi! Sou {n}. Busco as notícias contábeis do dia 📰',
     checklist: 'Oi! Sou {n}. Vamos organizar suas tarefas? 📋',
     prospeccao: 'Opa! Sou o {n}. Vou achar clientes novos 📞',
+    video: 'E aí! Sou o {n}. Faço os vídeos do Instagram 🎬',
+    contato: 'Oi! Sou a {n}. Faço o primeiro contato com os clientes 💬',
   };
   function selecionar(id) {
     estado.selecionado = id;
@@ -298,6 +320,8 @@
     const f = func(), p = pessoaDe();
     if (f.funcao === 'checklist') return KM.clara.trabalhar(f, p);
     if (f.funcao === 'prospeccao') return KM.maycon.trabalhar(f, p);
+    if (f.funcao === 'video') return KM.marketing.trabalharVideo(f, p);
+    if (f.funcao === 'contato') return KM.marketing.trabalharContato(f, p);
     return trabalharNoticias(f, p);
   }
 
@@ -432,8 +456,12 @@
       el('div', { style: 'margin-top:10px' }, el('button', { class: 'bt peq escuro', onclick: () => abrirRelatorio(r.id) }, 'Abrir relatório →')));
   }
 
-  const tituloRel = r => r.tipo === 'prospeccao' ? `📞 Clientes em ${r.cidade || '—'}${r.uf ? '-' + r.uf : ''}` : `📰 Notícias de ${fmtDia(r.diaData)}`;
-  const resumoRel = r => r.tipo === 'prospeccao' ? `🏥 ${r.qtdClinicas || 0} clínicas · ☎️ ${r.qtdComTelefone || 0} com telefone` : `⭐ ${r.qtdPrincipais} principais · 📅 ${r.qtdDia} do dia`;
+  const tituloRel = r => r.tipo === 'prospeccao' ? `📞 Clientes em ${r.cidade || '—'}${r.uf ? '-' + r.uf : ''}`
+    : r.tipo === 'video' ? `🎬 Vídeo: ${(r.titulo || '').slice(0, 60)}${(r.titulo || '').length > 60 ? '…' : ''}`
+    : r.tipo === 'contatos' ? `💬 Contatos em ${r.cidade || '—'}${r.uf ? '-' + r.uf : ''}` : `📰 Notícias de ${fmtDia(r.diaData)}`;
+  const resumoRel = r => r.tipo === 'prospeccao' ? `🏥 ${r.qtdClinicas || 0} clínicas · ☎️ ${r.qtdComTelefone || 0} com telefone`
+    : r.tipo === 'video' ? '🎞️ Vídeo 4:5 + legenda para o Instagram'
+    : r.tipo === 'contatos' ? `💬 ${r.qtdContatos || 0} mensagens de primeiro contato` : `⭐ ${r.qtdPrincipais} principais · 📅 ${r.qtdDia} do dia`;
   function renderListaRel() {
     const box = $('#listaRel'); box.innerHTML = '';
     if (!estado.relatorios.length) { box.append(el('p', { class: 'vazio', style: 'padding:0 8px' }, 'As entregas do funcionário aparecem aqui.')); }
@@ -447,6 +475,11 @@
   }
 
   const cacheRel = new Map();
+  async function obterRelatorio(id) {
+    let r = cacheRel.get(id);
+    if (!r) { r = await BK.relatorio(id); cacheRel.set(id, r); }
+    return r;
+  }
   async function abrirRelatorio(id) {
     irPara('relatorios');
     if (!id) return;
@@ -480,6 +513,8 @@
       return;
     }
     if (r.tipo === 'prospeccao') return KM.maycon.renderRel(r, box);
+    if (r.tipo === 'video') return KM.marketing.renderVideo(r, box);
+    if (r.tipo === 'contatos') return KM.marketing.renderContatos(r, box);
     const rel = el('div', { class: 'rel' });
     const chips = el('div', { class: 'chips' }, (r.fontes || []).map(f => el('span', { class: 'chip ' + (f.ok ? 'ok' : 'erro') }, `${f.ok ? '✓' : '✗'} ${f.nome}${f.ok ? ` · ${f.itens} lidas` : ' · falhou'}`)));
     rel.append(el('div', { class: 'rel-cab' },
@@ -550,65 +585,81 @@
   }
 
   // ------------------------------------------------------------------ personalização
+  // Toque num objeto (cabelo, roupa, mesa, piso…) e escolha o modelo e a cor dele.
   const PELES = ['#FFDBAC', '#F5D0B5', '#E8B48F', '#E0AC82', '#C68642', '#8D5524', '#5C3A21'];
-  const CABELOS = ['#1C1C1C', '#2B1B12', '#3B2416', '#5A3825', '#6B4226', '#B5651D', '#E6C35C', '#9E9E9E', '#C0392B', '#28BE52', '#7B4FBF', '#3fb6ff'];
-  const ROUPAS = ['#E9D5B7', '#28BE52', '#111A19', '#ffffff', '#2B3A55', '#3f7fc1', '#c9453a', '#e2b33c', '#7B4FBF', '#ff8fb1', '#8a8f94'];
-  const SAPATOS = ['#1A1A1A', '#5A3A22', '#ffffff', '#28BE52', '#c9453a'];
+  const CABELOS = ['#1C1C1C', '#3B2416', '#6B4226', '#B5651D', '#E6C35C', '#9E9E9E', '#C0392B', '#7B4FBF'];
+  const ROUPAS = ['#ffffff', '#111A19', '#28BE52', '#2B3A55', '#3f7fc1', '#c9453a', '#E64980', '#e2b33c'];
+  const CALCAS = ['#2F3A4A', '#3b5b8a', '#111A19', '#6b4a2a', '#d8c3a5', '#ffffff', '#7a7f87', '#28BE52'];
+  const SAPATOS = ['#1A1A1A', '#5A3A22', '#ffffff', '#28BE52', '#c9453a', '#3f7fc1'];
+  const CORDOES = ['#E8613C', '#28BE52', '#111A19', '#3f7fc1', '#c9453a', '#E64980'];
   const PAREDES = ['#EBDCCB', '#DDF3E3', '#F4F4F2', '#2B3433', '#FFE3CC', '#D6E6F5', '#E9D8F2', '#FFF3C4'];
   const RODAPES = ['#6B4A35', '#1E8A45', '#111A19', '#cfcfc9', '#8f3f22', '#ffffff'];
-  const PISOS = ['#B98A62', '#8B5E3C', '#D8C3A5', '#E4EAE5', '#5a4636', '#9aa3a1', '#6c7a89'];
-  const MOVEIS = ['#9C5B3A', '#6B4226', '#e8e2d6', '#F2F2EE', '#1f2524', '#2b2f33', '#28BE52', '#3f7fc1'];
+  const PISOS = ['#B98A62', '#8B5E3C', '#D8C3A5', '#E4EAE5', '#5a4636', '#9aa3a1', '#c9ced4', '#6c7a89'];
+  const MOVEIS = ['#9C5B3A', '#6B4226', '#e8e2d6', '#F2F2EE', '#1f2524', '#28BE52', '#3f7fc1', '#c9453a'];
   const TAPETES = ['#F5C27E', '#28BE52', '#c9453a', '#3f7fc1', '#e9e4d8', '#7B4FBF', '#111A19', '#ff8c5a'];
+  const VASOS = ['#b5532f', '#f1f3f5', '#111A19', '#28BE52', '#e2b33c', '#3f7fc1'];
+  const SOFAS = ['#3f7fc1', '#28BE52', '#c9453a', '#111A19', '#e9e4d8', '#7B4FBF', '#ff8c5a', '#6b4a2a'];
+  const MOLDURAS = ['#1c1612', '#ffffff', '#c9a65b', '#28BE52', '#6b4a2a'];
 
   let persIdx = 0;
   const E = 'escritorio.';
+  const apAtual = () => (cfg.funcionarios[persIdx] || cfg.funcionarios[0]).aparencia;
+  const escAtual = () => cfg.escritorio;
+  // campo simples da aparência / do escritório; "a" e "e" permitem aplicar numa cópia (para as prévias)
+  const cA = c => ({ ler: (a = apAtual()) => a[c], por: (v, a = apAtual()) => { a[c] = v; } });
+  const cE = c => ({ ler: (e = escAtual()) => e[c], por: (v, e = escAtual()) => { e[c] = v; } });
+  const mA = (c, pad) => ({ ler: (a = apAtual()) => a[c] || pad, por: (v, a = apAtual()) => { a[c] = v; } });
+  const mE = (c, pad) => ({ ler: (e = escAtual()) => e[c] || pad, por: (v, e = escAtual()) => { e[c] = v; } });
+  const comItem = (it, c, pad) => ({ ler: (e = escAtual()) => (e.itens[it] === false ? '' : e[c] || pad), por: (v, e = escAtual()) => { e.itens[it] = !!v; if (v) e[c] = v; } });
+  const liga = (r, ler, por) => ({ r, ler, por });
+  const itemE = (r, it) => liga(r, () => escAtual().itens[it] !== false, v => { escAtual().itens[it] = v; });
+
+  const OBJ_FUNC = [
+    { id: 'pele', ic: '🙂', nome: 'Pele', cores: [{ op: PELES, ...cA('pele') }] },
+    { id: 'cabelo', ic: '💇', nome: 'Cabelo', modelos: { op: { curto: 'Curto', longo: 'Longo', franja: 'Franja', cacheado: 'Cacheado', rabo: 'Rabo de cavalo', coque: 'Coque', tranca: 'Trança', topete: 'Topete', moicano: 'Moicano', careca: 'Careca' }, ...mA('cabelo', 'curto') },
+      cores: [{ op: CABELOS, ...cA('corCabelo') }], liga: [liga('🧔 Barba', () => !!apAtual().barba, v => { apAtual().barba = v; })] },
+    { id: 'roupa', ic: '👕', nome: 'Roupa', modelos: { op: { casual: 'Camisa casual', camiseta: 'Camiseta', kwik: 'Polo KWIK', social: 'Social e gravata', terno: 'Terno', moletom: 'Moletom', jaqueta: 'Jaqueta', regata: 'Regata', vestido: 'Vestido' }, ...mA('estiloCamisa', 'casual') },
+      cores: [{ op: ROUPAS, ...cA('corCamisa') }, { nome: 'Gravata', op: ROUPAS, quando: () => ['social', 'terno'].includes(apAtual().estiloCamisa), ...cA('corGravata') }] },
+    { id: 'baixo', ic: '👖', nome: 'Calça', modelos: { op: { calca: 'Calça', bermuda: 'Bermuda', saia: 'Saia' }, ...mA('baixo', 'calca') }, cores: [{ op: CALCAS, ...cA('calca') }] },
+    { id: 'pes', ic: '👟', nome: 'Calçado', modelos: { op: { sapato: 'Sapato', tenis: 'Tênis', bota: 'Bota' }, ...mA('calcado', 'sapato') }, cores: [{ op: SAPATOS, ...cA('sapato') }] },
+    { id: 'chapeu', ic: '🧢', nome: 'Chapéu', modelos: { op: { '': 'Nenhum', bone: 'Boné', gorro: 'Gorro', chapeu: 'Chapéu', tiara: 'Tiara' }, ler: (a = apAtual()) => a.chapeu ?? (a.bone ? 'bone' : ''), por: (v, a = apAtual()) => { a.chapeu = v; a.bone = false; } },
+      cores: [{ op: ROUPAS, ...cA('corBone'), quando: () => !!(apAtual().chapeu ?? apAtual().bone) }] },
+    { id: 'oculos', ic: '👓', nome: 'Óculos', modelos: { op: { '': 'Sem óculos', quadrado: 'Quadrado', redondo: 'Redondo', escuro: 'Escuro' }, ler: (a = apAtual()) => (a.oculos === true ? 'quadrado' : a.oculos || ''), por: (v, a = apAtual()) => { a.oculos = v || false; } } },
+    { id: 'acess', ic: '🎧', nome: 'Acessórios', liga: [liga('🎧 Fone', () => !!apAtual().fone, v => { apAtual().fone = v; }), liga('🪪 Crachá', () => apAtual().cracha !== false, v => { apAtual().cracha = v; }), liga('🧣 Cachecol', () => !!apAtual().cachecol, v => { apAtual().cachecol = v; })],
+      cores: [{ nome: 'Cordão do crachá', op: CORDOES, quando: () => apAtual().cracha !== false, ...cA('corCordao') }, { nome: 'Cachecol', op: ROUPAS, quando: () => !!apAtual().cachecol, ...cA('corCachecol') }] },
+    { id: 'altura', ic: '📏', nome: 'Altura', modelos: { op: { normal: 'Normal', baixo: 'Baixinho' }, ...mA('altura', 'normal') } },
+  ];
+  const OBJ_ESC = [
+    { id: 'parede', ic: '🧱', nome: 'Parede', modelos: { op: { lisa: 'Lisa', listrada: 'Listrada', tijolo: 'Tijolinho', madeira: 'Madeira' }, ...mE('modeloParede', 'lisa') }, cores: [{ op: PAREDES, ...cE('parede') }, { nome: 'Rodapé', op: RODAPES, ...cE('rodape') }] },
+    { id: 'piso', ic: '🟫', nome: 'Piso', modelos: { op: { madeira: 'Madeira', taco: 'Taco', piso: 'Porcelanato', carpete: 'Carpete', cimento: 'Cimento' }, ...mE('piso', 'madeira') }, cores: [{ op: PISOS, ...cE('corPiso') }] },
+    { id: 'mesa', ic: '🗄️', nome: 'Mesa', modelos: { op: { classica: 'Com gaveteiro', moderna: 'Moderna', vidro: 'Vidro' }, ...mE('modeloMesa', 'classica') }, cores: [{ op: MOVEIS, ...cE('mesa') }] },
+    { id: 'cadeira', ic: '🪑', nome: 'Cadeira', modelos: { op: { escritorio: 'Escritório', gamer: 'Gamer', madeira: 'Madeira' }, ...mE('modeloCadeira', 'escritorio') }, cores: [{ op: ROUPAS, ...cE('cadeira') }] },
+    { id: 'tapete', ic: '🟩', nome: 'Tapete', modelos: { op: { '': 'Sem tapete', losango: 'Losango', kwik: 'Logo KWIK', listras: 'Listras', redondo: 'Redondo' }, ler: (e = escAtual()) => (e.tapete ? e.padraoTapete || 'losango' : ''), por: (v, e = escAtual()) => { e.tapete = !!v; if (v) e.padraoTapete = v; } },
+      cores: [{ op: TAPETES, quando: () => !!escAtual().tapete, ...cE('corTapete') }] },
+    { id: 'planta', ic: '🪴', nome: 'Plantas', modelos: { op: { '': 'Sem plantas', costela: 'Costela-de-adão', cacto: 'Cacto', palmeira: 'Palmeira', flores: 'Flores' }, ...comItem('planta', 'modeloPlanta', 'costela') }, cores: [{ nome: 'Vaso', op: VASOS, ...cE('corVaso') }] },
+    { id: 'sofa', ic: '🛋️', nome: 'Sofá', modelos: { op: { reto: 'Reto', chester: 'Capitonê', futon: 'Com almofadas' }, ...mE('modeloSofa', 'reto') }, cores: [{ op: SOFAS, ...cE('corSofa') }] },
+    { id: 'estante', ic: '📚', nome: 'Estante', modelos: { op: { '': 'Sem estante', livros: 'Livros', arquivo: 'Arquivo', nicho: 'Nichos' }, ...comItem('estante', 'modeloEstante', 'livros') }, cores: [{ op: MOVEIS, ...cE('estante') }] },
+    { id: 'quadros', ic: '🖼️', nome: 'Quadros', modelos: { op: { '': 'Sem quadros', paisagem: 'Paisagem', abstrato: 'Abstrato', certificado: 'Certificado' }, ...comItem('quadros', 'modeloQuadro', 'paisagem') }, cores: [{ nome: 'Moldura', op: MOLDURAS, ...cE('corMoldura') }] },
+    { id: 'ceu', ic: '🌤️', nome: 'Céu', modelos: { op: { auto: 'Pelo horário', dia: 'Dia', tarde: 'Pôr do sol', noite: 'Noite' }, ...mE('ceu', 'auto') } },
+    { id: 'outros', ic: '✨', nome: 'Outros', liga: [itemE('🪟 Janelas', 'janela'), itemE('🕒 Relógios', 'relogio'), itemE('📺 Painel de status', 'tv'), itemE('📈 Gráfico', 'grafico'), itemE('🟩 Logo KWIK', 'logo'), itemE('💰 Cofre e moedas', 'cofre'), itemE('🗑️ Lixeiras', 'lixeira')] },
+  ];
+  const objAberto = { func: null, esc: null };
+
   const camposFunc = () => {
-    const F = `funcionarios.${persIdx}.`, A = F + 'aparencia.';
-    return [
-      { c: F + 'nome', t: 'texto', r: 'Nome' },
-      { c: F + 'cargo', t: 'texto', r: 'Cargo' },
-      { sec: 'Aparência' },
-      { c: A + 'pele', t: 'cor', r: 'Pele', op: PELES },
-      { c: A + 'cabelo', t: 'sel', r: 'Cabelo', op: { curto: 'Curto', longo: 'Longo', cacheado: 'Black power / cacheado', moicano: 'Moicano', rabo: 'Rabo de cavalo', coque: 'Coque', careca: 'Careca' } },
-      { c: A + 'corCabelo', t: 'cor', r: 'Cor do cabelo', op: CABELOS },
-      { sec: 'Roupa' },
-      { c: A + 'estiloCamisa', t: 'sel', r: 'Estilo', op: { casual: 'Camisa casual (manga dobrada)', kwik: 'Polo KWIK', social: 'Camisa social + gravata', terno: 'Terno', moletom: 'Moletom' } },
-      { c: A + 'corCamisa', t: 'cor', r: 'Cor da roupa', op: ROUPAS },
-      { c: A + 'corGravata', t: 'cor', r: 'Gravata', op: ROUPAS },
-      { c: A + 'calca', t: 'cor', r: 'Calça', op: ROUPAS },
-      { c: A + 'sapato', t: 'cor', r: 'Sapato', op: SAPATOS },
-      { c: A + 'corCordao', t: 'cor', r: 'Cordão do crachá', op: ['#E8613C', '#28BE52', '#111A19', '#3f7fc1', '#c9453a', '#e2b33c'] },
-      { sec: 'Acessórios' },
-      { t: 'checks', itens: [[A + 'oculos', '👓 Óculos'], [A + 'fone', '🎧 Fone'], [A + 'bone', '🧢 Boné'], [A + 'barba', '🧔 Barba'], [A + 'cracha', '🪪 Crachá']] },
-    ];
+    const F = `funcionarios.${persIdx}.`;
+    return [{ c: F + 'nome', t: 'texto', r: 'Nome' }, { c: F + 'cargo', t: 'texto', r: 'Cargo' }];
   };
   const CAMPOS = {
-    camposEsc: [
-      { sec: 'Geral' },
-      { c: E + 'nome', t: 'texto', r: 'Nome do escritório' },
-      { c: E + 'ceu', t: 'sel', r: 'Céu da janela', op: { auto: 'Automático (pelo horário)', dia: 'Dia', tarde: 'Pôr do sol', noite: 'Noite' } },
-      { sec: 'Paredes e piso' },
-      { c: E + 'parede', t: 'cor', r: 'Parede', op: PAREDES },
-      { c: E + 'rodape', t: 'cor', r: 'Rodapé', op: RODAPES },
-      { c: E + 'piso', t: 'sel', r: 'Piso', op: { madeira: 'Madeira', taco: 'Taco', piso: 'Porcelanato', carpete: 'Carpete' } },
-      { c: E + 'corPiso', t: 'cor', r: 'Cor do piso', op: PISOS },
-      { sec: 'Tapete' },
-      { t: 'checks', itens: [[E + 'tapete', 'Mostrar tapete']] },
-      { c: E + 'corTapete', t: 'cor', r: 'Cor do tapete', op: TAPETES },
-      { c: E + 'padraoTapete', t: 'sel', r: 'Desenho', op: { losango: 'Losango', kwik: 'Logo KWIK', listras: 'Listras' } },
-      { sec: 'Móveis' },
-      { c: E + 'mesa', t: 'cor', r: 'Mesa', op: MOVEIS },
-      { c: E + 'cadeira', t: 'cor', r: 'Cadeira', op: ROUPAS },
-      { c: E + 'estante', t: 'cor', r: 'Estante', op: MOVEIS },
-      { sec: 'O que aparece na sala' },
-      { t: 'checks', itens: [[E + 'itens.planta', '🪴 Planta'], [E + 'itens.estante', '📚 Estante'], [E + 'itens.janela', '🪟 Janela'], [E + 'itens.relogio', '🕒 Relógio'],
-        [E + 'itens.tv', '📺 Painel de status'], [E + 'itens.grafico', '📈 Quadro de gráfico'], [E + 'itens.logo', '🟩 Logo KWIK'], [E + 'itens.quadros', '🖼️ Quadros'],
-        [E + 'itens.cofre', '💰 Cofre e moedas'], [E + 'itens.lixeira', '🗑️ Lixeira']] },
-    ],
+    camposEsc: [{ c: E + 'nome', t: 'texto', r: 'Nome do escritório' }],
     camposEco: [
       { c: 'economia.valorTarefa', t: 'num', r: 'R$ por tarefa' },
       { c: 'maycon.cidade', t: 'texto', r: 'Cidade do Maycon' },
       { c: 'maycon.uf', t: 'sel', r: 'Estado (UF)', op: Object.fromEntries(['', 'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'].map(u => [u, u || '—'])) },
+      { sec: 'Marketing (Enzo e Lena)' },
+      { c: 'marketing.whats', t: 'texto', r: 'WhatsApp Business' },
+      { c: 'marketing.dono', t: 'texto', r: 'Seu nome nas mensagens' },
+      { c: 'marketing.empresa', t: 'texto', r: 'Nome da empresa' },
+      { sec: 'Comemorações' },
       { t: 'checks', itens: [['opcoes.comemorar', '⚡ Vira Super Sayajin ao entregar'], ['opcoes.soneca', '😴 Cochila se ficar parado (3 min)'], ['opcoes.fotos', '📸 Maycon tira fotos quando está livre'], ['opcoes.som', '🔊 Sons']] },
     ],
   };
@@ -625,7 +676,51 @@
   function montarAbasFunc() {
     const box = $('#persAbas'); if (!box) return;
     box.innerHTML = '';
-    cfg.funcionarios.forEach((f, i) => box.append(el('button', { class: i === persIdx ? 'on' : '', onclick: () => { persIdx = i; montarCampos(); preencherCampos(); } }, f.nome)));
+    cfg.funcionarios.forEach((f, i) => box.append(el('button', { class: i === persIdx ? 'on' : '', onclick: () => { persIdx = i; montarCampos(); preencherCampos(); } }, f.nome.split(' ')[0])));
+  }
+  function montarObjetos(tipo) {
+    const lista = tipo === 'func' ? OBJ_FUNC : OBJ_ESC, box = $(tipo === 'func' ? '#objFunc' : '#objEsc');
+    box.innerHTML = '';
+    for (const o of lista) {
+      box.append(el('button', {
+        class: 'obj' + (objAberto[tipo] === o.id ? ' on' : ''), type: 'button',
+        onclick: () => { objAberto[tipo] = objAberto[tipo] === o.id ? null : o.id; montarObjetos(tipo); montarPainel(tipo); KM.tocar('clique'); },
+      }, el('span', { class: 'ic' }, o.ic), el('span', {}, o.nome)));
+    }
+  }
+  function previaModelo(tipo, o, v) {
+    if (tipo === 'func') {
+      const a2 = clone(apAtual()); o.modelos.por(v, a2);
+      const cab = ['cabelo', 'chapeu', 'oculos'].includes(o.id);
+      const cv = el('canvas', { width: 30, height: cab ? 26 : 46, class: cab ? 'pv-cab' : 'pv-corpo' });
+      const g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
+      g.drawImage(KM.sprite(a2, { boca: 'sorriso' }), 0, 0);
+      return cv;
+    }
+    const c2 = clone(cfg); o.modelos.por(v, c2.escritorio);
+    const cv = el('canvas', { width: 48, height: 40, class: 'pv-obj' });
+    KM.previewObjeto(cv, o.id, c2);
+    return cv;
+  }
+  function montarPainel(tipo) {
+    const lista = tipo === 'func' ? OBJ_FUNC : OBJ_ESC, box = $(tipo === 'func' ? '#painelFunc' : '#painelEsc');
+    const o = lista.find(x => x.id === objAberto[tipo]);
+    box.hidden = !o; box.innerHTML = '';
+    if (!o) return;
+    const refazer = () => { mudou(); montarPainel(tipo); };
+    if (o.modelos) {
+      const atual = String(o.modelos.ler() ?? '');
+      box.append(el('h5', {}, 'Modelo'), el('div', { class: 'modelos' }, Object.entries(o.modelos.op).map(([v, rot]) =>
+        el('button', { type: 'button', class: 'modelo' + (atual === v ? ' on' : ''), onclick: () => { o.modelos.por(v); KM.tocar('clique'); refazer(); } }, previaModelo(tipo, o, v), el('small', {}, rot)))));
+    }
+    for (const c of o.cores || []) {
+      if (c.quando && !c.quando()) continue;
+      const atual = String(c.ler() || '').toLowerCase();
+      box.append(el('h5', {}, c.nome || 'Cor'), el('div', { class: 'cores' }, c.op.map(cor =>
+        el('button', { type: 'button', title: cor, style: `background:${cor}`, class: atual === cor.toLowerCase() ? 'on' : '', onclick: () => { c.por(cor); refazer(); } }))));
+    }
+    if (o.liga) box.append(el('h5', {}, 'Ligar / desligar'), el('div', { class: 'checks' }, o.liga.map(l =>
+      el('label', {}, el('input', { type: 'checkbox', checked: !!l.ler(), onchange: e => { l.por(e.target.checked); refazer(); } }), l.r))));
   }
   function montarCampos() {
     montarAbasFunc();
@@ -642,25 +737,14 @@
         if (d.t === 'texto') ctrl = el('input', { type: 'text', 'data-c': d.c, maxlength: 40, oninput: e => { definir(d.c, e.target.value); mudou(); } });
         else if (d.t === 'num') ctrl = el('input', { type: 'number', min: 0, step: 10, 'data-c': d.c, oninput: e => { definir(d.c, Math.max(0, Number(e.target.value) || 0)); mudou(); } });
         else if (d.t === 'sel') ctrl = el('select', { 'data-c': d.c, onchange: e => { definir(d.c, e.target.value); mudou(); } }, Object.entries(d.op).map(([v, r]) => el('option', { value: v }, r)));
-        else if (d.t === 'cor') {
-          ctrl = el('div', { class: 'cores', 'data-c': d.c, 'data-cor': '1' },
-            d.op.map(c => el('button', { type: 'button', title: c, style: `background:${c}`, 'data-v': c, onclick: () => { definir(d.c, c); mudou(); preencherCampos(); } })),
-            el('input', { type: 'color', title: 'Outra cor', oninput: e => { definir(d.c, e.target.value); mudou(); marcarCores(); } }));
-        }
         box.append(el('div', { class: 'campo' }, el('label', {}, d.r), ctrl));
       }
     }
+    montarObjetos('func'); montarPainel('func'); montarObjetos('esc'); montarPainel('esc');
     const temas = $('#temas'); temas.innerHTML = '';
     for (const [nome, t] of Object.entries(TEMAS)) {
-      temas.append(el('button', { onclick: () => { Object.assign(cfg.escritorio, t); if (!t.ceu) cfg.escritorio.ceu = 'auto'; mudou(); preencherCampos(); KM.tocar('clique'); toast('Tema aplicado: ' + nome); } },
+      temas.append(el('button', { onclick: () => { Object.assign(cfg.escritorio, t); if (!t.ceu) cfg.escritorio.ceu = 'auto'; mudou(); preencherCampos(); montarPainel('esc'); KM.tocar('clique'); toast('Tema aplicado: ' + nome); } },
         el('i', { style: `background:linear-gradient(135deg, ${t.parede} 50%, ${t.corPiso} 50%)` }), nome));
-    }
-  }
-  function marcarCores() {
-    for (const box of $$('[data-cor]')) {
-      const v = String(obter(box.dataset.c) || '').toLowerCase();
-      box.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v.toLowerCase() === v));
-      box.querySelector('input').value = /^#[0-9a-f]{6}$/i.test(v) ? v : '#000000';
     }
   }
   function preencherCampos() {
@@ -669,7 +753,8 @@
       if (c.type === 'checkbox') c.checked = !!v;
       else if (c.tagName === 'INPUT' || c.tagName === 'SELECT') { if (document.activeElement !== c) c.value = v ?? ''; }
     }
-    marcarCores();
+    if (objAberto.func) montarPainel('func');
+    if (objAberto.esc) montarPainel('esc');
   }
 
   // ------------------------------------------------------------------ abas
@@ -690,6 +775,25 @@
 
   // ------------------------------------------------------------------ laço de desenho
   const tela = $('#tela'), ctx = tela.getContext('2d'), palco = $('#palco');
+  const mqCelular = window.matchMedia('(max-width: 760px)');
+  function aplicarLayout() {
+    const nome = mqCelular.matches ? 'alto' : 'largo';
+    if (!KM.definirLayout(nome, cfg)) return;
+    tela.width = KM.W; tela.height = KM.H;
+    palco.style.aspectRatio = `${KM.W} / ${KM.H}`;
+    palco.style.width = nome === 'largo' ? `min(100%, calc((100vh - 170px) * ${(KM.W / KM.H).toFixed(4)}))` : '100%';
+    if (estado.luzJogos && KM.jogos) KM.jogos.apagar();
+    for (const p of Object.values(estado.pessoas)) {
+      const a = KM.LAYOUT.assentos[p.funcao]; if (!a) continue;
+      if (p.acao === 'rotina' || p.acao === 'soneca') KM.pararRotina(p);
+      Object.assign(p, { modo: 'sentado', X: a.X, Y: a.Y, dir: a.dir, Z: 0, foraDaMesa: false });
+    }
+    for (const r of $$('.rotulo-sala')) r.remove();
+    for (const s of Object.values(KM.LAYOUT.salas)) {
+      palco.append(el('div', { class: 'rotulo-sala' + (s.id === 'jogos' ? ' jogos' : ''), style: `left:${((s.x + KM.RW / 2) / KM.W * 100).toFixed(2)}%;top:${((s.y + 2) / KM.H * 100).toFixed(2)}%` }, s.nome));
+    }
+  }
+  mqCelular.addEventListener ? mqCelular.addEventListener('change', aplicarLayout) : mqCelular.addListener(aplicarLayout);
   let ultimo = performance.now(), proxPiscar = 2, previewT = 0;
   function quadro(agora) {
     const t = agora / 1000, dt = Math.min(0.05, (agora - ultimo) / 1000);
@@ -718,7 +822,7 @@
       if (some) continue;
       const cx = r.left - pr.left + cab[0] * esc, cy = r.top - pr.top + (cab[1] - 3) * esc;
       d.cracha.style.left = cx + 'px'; d.cracha.style.top = cy + 'px';
-      d.balao.style.left = Math.max(100, Math.min(pr.width - 100, cx)) + 'px'; d.balao.style.top = (cy - (estado.selecionado === id ? d.cracha.offsetHeight + 10 : 4)) + 'px';
+      d.balao.style.left = Math.max(80, Math.min(pr.width - 80, cx)) + 'px'; d.balao.style.top = (cy - (estado.selecionado === id ? d.cracha.offsetHeight + 10 : 4)) + 'px';
     }
 
     // prévia animada na personalização
@@ -810,9 +914,10 @@
       for (const f of cfg.funcionarios) f.aparencia = clone(PADRAO.funcionarios[0].aparencia);
       cfg.versao = 2; migrou = true;
     }
-    if ((cfg.versao || 1) < 3 || cfg.funcionarios.length < PADRAO.funcionarios.length) { // versão 3: chegam Clara e Maycon
+    if ((cfg.versao || 1) < 4 || cfg.funcionarios.length < PADRAO.funcionarios.length) { // versão 3: Clara e Maycon; versão 4: Enzo e Lena (Marketing)
       for (const pf of PADRAO.funcionarios) if (!cfg.funcionarios.some(f => f.id === pf.id)) { cfg.funcionarios.push(clone(pf)); migrou = true; }
-      cfg.versao = 3;
+      if ((cfg.versao || 1) < 4) migrou = true;
+      cfg.versao = 4;
     }
     for (const f of cfg.funcionarios) if (!f.funcao) f.funcao = (PADRAO.funcionarios.find(x => x.id === f.id) || { funcao: 'noticias' }).funcao;
     sincronizarPessoas();
@@ -868,6 +973,7 @@
   }
 
   async function iniciar() {
+    aplicarLayout();
     const j = await conectarBackend();
     aplicarDados(j);
     montarCampos(); ligarEventos(); mudou(true); preencherCampos();
@@ -892,13 +998,15 @@
     setTimeout(() => falar('f1', `${sauda}! Clique em um de nós para mandar trabalhar 👋`, 3800), 700);
     setTimeout(() => falar('clara', 'Oi! Eu cuido da sua prancheta de tarefas 📋', 3400), 2300);
     setTimeout(() => falar('maycon', 'E eu acho clientes novos! 📞📸', 3400), 3900);
+    setTimeout(() => falar('enzo', 'Eu transformo as notícias em vídeo! 🎬', 3400), 5400);
+    setTimeout(() => falar('lena', 'E eu chamo os clientes no WhatsApp 💬', 3400), 6900);
   }
 
   // API para os módulos (Clara, Maycon, jogos, filmes).
   KM.app = {
     el, toast, salvar, mudou, cfg: () => cfg, estado, func, pessoaDe, pagar, concluir, falar, irPara, brl, fmtData,
     BK: () => BK, online: () => online, abrirConexao, carregarRelatorios, abrirRelatorio, animarCaixa, atualizarBotoes, atualizarFuncionario,
-    iniciarPainelTarefa, callbacksTarefa, esperarLivre, apagarRel: r => apagarRel(r), desenharAvatar,
+    iniciarPainelTarefa, callbacksTarefa, esperarLivre, apagarRel: r => apagarRel(r), desenharAvatar, obterRelatorio,
   };
   iniciar();
 })();

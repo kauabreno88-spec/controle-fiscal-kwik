@@ -7,20 +7,17 @@
   const st = () => KM.fx;
   const esperar = ms => KM.esperar(ms);
   const fala = (p, t, ms) => m().fala(p, t, ms);
-  const PALCO = [[52, 88], [64, 80], [76, 92]];
+  const palco = () => KM.LAYOUT.palco; // pontos no corredor, em volta do centro do prédio
+  const centro = () => KM.LAYOUT.centro;
   const nome = p => KM.app.func(p.id).nome.split(' ')[0];
 
-  function olhar(p, alvo) {
-    const dx = alvo.X - p.X, dy = alvo.Y - p.Y;
-    p.dir = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 'fd' : 'ce') : (dy > 0 ? 'fe' : 'cd');
-    if (p.dir === 'ce') p.dir = 'fe'; if (p.dir === 'cd') p.dir = 'fd';
-  }
+  function olhar(p, alvo) { p.dir = alvo.X >= p.X ? 'fd' : 'fe'; }
   function fumaca(p) {
     const [x, y] = m().pes(p);
     KM.emitir('pixel', 45, i => ({ x: x + rnd(-10, 10), y: y - rnd(0, 42), vx: rnd(-20, 20), vy: rnd(-30, -5), vida: rnd(0.4, 0.8), cor: ['#ffffff', '#dee2e6', '#adb5bd'][i % 3] }));
   }
   function vestir(p, f) { p.fantasia = f; fumaca(p); KM.tocar('magia'); }
-  async function aoPalco(ps, pontos = PALCO) { await Promise.all(ps.map((p, i) => m().irAte(p, ...pontos[i % pontos.length]))); ps.forEach(p => { p.dir = 'fe'; }); }
+  async function aoPalco(ps, pontos = palco()) { await Promise.all(ps.map((p, i) => m().irAte(p, ...pontos[i % pontos.length]))); ps.forEach(p => { p.dir = 'fe'; }); }
   async function deVolta(ps) {
     ps.forEach(p => { if (p.fantasia) fumaca(p); p.fantasia = null; p.prop = null; p.est = {}; p.Z = 0; p.opacidade = undefined; p.visivel = true; });
     KM.estado.extras = [];
@@ -32,15 +29,15 @@
 
   // Correr em círculo ao redor do centro do tapete.
   function correrEmCirculo(ps, ms, raio = 14, vel = 1.6, perseguidor) {
-    const [cx, cy] = KM.LAYOUT.centro, ini = performance.now();
+    const [cx, cy] = centro(), ini = performance.now();
     return m().quadroAQuadro((dt, t) => {
       const k = (performance.now() - ini) / 1000;
       ps.forEach((p, i) => {
         const a = k * vel + i * (Math.PI * 2 / ps.length) + (p === perseguidor ? -0.9 : 0);
-        const nx = cx + Math.cos(a) * raio, ny = cy + Math.sin(a) * raio * 0.9;
+        const nx = cx + Math.cos(a) * raio * 1.6, ny = cy - 4 + Math.sin(a) * raio * 0.55;
         const dx = nx - p.X, dy = ny - p.Y;
         p.X = nx; p.Y = ny; p.modo = 'em-pe';
-        if (Math.abs(dx) + Math.abs(dy) > 0.01) p.dir = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 'fd' : 'ce') : (dy > 0 ? 'fe' : 'cd');
+        if (Math.abs(dx) + Math.abs(dy) > 0.01) p.dir = (dy < -Math.abs(dx) * 0.6 ? 'c' : 'f') + (dx > 0 ? 'd' : 'e');
         p.est.passo = [1, 0, 2, 0][Math.floor(t * 10 + i) % 4];
       });
       return performance.now() - ini > ms;
@@ -66,7 +63,7 @@
         p.est = { bracos: ['cima', 'aceno', 'cima', 'baixo'][(f + i) % 4], aceno: (f + i) % 2, boca: 'sorriso', dy: (f + i) % 2, passo: [1, 0, 2, 0][(f + i) % 4] };
         p.dir = ['fe', 'fd', 'cd', 'ce'][Math.floor((performance.now() - ini) / 520 + i) % 4];
       });
-      if (Math.random() < 0.35) KM.emitir('estrela', 1, { x: KM.W / 2 + rnd(-80, 80), y: rnd(40, 160), vida: 0.5, cor: ['#ff5c8a', '#3fb6ff', '#ffd93b'][Math.floor(Math.random() * 3)] });
+      if (Math.random() < 0.35) KM.emitir('estrela', 1, { x: centro()[0] + rnd(-90, 90), y: centro()[1] - rnd(10, 70), vida: 0.5, cor: ['#ff5c8a', '#3fb6ff', '#ffd93b'][Math.floor(Math.random() * 3)] });
       await esperar(60);
     }
     KM.confete(100);
@@ -117,7 +114,7 @@
     KM.onBanner('CAÇA AO TESOURO!', 'verde');
     fala(ps[0], 'Arrr! O mapa diz que o X é aqui! 🗺️', 2200);
     await esperar(1600);
-    const [cx, cy] = KM.LAYOUT.centro;
+    const [cx, cy] = centro();
     await Promise.all(ps.map((p, i) => m().andarAte(p, cx + [-10, 0, 10][i % 3], cy + [6, -8, 6][i % 3])));
     ps.forEach(p => { p.dir = 'fe'; p.est = { bracos: 'poder' }; });
     for (let i = 0; i < 8; i++) { const [x, y] = KM.P(cx, cy, 0); KM.emitir('pedra', 6, { x, y, dx: 6, vy: -30, dvy: 20, dvx: 30, g: 120, vida: 0.7, chao: y + 4 }); KM.tocar('pulo'); await esperar(200); }
@@ -196,7 +193,7 @@
   // ------------------------------------------------------------------ 🙌 Toca aqui
   const tocaAqui = grupo('toca', async ps => {
     const [a, b] = ps;
-    const [cx, cy] = KM.LAYOUT.centro;
+    const [cx, cy] = centro();
     await Promise.all([m().irAte(a, cx - 7, cy), m().irAte(b, cx + 7, cy)]);
     a.dir = 'fd'; b.dir = 'fe';
     fala(a, `Bora, ${nome(b)}!`, 1400);
@@ -213,7 +210,7 @@
 
   // ------------------------------------------------------------------ 📸 Foto da equipe
   const foto = grupo('foto', async ps => {
-    await aoPalco(ps, [[50, 86], [62, 86], [74, 86]]);
+    await aoPalco(ps, palco().map(([x]) => [x, centro()[1] + 2]));
     const fotografo = ps.find(p => p.funcao === 'prospeccao') || ps[0];
     fala(fotografo, 'Todo mundo junto! 📸', 1600);
     ps.forEach(p => { p.dir = 'fe'; p.est = { bracos: p === ps[1] ? 'aceno' : 'baixo', boca: 'sorriso' }; });
@@ -231,7 +228,9 @@
   });
   function retrato() {
     const tela = document.getElementById('tela');
-    const c = document.createElement('canvas'), esc = 4, x0 = 20, y0 = 36, w = 200, h = 150;
+    const [cx, cy] = centro(), w = Math.min(200, KM.W), h = 96;
+    const x0 = Math.max(0, Math.min(KM.W - w, cx - w / 2)), y0 = Math.max(0, cy - 70);
+    const c = document.createElement('canvas'), esc = 4;
     c.width = w * esc; c.height = h * esc;
     const g = c.getContext('2d'); g.imageSmoothingEnabled = false;
     g.drawImage(tela, x0, y0, w, h, 0, 0, c.width, c.height);
@@ -250,8 +249,8 @@
     const nikki = ps.find(p => p.funcao === 'checklist' && p !== bear) || ps.find(p => p !== bear);
     const diretor = ps.find(p => p !== bear && p !== nikki);
     await Promise.all([
-      m().irAte(bear, 58, 90), m().irAte(nikki, 80, 74),
-      diretor ? m().irAte(diretor, 86, 98) : Promise.resolve(),
+      m().irAte(bear, centro()[0] - 12, centro()[1] + 4), m().irAte(nikki, centro()[0] + 18, centro()[1] - 4),
+      diretor ? m().irAte(diretor, centro()[0] + 44, centro()[1] + 6) : Promise.resolve(),
     ]);
     bear.dir = 'fe'; nikki.dir = 'fe';
     vestir(bear, 'bear'); bear.prop = 'disco';
@@ -289,9 +288,9 @@
     bear.est = { boca: 'o' }; fala(bear, 'Ééé… tudo bem, Nikki? 😅', 1800);
     await esperar(1500);
     // ela segue ele (sem tirar o sorriso)
-    const fugir = m().andarAte(bear, 46, 100, 30);
+    const fugir = m().andarAte(bear, centro()[0] - 48, centro()[1] + 6, 30);
     await esperar(300);
-    await m().andarAte(nikki, 56, 94, 26);
+    await m().andarAte(nikki, centro()[0] - 32, centro()[1] + 2, 26);
     await fugir;
     olhar(nikki, bear); bear.dir = 'fd';
     fala(nikki, 'Aonde você vai? 🙂🙂🙂', 2000);
