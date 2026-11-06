@@ -89,27 +89,54 @@
   // ------------------------------------------------------------------ planta do prédio
   const G = 4, T = 4, RW = 136, RH = 124, NB = 20, CH = 40, TOPO = 34, BAIXO = 48;
   const PORTA = [8, 32]; // a porta de cada sala fica sempre à esquerda; essa faixa nunca tem móveis
-  const NOMES = { recepcao: 'Recepção', contabil: 'Contábil', comercial: 'Comercial', copa: 'Copa', jogos: 'Sala de jogos', marketing: 'Marketing', relacionamento: 'Relacionamento', reuniao: 'Reunião', meta: 'META', refeitorio: 'Refeitório' };
-  const PLANTAS = {
-    largo: { margem: 30, linhas: [['recepcao', 'contabil', 'comercial', 'relacionamento', 'meta'], ['copa', 'refeitorio', 'jogos', 'marketing', 'reuniao']] },
-    alto: { margem: 12, linhas: [['recepcao', 'contabil'], ['comercial', 'relacionamento'], ['meta', 'reuniao'], ['marketing', 'refeitorio'], ['copa', 'jogos']] },
-  };
+  const NOMES = { recepcao: 'Recepção', diretoria: 'Diretoria · CEO', controladoria: 'Controladoria', comercial: 'Comercial', copa: 'Copa', jogos: 'Sala de jogos', marketing: 'Marketing',
+    relacionamento: 'Relacionamento', reuniao: 'Reunião', meta: 'META', refeitorio: 'Refeitório', financeiro: 'Financeiro', precificacao: 'Precificação', execucao: 'Execução' };
   KM.P = (X, Y, Z = 0) => [X, Y - Z];
   KM.chaoEm = (x, y) => [x, y];
   let L = null;
 
+  // Sala de Execução: cresce para o lado (até 2 vagas) e depois para baixo (mais fileiras de mesas).
+  // Cada vaga de sala tem 2 mesas por fileira; a altura normal cabe 2 fileiras.
+  const EXEC_POR_FILEIRA = 2, FILEIRA = 48;
+  function tamanhoExecucao(n) {
+    const span = n > 2 * EXEC_POR_FILEIRA ? 2 : 1;
+    const fileiras = Math.max(2, Math.ceil(n / (span * EXEC_POR_FILEIRA)));
+    return { span, fileiras, extraH: (fileiras - 2) * FILEIRA, vagas: span * EXEC_POR_FILEIRA * fileiras };
+  }
+  KM.tamanhoExecucao = tamanhoExecucao;
+  const ativasExecucao = cfg => (cfg && cfg.execucao || []).filter(a => !a.fim).length;
+  function plantaDe(nome, ex) {
+    if (nome === 'largo') return {
+      margem: 30, cols: 5, extra: [0, 0, ex.extraH],
+      linhas: [
+        [['recepcao', 1], ['diretoria', 1], ['controladoria', 1], ['comercial', 1], ['relacionamento', 1]],
+        [['marketing', 1], ['financeiro', 1], ['precificacao', 1], ['meta', 1], ['reuniao', 1]],
+        [['copa', 1], ['refeitorio', 1], ['jogos', 3 - ex.span], ['execucao', ex.span]],
+      ],
+    };
+    const base = [[['recepcao', 1], ['diretoria', 1]], [['controladoria', 1], ['comercial', 1]], [['relacionamento', 1], ['marketing', 1]],
+      [['financeiro', 1], ['precificacao', 1]], [['meta', 1], ['reuniao', 1]], [['copa', 1], ['refeitorio', 1]]];
+    const fim = ex.span === 1 ? [[['jogos', 1], ['execucao', 1]]] : [[['jogos', 2]], [['execucao', 2]]];
+    const linhas = base.concat(fim);
+    return { margem: 12, cols: 2, linhas, extra: linhas.map((l, i) => (i === linhas.length - 1 ? ex.extraH : 0)) };
+  }
+
   function montarLayout(nome, cfg) {
-    const pl = PLANTAS[nome], cols = pl.linhas[0].length, nl = pl.linhas.length;
+    const ex = tamanhoExecucao(ativasExecucao(cfg));
+    const pl = plantaDe(nome, ex), cols = pl.cols, nl = pl.linhas.length;
     const BW = T + cols * (RW + T);
     const W = pl.margem * 2 + BW, bx = pl.margem;
-    const lay = { nome, W, H: 0, salas: {}, corredores: [], moveis: [], decor: [], assentos: {}, pontos: {} };
+    const lay = { nome, W, H: 0, salas: {}, corredores: [], moveis: [], decor: [], assentos: {}, pontos: {}, exec: ex };
     let y = TOPO;
     pl.linhas.forEach((linha, r) => {
-      linha.forEach((id, c) => {
-        const x = bx + T + c * (RW + T);
-        lay.salas[id] = { id, nome: NOMES[id], x, y, fx: x, fy: y + NB, linha: r, col: c, portaCima: r > 0, portaBaixo: r < nl - 1 };
+      const h = RH + (pl.extra[r] || 0);
+      let vaga = 0;
+      linha.forEach(([id, span]) => {
+        const x = bx + T + vaga * (RW + T), w = span * RW + (span - 1) * T;
+        lay.salas[id] = { id, nome: NOMES[id], x, y, fx: x, fy: y + NB, w, h, span, linha: r, col: vaga, portaCima: r > 0, portaBaixo: r < nl - 1 };
+        vaga += span;
       });
-      y += RH + T;
+      y += h + T;
       if (r < nl - 1) { lay.corredores.push({ x: bx + T, y, w: BW - 2 * T, h: CH }); y += CH; }
     });
     lay.predio = { x: bx, y: TOPO, w: BW, h: y - TOPO };
@@ -117,9 +144,9 @@
     lay.H = y + BAIXO;
     for (const s of Object.values(lay.salas)) {
       s.corrCima = lay.corredores.find(c => c.y + c.h === s.y);
-      s.corrBaixo = lay.corredores.find(c => c.y === s.y + RH + T);
+      s.corrBaixo = lay.corredores.find(c => c.y === s.y + s.h + T);
       const cor = s.corrBaixo || s.corrCima;
-      s.porta = [s.fx + (PORTA[0] + PORTA[1]) / 2, cor === s.corrBaixo ? s.y + RH + T + 14 : s.y - 14];
+      s.porta = [s.fx + (PORTA[0] + PORTA[1]) / 2, cor === s.corrBaixo ? s.y + s.h + T + 14 : s.y - 14];
     }
     const c0 = lay.corredores[0];
     lay.centro = [Math.round(lay.predio.x + lay.predio.w / 2 + (nome === 'largo' ? 0 : 18)), c0.y + 26];
@@ -128,7 +155,7 @@
     montarGrade(lay);
     // pontos para fotos do Maycon e passeios
     lay.pontos.fotos = [];
-    for (const s of Object.values(lay.salas)) for (const [rx, ry] of [[52, 78], [96, 52], [70, 92]]) if (livreEm(lay, s.fx + rx, s.fy + ry)) lay.pontos.fotos.push([s.fx + rx, s.fy + ry, s.id]);
+    for (const s of Object.values(lay.salas)) for (const [rx, ry] of [[52, 78], [96, 52], [70, 92], [s.w - 40, 60]]) if (livreEm(lay, s.fx + rx, s.fy + ry)) lay.pontos.fotos.push([s.fx + rx, s.fy + ry, s.id]);
     for (const c of lay.corredores) for (let x = c.x + 60; x < c.x + c.w - 30; x += 90) lay.pontos.fotos.push([x, c.y + 26, 'corredor']);
     return lay;
   }
@@ -169,30 +196,79 @@
     if (it.relogio !== false) parede('recepcao', 'relogio', 92, 9, { din: true });
     if (it.logo !== false) parede('recepcao', 'logo', 106, 16);
 
-    // Contábil: Kauã (notícias) e Clara (checklist)
-    assento('noticias', 'contabil', 60, 34, ['papeis', 'caneca'], 'monitor');
-    assento('checklist', 'contabil', 104, 34, ['prancheta', 'flor'], 'notebook', 'cd');
-    if (it.estante !== false) add('contabil', 'estante', 122, 6, 13, 10, 24);
-    if (it.lixeira !== false) add('contabil', 'lixeira', 79, 15, 6, 6, 7);
-    add('contabil', 'impressora', 42, 90, 14, 10, 9);
-    planta('contabil', 124, 88);
-    if (e.tapete) add('contabil', 'tapete', 56, 54, 60, 34, 0, { bloq: false });
-    if (lay.salas.contabil.linha === 0 && it.janela !== false) parede('contabil', 'janela', 44, 26, { din: true });
-    if (it.grafico !== false) parede('contabil', 'grafico', 76, 18);
-    if (it.quadros !== false) parede('contabil', 'quadro', 98, 12);
+    // Diretoria: Kauã (CEO) e Clara (namorada e assistente)
+    assento('noticias', 'diretoria', 60, 40, ['papeis', 'caneca'], 'duplo');
+    assento('checklist', 'diretoria', 108, 30, ['prancheta', 'flor'], 'notebook', 'cd');
+    add('diretoria', 'sofa', 66, 64, 40, 14, 12);
+    add('diretoria', 'mesinha', 76, 88, 20, 8, 6);
+    planta('diretoria', 42, 90);
+    planta('diretoria', 124, 88);
+    if (e.tapete) add('diretoria', 'tapete', 56, 56, 64, 40, 0, { bloq: false });
+    if (lay.salas.diretoria.linha === 0 && it.janela !== false) parede('diretoria', 'janela', 38, 22, { din: true });
+    parede('diretoria', 'placaCEO', 82, 24);
+    parede('diretoria', 'coracao', 122, 12);
 
-    // Comercial: Maycon (prospecção)
-    assento('prospeccao', 'comercial', 70, 36, ['telefone', 'fotos'], 'monitor');
-    add('comercial', 'arquivo', 98, 3, 12, 10, 22);
+    // Controladoria: Maycon (pai do Kauã, chefe da controladoria; também faz a prospecção)
+    assento('prospeccao', 'controladoria', 70, 36, ['telefone', 'fotos'], 'monitor');
+    add('controladoria', 'arquivo', 98, 3, 12, 10, 22);
+    add('controladoria', 'arquivo', 112, 3, 12, 10, 22);
+    add('controladoria', 'impressora', 42, 90, 14, 10, 9);
+    add('controladoria', 'poltrona', 64, 62, 15, 13, 10);
+    add('controladoria', 'mesinha', 84, 66, 14, 8, 6, { redonda: true });
+    planta('controladoria', 124, 88);
+    if (e.tapete) add('controladoria', 'tapete', 56, 56, 60, 30, 0, { bloq: false });
+    if (lay.salas.controladoria.linha === 0 && it.janela !== false) parede('controladoria', 'janela', 40, 24, { din: true });
+    if (it.grafico !== false) parede('controladoria', 'grafico', 70, 18);
+    parede('controladoria', 'mural', 98, 26, { din: true });
+
+    // Comercial: Lena (mãe do Kauã, chefe do comercial)
+    assento('contato', 'comercial', 70, 34, ['celular', 'flor'], 'notebook');
     add('comercial', 'arquivo', 112, 3, 12, 10, 22);
     add('comercial', 'poltrona', 58, 62, 15, 13, 10);
     add('comercial', 'mesinha', 78, 66, 14, 8, 6, { redonda: true });
     add('comercial', 'poltrona', 98, 62, 15, 13, 10);
     planta('comercial', 124, 88);
+    planta('comercial', 42, 90);
     if (e.tapete) add('comercial', 'tapete', 52, 56, 66, 30, 0, { bloq: false, redondo: true });
-    if (lay.salas.comercial.linha === 0 && it.janela !== false) parede('comercial', 'janela', 42, 24, { din: true });
-    parede('comercial', 'mural', 98, 26, { din: true });
-    parede('comercial', 'mapa', 70, 18);
+    if (lay.salas.comercial.linha === 0 && it.janela !== false) parede('comercial', 'janela', 40, 22, { din: true });
+    parede('comercial', 'mapa', 66, 18);
+    parede('comercial', 'insta', 88, 22);
+
+    // Financeiro: Rodrigo (tio do Kauã, irmão do Maycon) — bolsa de valores e renda fixa
+    assento('financas', 'financeiro', 70, 40, ['grafico', 'calculadora'], 'duplo');
+    add('financeiro', 'arquivo', 42, 86, 12, 10, 16);
+    add('financeiro', 'poltrona', 96, 62, 15, 13, 10);
+    add('financeiro', 'mesinha', 114, 66, 12, 8, 6, { redonda: true });
+    planta('financeiro', 124, 90);
+    if (e.tapete) add('financeiro', 'tapete', 52, 54, 64, 32, 0, { bloq: false });
+    parede('financeiro', 'tickerBolsa', 92, 42, { din: true });
+    if (!lay.salas.financeiro.portaCima) parede('financeiro', 'graficoBolsa', 20, 22);
+
+    // Precificação: Dona Iva (avó do Kauã, mãe do Maycon e do Rodrigo)
+    assento('precificacao', 'precificacao', 70, 36, ['calculadora', 'caneca'], 'notebook');
+    if (it.estante !== false) add('precificacao', 'estante', 122, 6, 13, 10, 24);
+    add('precificacao', 'poltrona', 44, 62, 15, 13, 10);
+    add('precificacao', 'mesinha', 62, 66, 12, 8, 6, { redonda: true });
+    planta('precificacao', 124, 88);
+    if (e.tapete) add('precificacao', 'tapete', 40, 56, 60, 32, 0, { bloq: false, redondo: true });
+    parede('precificacao', 'tabelaPrecos', 38, 42);
+    if (it.relogio !== false) parede('precificacao', 'relogio', 86, 9, { din: true });
+    if (it.quadros !== false) parede('precificacao', 'quadro', 100, 12);
+
+    // Execução: uma mesa para cada atividade em andamento (a sala cresce quando enche)
+    {
+      const s = lay.salas.execucao, ex = lay.exec;
+      lay.pontos.execucao = [];
+      for (let f = 0; f < ex.fileiras; f++) for (let k = 0; k < ex.span; k++) for (let j = 0; j < EXEC_POR_FILEIRA; j++) {
+        const rx = 40 + k * (RW + T) + j * 46, ry = 22 + f * FILEIRA;
+        const mesa = add('execucao', 'mesaExec', rx, ry, 36, 10, 9, { n: lay.pontos.execucao.length + 1 });
+        lay.pontos.execucao.push({ X: s.fx + rx + 18, Y: s.fy + ry + 19, mesa });
+      }
+      lay.pontos.execucao.sort((a, b) => a.Y - b.Y || a.X - b.X).forEach((p, i) => { p.mesa.n = i + 1; });
+      parede('execucao', 'quadroExec', 40, 62, { din: true });
+      if (s.span > 1) parede('execucao', 'logo', RW + T + 46, 16);
+      planta('execucao', s.w - 12, s.h - NB - 16);
+    }
 
     // Relacionamento: Bia (feedback e contato com os clientes ativos)
     assento('relacionamento', 'relacionamento', 62, 36, ['caneca', 'flor'], 'monitor');
@@ -213,9 +289,8 @@
     parede('reuniao', 'tvReuniao', 64, 36, { din: true });
     if (lay.salas.reuniao.linha === 0 && it.janela !== false) parede('reuniao', 'janela', 108, 22, { din: true });
 
-    // Marketing: Enzo (vídeo) e Lena (contatos)
+    // Marketing: Enzo (irmão do Kauã, chefe do marketing)
     assento('video', 'marketing', 62, 40, ['caneca'], 'duplo');
-    assento('contato', 'marketing', 108, 32, ['celular', 'flor'], 'notebook', 'cd');
     add('marketing', 'fundoVerde', 108, 50, 26, 5, 28);
     add('marketing', 'ringlight', 98, 66, 6, 5, 26, { din: true });
     add('marketing', 'banqueta', 118, 70, 9, 7, 8);
@@ -307,9 +382,9 @@
       }
     };
     for (const s of Object.values(lay.salas)) {
-      marcar(s.fx + 4, s.fy + 6, s.fx + RW - 4, s.y + RH - 3, 1);
+      marcar(s.fx + 4, s.fy + 6, s.fx + s.w - 4, s.y + s.h - 3, 1);
       if (s.portaCima) marcar(s.fx + PORTA[0] + 3, s.y - 6, s.fx + PORTA[1] - 3, s.fy + 4, 1);
-      if (s.portaBaixo) marcar(s.fx + PORTA[0] + 3, s.y + RH - 6, s.fx + PORTA[1] - 3, s.y + RH + T + 6, 1);
+      if (s.portaBaixo) marcar(s.fx + PORTA[0] + 3, s.y + s.h - 6, s.fx + PORTA[1] - 3, s.y + s.h + T + 6, 1);
     }
     for (const c of lay.corredores) marcar(c.x + 4, c.y + 5, c.x + c.w - 4, c.y + c.h - 2, 1);
     for (const m of lay.moveis) if (m.bloq) marcar(m.X - 3, m.Y - 3, m.X + m.w + 3, m.Y + m.d + 3, 0);
@@ -414,14 +489,25 @@
     });
   }
   function pisoDaSala(s, e) {
-    const w = RW, h = RH - NB;
+    const w = s.w || RW, h = (s.h || RH) - NB;
+    if (s.id === 'execucao') return texXadrez('#e3e9e6', '#d6dfda', w, h, 10);
+    if (s.id === 'diretoria') return texTabuas('#8a5a3c', w, h);
     if (s.id === 'copa') return texXadrez('#f4f6f7', '#dfe5e8', w, h, 8);
     if (s.id === 'jogos') return texTabuas('#b07a4f', w, h);
     if (s.id === 'refeitorio') return texXadrez('#f3e3c9', '#e8d2b0', w, h, 8);
     return texPiso(e, w, h);
   }
   function texFace(s, e) {
-    const w = RW, h = NB - 4;
+    const w = s.w || RW, h = NB - 4;
+    if (s.id === 'diretoria') return tex('faceDiretoria', w, h, (g, w, h) => {
+      g.fillStyle = '#20302b'; g.fillRect(0, 0, w, h);
+      for (let u = 0; u < w; u += 8) { g.fillStyle = (u / 8) % 2 ? '#243630' : '#1d2b26'; g.fillRect(u, 0, 8, h - 2); }
+      g.fillStyle = '#c9a65b'; g.fillRect(0, h - 3, w, 1); g.fillStyle = '#111A19'; g.fillRect(0, h - 2, w, 2);
+    });
+    if (s.id === 'execucao') return tex('faceExec', w, h, (g, w, h) => {
+      g.fillStyle = '#eef6f1'; g.fillRect(0, 0, w, h);
+      g.fillStyle = '#28BE52'; g.fillRect(0, h - 5, w, 3); g.fillStyle = '#111A19'; g.fillRect(0, h - 2, w, 2);
+    });
     if (s.id === 'copa') return tex('faceCopa', w, h, (g, w, h) => {
       g.fillStyle = '#e8f4ee'; g.fillRect(0, 0, w, h);
       g.fillStyle = '#cfe3d8'; for (let u = 0; u < w; u += 6) g.fillRect(u, 0, 1, h); for (let v = 0; v < h; v += 6) g.fillRect(0, v, w, 1);
@@ -446,6 +532,7 @@
 
   // ------------------------------------------------------------------ desenho: utilidades
   const sombra = (g, X, Y, w, d) => { g.fillStyle = 'rgba(0,0,0,0.16)'; g.fillRect(X + 1, Y + d - 2, w, 3); };
+  KM.desenharCadeira = (ctx, x, y, ocupada) => cadeira(ctx, { sx: x, sy: y }, KM.config(), ocupada);
   // Caixa vista de cima: topo em (X, Y-h) e frente em (X, Y+d-h) com altura h.
   function caixa(g, X, Y, w, d, h, cor, o = {}) {
     const topo = o.topo || cor, frente = o.frente || tom(cor, 0.76), borda = o.borda || tom(cor, 0.45);
@@ -467,6 +554,8 @@
     telefone: (g, x, ty) => { r(g, x, ty + 2, 7, 5, '#c9453a'); r(g, x, ty + 1, 7, 2, '#8f2a22'); r(g, x + 2, ty + 4, 3, 2, '#f1f3f5'); },
     fotos: (g, x, ty) => { r(g, x, ty + 2, 6, 5, '#ffffff'); r(g, x + 1, ty + 3, 4, 3, '#6aa5d8'); r(g, x + 3, ty + 1, 6, 5, '#ffffff'); r(g, x + 4, ty + 2, 4, 3, '#f2c14e'); },
     celular: (g, x, ty) => { r(g, x, ty + 2, 4, 6, '#212529'); r(g, x + 1, ty + 3, 2, 4, '#25d366'); },
+    calculadora: (g, x, ty) => { r(g, x, ty + 1, 6, 7, '#495057'); r(g, x + 1, ty + 2, 4, 2, '#a9e34b'); r(g, x + 1, ty + 5, 1, 1, '#f1f3f5'); r(g, x + 3, ty + 5, 1, 1, '#f1f3f5'); r(g, x + 1, ty + 7, 4, 1, '#ff8787'); },
+    grafico: (g, x, ty) => { r(g, x, ty + 1, 8, 7, '#ffffff'); r(g, x + 1, ty + 5, 1, 2, '#2f9e44'); r(g, x + 3, ty + 4, 1, 3, '#2f9e44'); r(g, x + 5, ty + 2, 1, 5, VERDE); },
   };
 
   // ------------------------------------------------------------------ desenho dos móveis (estáticos)
@@ -736,6 +825,28 @@
       r(g, X + w - 2, Y - h - 16, 1, 18, '#8d5a3b'); r(g, X + w - 4, Y + d - 3, 5, 2, '#f8f9fa'); // rodo
       r(g, X + 2, Y + d - h + 3, w - 4, 1, '#e67700');
     },
+    // ----- Execução, Diretoria, Financeiro, Precificação
+    mesaExec(g, m) {
+      const { X, Y, w, d, h } = m; sombra(g, X, Y, w, d); caixa(g, X, Y, w, d, h, '#f1f3f5', { frente: '#dee2e6' });
+      r(g, X, Y + d - h + 2, w, 1, VERDE);
+      const cx = X + (w >> 1), ty = Y - h;
+      r(g, cx - 8, ty - 13, 16, 11, '#1f2326'); r(g, cx - 7, ty - 12, 14, 8, '#0c1416'); r(g, cx - 1, ty - 2, 2, 2, '#30363a'); r(g, cx - 4, ty, 8, 1, '#30363a');
+      r(g, X + 3, ty + 2, 8, 3, '#adb5bd'); // teclado
+      texto(g, String(m.n || ''), X + w - 9, ty + 2, '#868e96');
+    },
+    placaCEO(g, m) {
+      const { X, Y, w } = m; r(g, X, Y + 2, w, 11, '#1c1612'); r(g, X + 1, Y + 3, w - 2, 9, '#111A19'); r(g, X + 1, Y + 3, w - 2, 1, '#c9a65b');
+      texto(g, 'CEO', X + ((w - 11) >> 1), Y + 5, '#e2c06b');
+    },
+    graficoBolsa(g, m) {
+      const { X, Y, w } = m; r(g, X, Y + 1, w, 13, CONTORNO); r(g, X + 1, Y + 2, w - 2, 11, '#0f1f17');
+      [[2, 5, 1], [5, 4, 0], [8, 6, 1], [11, 3, 1], [14, 5, 0], [17, 2, 1]].forEach(([x, h, up]) => { r(g, X + 1 + x, Y + 11 - h - (up ? 2 : 0), 2, h, up ? '#51cf66' : '#ff6b6b'); r(g, X + 1 + x, Y + 9 - h - (up ? 2 : 0), 1, h + 3, up ? '#2f9e44' : '#c92a2a'); });
+    },
+    tabelaPrecos(g, m) {
+      const { X, Y, w } = m; r(g, X, Y + 1, w, 14, '#5c3d2e'); r(g, X + 1, Y + 2, w - 2, 12, '#fffdf4');
+      texto(g, 'PRECOS', X + 3, Y + 3, '#1E8A45');
+      for (let i = 0; i < 2; i++) { r(g, X + 3, Y + 9 + i * 3, 14, 1, '#adb5bd'); texto(g, '$', X + w - 8 - i * 7, Y + 8, '#e8590c'); }
+    },
     cardapio(g, m) {
       const { X, Y, w } = m; r(g, X, Y + 1, w, 14, '#5c3d2e'); r(g, X + 1, Y + 2, w - 2, 12, '#2b2f33');
       texto(g, 'MENU', X + 3, Y + 3, '#ffd43b'); r(g, X + 3, Y + 9, w - 8, 1, '#f1f3f5'); r(g, X + 3, Y + 11, w - 10, 1, '#f1f3f5');
@@ -865,6 +976,37 @@
     texto(ctx, dia, X + ((w - KM.larguraTexto(dia)) >> 1), Y + 8, '#1c1612');
     if (hojeTem) r(ctx, X + w - 4, Y + 11, 2, 2, '#e03131');
   }
+  // letreiro de LED com as ações da última análise do Rodrigo (ou índices de exemplo)
+  function tickerBolsa(ctx, d, cfg, t) {
+    const { X, Y, w } = d;
+    r(ctx, X, Y + 1, w, 14, CONTORNO); r(ctx, X + 1, Y + 2, w - 2, 12, '#05140c');
+    const itens = (cfg.financas && cfg.financas.ticker && cfg.financas.ticker.length) ? cfg.financas.ticker : [['IBOV', 1], ['IDIV', 1], ['IFIX', 1], ['SELIC', 0], ['CDI', 0]];
+    const s = itens.map(([c, up]) => `${c} ${up > 0 ? '+' : up < 0 ? '-' : '*'}`).join('  ') + '   ';
+    const larg = KM.larguraTexto(s) + 4, off = Math.floor(t * 12) % larg;
+    ctx.save(); ctx.beginPath(); ctx.rect(X + 2, Y + 2, w - 4, 12); ctx.clip();
+    for (let k = -1; k < 2; k++) {
+      let x = X + 2 - off + k * larg;
+      for (const [c, up] of itens) {
+        x = texto(ctx, c, x, Y + 4, '#a9e34b') + 2;
+        const cor = up > 0 ? '#51cf66' : up < 0 ? '#ff6b6b' : '#ffd43b';
+        if (up > 0) { r(ctx, x + 1, Y + 5, 1, 1, cor); r(ctx, x, Y + 6, 3, 1, cor); r(ctx, x + 1, Y + 7, 1, 2, cor); }
+        else if (up < 0) { r(ctx, x + 1, Y + 5, 1, 2, cor); r(ctx, x, Y + 7, 3, 1, cor); r(ctx, x + 1, Y + 8, 1, 1, cor); }
+        else r(ctx, x, Y + 6, 3, 2, cor);
+        x += 8;
+      }
+    }
+    ctx.restore();
+    r(ctx, X + 1, Y + 12, w - 2, 1, '#0b2a17');
+  }
+  function quadroExec(ctx, d, cfg, t) {
+    const { X, Y, w } = d, n = (cfg.execucao || []).filter(a => !a.fim).length;
+    r(ctx, X, Y + 1, w, 14, CONTORNO); r(ctx, X + 1, Y + 2, w - 2, 12, '#ffffff');
+    texto(ctx, 'EM EXECUCAO', X + 2, Y + 3, '#1E8A45');
+    const sn = String(n);
+    r(ctx, X + 2, Y + 9, w - 4, 4, '#e9ecef');
+    for (let i = 0; i < Math.min(n, 10); i++) r(ctx, X + 3 + i * 4, Y + 10, 3, 2, i % 2 ? '#28BE52' : '#1E8A45');
+    texto(ctx, sn, X + w - 3 - KM.larguraTexto(sn), Y + 9, n && Math.floor(t * 2) % 2 ? '#e8590c' : '#111A19');
+  }
   function desenharDinamicos(ctx, cfg, estado, t) {
     for (const d of L.decor) {
       if (d.tipo === 'janela') janela(ctx, d, cfg, t);
@@ -876,6 +1018,8 @@
       else if (d.tipo === 'arCond') arCond(ctx, d, estado, t);
       else if (d.tipo === 'painelMeta') painelMeta(ctx, d, cfg, t);
       else if (d.tipo === 'calendario') calendarioParede(ctx, d, cfg, t);
+      else if (d.tipo === 'tickerBolsa') tickerBolsa(ctx, d, cfg, t);
+      else if (d.tipo === 'quadroExec') quadroExec(ctx, d, cfg, t);
     }
     for (const m of L.moveis) {
       if (m.tipo === 'mesa') monitorDe(ctx, m, estado, t);
@@ -954,6 +1098,7 @@
       for (const s of Object.values(L.salas)) if (s.corrBaixo === c || s.corrCima === c) { r(g, s.fx + 44, c.y + 18, 80, 10, '#8f9aa6'); r(g, s.fx + 45, c.y + 19, 78, 8, '#a8b3be'); r(g, s.fx + 47, c.y + 21, 74, 1, '#8f9aa6'); r(g, s.fx + 47, c.y + 25, 74, 1, '#8f9aa6'); }
     }
     for (const s of Object.values(L.salas)) {
+      const RW = s.w, RH = s.h; // salas podem ter largura/altura diferentes (Execução cresce)
       g.drawImage(pisoDaSala(s, e), s.fx, s.fy);
       r(g, s.fx, s.fy, RW, 3, 'rgba(0,0,0,0.10)');
       g.drawImage(texFace(s, e), s.fx, s.y + 4);
@@ -998,8 +1143,12 @@
   }
 
   // ------------------------------------------------------------------ escolher a planta (computador x celular)
+  // Monta a planta (computador ou celular). Também refaz quando a Sala de Execução precisa crescer/diminuir.
   KM.definirLayout = function (nome, cfg) {
-    if (L && L.nome === nome) return false;
+    if (L && L.nome === nome) {
+      const ex = tamanhoExecucao(ativasExecucao(cfg));
+      if (ex.span === L.exec.span && ex.fileiras === L.exec.fileiras) return false;
+    }
     L = KM.LAYOUT = montarLayout(nome, cfg);
     KM.W = L.W; KM.H = L.H;
     fundo = null;
@@ -1053,7 +1202,7 @@
     }
   };
 
-  KM.salaEm = (x, y) => { if (!L) return null; for (const s of Object.values(L.salas)) if (x >= s.x && x <= s.x + RW && y >= s.y && y <= s.y + RH) return s.id; return null; };
+  KM.salaEm = (x, y) => { if (!L) return null; for (const s of Object.values(L.salas)) if (x >= s.x && x <= s.x + s.w && y >= s.y && y <= s.y + s.h) return s.id; return null; };
   const sentado = p => p.modo === 'sentado' || p.modo === 'sentado-mesa'; // sentado-mesa: no refeitório
   KM.ancora = function (pers) {
     if (sentado(pers)) return [Math.round(pers.X), Math.round(pers.Y) - 2];

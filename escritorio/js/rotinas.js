@@ -80,15 +80,22 @@
       await KM.mov.irAte(a, as.X + 17, as.Y + 3, 36);
       if (parar(a)) return;
       KM.olhar(a, b);
-      const nomes = s => s.replace(/\{(\w+)\}/g, (m, f) => (KM.nomeDe && KM.nomeDe(f)) || 'a equipe');
-      const [l1, l2] = sorteio(PAPOS).map(nomes);
-      KM.mov.fala(a, `${nome(b)}, ${l1.charAt(0).toLowerCase()}${l1.slice(1)}`, 2600);
+      let l1, l2;
+      if (KM.familia) [l1, l2] = KM.familia.papo(a.id, b.id); // fala de acordo com o parentesco (pai, mãe, mano, amor, vó…)
+      else {
+        const nomes = s => s.replace(/\{(\w+)\}/g, (m, f) => (KM.nomeDe && KM.nomeDe(f)) || 'a equipe');
+        [l1, l2] = sorteio(PAPOS).map(nomes); l1 = `${nome(b)}, ${l1.charAt(0).toLowerCase()}${l1.slice(1)}`;
+      }
+      KM.mov.fala(a, l1, 2800);
       a.est = { bracos: 'aceno', aceno: 1, boca: 'sorriso' };
-      await KM.esperar(2700);
+      const casal = KM.familia && KM.familia.casal(a.id, b.id);
+      if (casal) { const [x, y] = KM.mov.cabeca(a); KM.emitir('coracao', 4, { x, y: y - 4, dx: 10, vy: -14, vida: 1.4 }); }
+      await KM.esperar(2900);
       a.est = { boca: 'sorriso' };
-      if (!b.trabalhando) KM.mov.fala(b, l2, 2400);
-      await KM.esperar(2500);
-      if (Math.random() < 0.5) { KM.mov.fala(a, sorteio(['Haha, boa! 😂', 'Fechado! 👊', 'Valeu! 💚']), 1800); await KM.esperar(1800); }
+      if (!b.trabalhando) KM.mov.fala(b, l2, 2600);
+      if (casal) { const [x, y] = KM.mov.cabeca(b); KM.emitir('coracao', 3, { x, y: y - 4, dx: 8, vy: -14, vida: 1.2 }); KM.tocar('coracao'); }
+      await KM.esperar(2700);
+      if (Math.random() < 0.4) { KM.mov.fala(a, sorteio(casal ? ['Te amo 💚', '🥰', 'Volto já 😘'] : ['Haha, boa! 😂', 'Fechado! 👊', 'Valeu! 💚']), 1800); await KM.esperar(1800); }
     });
   }
 
@@ -101,7 +108,10 @@
       const p = sorteio(ps), x = Math.random();
       try {
         if (x < 0.35) fingir(p);
-        else if (x < 0.65) { const outros = Object.values(A().estado.pessoas).filter(q => q !== p && q.visivel !== false && q.modo === 'sentado' && !q.dormindo); if (outros.length) conversar(p, sorteio(outros)); else passear(p); }
+        else if (x < 0.65) {
+          const outros = Object.values(A().estado.pessoas).filter(q => q !== p && q.visivel !== false && q.modo === 'sentado' && !q.dormindo && KM.LAYOUT.assentos[q.funcao]);
+          if (outros.length) conversar(p, KM.familia ? KM.familia.parceiroPreferido(p.id, outros) : sorteio(outros)); else passear(p);
+        }
         else if (x < 0.82) passear(p);
         else cafe(p);
       } catch (e) { /* segue a vida */ }

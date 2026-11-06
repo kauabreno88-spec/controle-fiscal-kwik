@@ -29,7 +29,7 @@
       itens: { planta: true, estante: true, janela: true, relogio: true, tv: true, grafico: true, logo: true, quadros: true, cofre: true, lixeira: true },
     },
     funcionarios: [{
-      id: 'f1', nome: 'Léo', cargo: 'Analista de Notícias', funcao: 'noticias',
+      id: 'f1', nome: 'Kauã Breno', cargo: 'CEO · Fundador da KWIK', funcao: 'noticias',
       aparencia: {
         pele: '#E8B48F', cabelo: 'curto', corCabelo: '#5A3825', estiloCamisa: 'casual', corCamisa: '#E9D5B7', corGravata: '#28BE52',
         calca: '#2F3A4A', sapato: '#5A3A22', oculos: false, fone: false, bone: false, barba: false, corBone: '#28BE52',
@@ -38,7 +38,7 @@
       },
       xp: 0, tarefas: 0, ganhos: 0,
     }, {
-      id: 'clara', nome: 'Clara', cargo: 'Organizadora de Tarefas', funcao: 'checklist',
+      id: 'clara', nome: 'Clara', cargo: 'Assistente do CEO', funcao: 'checklist',
       aparencia: {
         pele: '#F1C9A5', cabelo: 'longo', corCabelo: '#3B2416', estiloCamisa: 'casual', corCamisa: '#F4B6C2', corGravata: '#28BE52',
         calca: '#3b4a6b', sapato: '#7a3b2a', oculos: false, fone: false, bone: false, barba: false, corBone: '#28BE52',
@@ -47,7 +47,7 @@
       },
       xp: 0, tarefas: 0, ganhos: 0,
     }, {
-      id: 'maycon', nome: 'Maycon (pai)', cargo: 'Prospecção de Clientes', funcao: 'prospeccao',
+      id: 'maycon', nome: 'Maycon', cargo: 'Chefe da Controladoria', funcao: 'prospeccao',
       aparencia: {
         pele: '#E0AC82', cabelo: 'curto', corCabelo: '#8a8a8a', estiloCamisa: 'social', corCamisa: '#cfe0f5', corGravata: '#1f3a68',
         calca: '#3a3f47', sapato: '#2b1d12', oculos: true, fone: false, bone: false, barba: true, corBone: '#28BE52',
@@ -56,7 +56,7 @@
       },
       xp: 0, tarefas: 0, ganhos: 0,
     }, {
-      id: 'enzo', nome: 'Enzo', cargo: 'Vídeos para o Instagram', funcao: 'video',
+      id: 'enzo', nome: 'Enzo', cargo: 'Chefe do Marketing', funcao: 'video',
       aparencia: {
         pele: '#C68642', cabelo: 'topete', corCabelo: '#2B1B12', estiloCamisa: 'camiseta', corCamisa: '#111A19', corGravata: '#28BE52',
         calca: '#3b5b8a', sapato: '#ffffff', oculos: false, fone: false, bone: false, barba: false, corBone: '#28BE52',
@@ -65,7 +65,7 @@
       },
       xp: 0, tarefas: 0, ganhos: 0,
     }, {
-      id: 'lena', nome: 'Lena', cargo: 'Primeiro contato com clientes', funcao: 'contato',
+      id: 'lena', nome: 'Lena', cargo: 'Chefe do Comercial', funcao: 'contato',
       aparencia: {
         pele: '#F5D0B5', cabelo: 'longo', corCabelo: '#E6C35C', estiloCamisa: 'jaqueta', corCamisa: '#E64980', corGravata: '#28BE52',
         calca: '#2B3A55', sapato: '#ffffff', oculos: false, fone: false, bone: false, barba: false, corBone: '#E64980',
@@ -74,7 +74,7 @@
       },
       xp: 0, tarefas: 0, ganhos: 0,
     }, {
-      id: 'bia', nome: 'João', cargo: 'Relacionamento com o cliente', funcao: 'relacionamento',
+      id: 'bia', nome: 'João', cargo: 'Chefe do Relacionamento com o Cliente', funcao: 'relacionamento',
       aparencia: {
         pele: '#8D5524', cabelo: 'cacheado', corCabelo: '#1C1C1C', estiloCamisa: 'casual', corCamisa: '#28BE52', corGravata: '#28BE52',
         calca: '#111A19', sapato: '#111A19', oculos: 'redondo', fone: true, bone: false, barba: false, corBone: '#28BE52',
@@ -91,8 +91,29 @@
         olhos: 'normal', sobrancelha: 'normal', boca: 'sorriso', sardas: false, bochechas: false, pinta: false, estampa: 'lisa', corEstampa: '#ffffff', relogio: false, corRelogio: '#212529', colar: false, corColar: '#e2b33c', brinco: false, corBrinco: '#e2b33c', corFone: '#28BE52', corOculos: '#1b1b1b',
       },
       xp: 0, tarefas: 0, ganhos: 0,
+    }, {
+      id: 'rodrigo', nome: 'Rodrigo', cargo: 'Financeiro · Investimentos', funcao: 'financas',
+      aparencia: {
+        pele: '#E0AC82', cabelo: 'curto', corCabelo: '#3b3b3b', estiloCamisa: 'social', corCamisa: '#1f3a68', corGravata: '#28BE52',
+        calca: '#2b2f33', sapato: '#2b1d12', oculos: false, fone: false, bone: false, barba: true, corBone: '#28BE52',
+        cracha: true, corCordao: '#28BE52', chapeu: '', baixo: 'calca', calcado: 'sapato', altura: 'normal', cachecol: false, corCachecol: '#c9453a',
+        olhos: 'normal', sobrancelha: 'normal', boca: 'normal', sardas: false, bochechas: false, pinta: false, estampa: 'lisa', corEstampa: '#ffffff', relogio: true, corRelogio: '#c9a65b', colar: false, corColar: '#e2b33c', brinco: false, corBrinco: '#e2b33c', corFone: '#28BE52', corOculos: '#1b1b1b',
+      },
+      xp: 0, tarefas: 0, ganhos: 0,
+    }, {
+      id: 'iva', nome: 'Dona Iva', cargo: 'Precificação', funcao: 'precificacao',
+      aparencia: {
+        pele: '#E8B48F', cabelo: 'coque', corCabelo: '#d6d6d6', estiloCamisa: 'casual', corCamisa: '#b197fc', corGravata: '#28BE52',
+        calca: '#5f3dc4', sapato: '#5a3a22', oculos: 'redondo', fone: false, bone: false, barba: false, corBone: '#28BE52',
+        cracha: true, corCordao: '#7048e8', chapeu: '', baixo: 'saia', calcado: 'sapato', altura: 'baixo', cachecol: false, corCachecol: '#c9453a',
+        olhos: 'normal', sobrancelha: 'normal', boca: 'sorriso', sardas: false, bochechas: true, pinta: false, estampa: 'lisa', corEstampa: '#ffffff', relogio: false, corRelogio: '#212529', colar: true, corColar: '#f1f3f5', brinco: true, corBrinco: '#e2b33c', corFone: '#28BE52', corOculos: '#8a5a2b',
+      },
+      xp: 0, tarefas: 0, ganhos: 0,
     }],
     clientes: [],
+    execucao: [],
+    financas: { ticker: [], ultimo: null, aporte: 500 },
+    precificacao: { ultimo: null },
     meta: { clientes: 10 },
     reunioes: [],
     relacionamento: { enviados: {}, respostas: [] },
@@ -156,7 +177,7 @@
   KM.estado = estado;
   const func = id => cfg.funcionarios.find(f => f.id === (id || estado.selecionado || estado.principal)) || cfg.funcionarios[0];
   const pessoaDe = id => estado.pessoas[id || estado.selecionado || estado.principal];
-  const ROTULO_TRABALHO = { noticias: '📰 Buscar notícias', checklist: '📋 Abrir prancheta', prospeccao: '📞 Buscar clientes', video: '🎬 Criar conteúdo', contato: '💬 Preparar contatos', relacionamento: '💚 Falar com clientes', limpeza: '🧹 Faxina geral' };
+  const ROTULO_TRABALHO = { noticias: '📰 Buscar notícias', checklist: '📋 Abrir prancheta', prospeccao: '📞 Buscar clientes', video: '🎬 Criar conteúdo', contato: '💬 Preparar contatos', relacionamento: '💚 Falar com clientes', limpeza: '🧹 Faxina geral', financas: '📈 Analisar investimentos', precificacao: '🧮 Precificar serviços' };
   // Primeiro nome de quem cuida de uma função (os textos do app usam o nome que você coloca em Visual).
   KM.nomeDe = funcao => { const f = cfg.funcionarios.find(x => x.funcao === funcao); return f ? (f.nome || '').trim().split(' ')[0] : ''; };
 
@@ -287,13 +308,15 @@
     $('#dlgEquipe').showModal();
   }
   const OLA = {
-    noticias: 'Oi! Eu sou {n}. Busco as notícias contábeis do dia 📰',
-    checklist: 'Oi! Eu sou {n}. Vamos organizar suas tarefas? 📋',
-    prospeccao: 'Opa! Eu sou {n}. Vou achar clientes novos 📞',
-    video: 'E aí! Eu sou {n}. Faço os vídeos do Instagram 🎬',
-    contato: 'Oi! Eu sou {n}. Faço o primeiro contato com os clientes 💬',
-    relacionamento: 'Oi! Eu sou {n}. Cuido dos nossos clientes 💚',
+    noticias: 'Fala! Eu sou {n}, CEO da KWIK. Também trago as notícias do dia 📰',
+    checklist: 'Oi! Eu sou {n}, assistente do CEO. Vamos organizar as tarefas? 📋',
+    prospeccao: 'Opa! Eu sou {n}, chefe da Controladoria. E ainda acho clientes novos 📞',
+    video: 'E aí! Eu sou {n}, chefe do Marketing. Faço os vídeos do Insta 🎬',
+    contato: 'Oi! Eu sou {n}, chefe do Comercial. Falo com os futuros clientes 💬',
+    relacionamento: 'Oi! Eu sou {n}, chefe do Relacionamento. Cuido dos nossos clientes 💚',
     limpeza: 'Opa! Eu sou {n}. Deixo tudo limpinho e funcionando 🧹',
+    financas: 'Olá! Eu sou {n}, do Financeiro. Analiso a bolsa e a renda fixa 📈',
+    precificacao: 'Oi, meu bem! Eu sou {n}, da Precificação. Cuido dos preços 🧮',
   };
   function selecionar(id) {
     estado.selecionado = id;
@@ -370,6 +393,8 @@
     if (f.funcao === 'contato') return KM.marketing.trabalharContato(f, p);
     if (f.funcao === 'relacionamento') return KM.relacionamento.trabalhar(f, p);
     if (f.funcao === 'limpeza') return KM.limpeza.trabalhar(f, p);
+    if (f.funcao === 'financas') return KM.financas.trabalhar(f, p);
+    if (f.funcao === 'precificacao') return KM.precificacao.trabalhar(f, p);
     return trabalharNoticias(f, p);
   }
 
@@ -512,11 +537,15 @@
     : r.tipo === 'video' ? `🎬 ${r.tarefa && /Reels/.test(r.tarefa) ? 'Reels' : r.tarefa && /Stories/.test(r.tarefa) ? 'Stories' : 'Vídeo'}: ${(r.titulo || '').slice(0, 56)}${(r.titulo || '').length > 56 ? '…' : ''}`
     : r.tipo === 'post' ? `🖼️ Post: ${(r.titulo || '').slice(0, 56)}`
     : r.tipo === 'relacionamento' ? `💚 ${r.titulo || 'Relacionamento'}`
+    : r.tipo === 'financas' ? `📈 ${r.titulo || 'Investimentos'}${r.aporte ? ` · ${brlCurto(r.aporte)}/mês` : ''}`
+    : r.tipo === 'precificacao' ? `🧮 ${r.titulo || 'Precificação'}`
     : r.tipo === 'contatos' ? `💬 Contatos em ${r.cidade || '—'}${r.uf ? '-' + r.uf : ''}` : `📰 Notícias de ${fmtDia(r.diaData)}`;
   const resumoRel = r => r.tipo === 'prospeccao' ? `🏥 ${r.qtdClinicas || 0} clínicas · ☎️ ${r.qtdComTelefone || 0} com telefone`
     : r.tipo === 'video' ? '🎞️ Vídeo com música + legenda para o Instagram'
     : r.tipo === 'post' ? '🖼️ Arte 4:5 + legenda para o Instagram'
     : r.tipo === 'relacionamento' ? '💬 Pronto para enviar aos clientes'
+    : r.tipo === 'financas' ? '🏆 Ranking do dia + simulação de quanto você vai ganhar'
+    : r.tipo === 'precificacao' ? '💜 Preços sugeridos com base no mercado de São Luís'
     : r.tipo === 'contatos' ? `💬 ${r.qtdContatos || 0} mensagens de primeiro contato` : `⭐ ${r.qtdPrincipais} principais · 📅 ${r.qtdDia} do dia`;
   function renderListaRel() {
     const box = $('#listaRel'); box.innerHTML = '';
@@ -573,6 +602,8 @@
     if (r.tipo === 'contatos') return KM.marketing.renderContatos(r, box);
     if (r.tipo === 'post') return KM.marketing.renderPost(r, box);
     if (r.tipo === 'relacionamento') return KM.relacionamento.renderRel(r, box);
+    if (r.tipo === 'financas') return KM.financas.renderRel(r, box);
+    if (r.tipo === 'precificacao') return KM.precificacao.renderRel(r, box);
     const rel = el('div', { class: 'rel' });
     const chips = el('div', { class: 'chips' }, (r.fontes || []).map(f => el('span', { class: 'chip ' + (f.ok ? 'ok' : 'erro') }, `${f.ok ? '✓' : '✗'} ${f.nome}${f.ok ? ` · ${f.itens} lidas` : ' · falhou'}`)));
     rel.append(el('div', { class: 'rel-cab' },
@@ -861,7 +892,12 @@
     const box = $('#clientesBox'); if (!box) return;
     cfg.clientes = cfg.clientes || [];
     box.innerHTML = '';
-    const num = s => { const t = String(s ?? '').replace(/[^\d,.-]/g, ''); if (!t) return 0; return Math.max(0, Number(t.includes(',') ? t.replace(/\./g, '').replace(',', '.') : t) || 0); };
+    const num = s => {
+      let t = String(s ?? '').replace(/[^\d,.-]/g, ''); if (!t) return 0;
+      if (t.includes(',')) t = t.replace(/\./g, '').replace(',', '.');
+      else if (/^\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, '');
+      return Math.max(0, Number(t) || 0);
+    };
     const fmt = v => v ? Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '';
     let n = 0;
     cfg.clientes.forEach((c, i) => {
@@ -953,22 +989,27 @@
   const mqCelular = window.matchMedia('(max-width: 760px)');
   function aplicarLayout() {
     const nome = mqCelular.matches ? 'alto' : 'largo';
+    const antes = KM.LAYOUT && KM.LAYOUT.nome;
     if (!KM.definirLayout(nome, cfg)) return;
     tela.width = KM.W; tela.height = KM.H;
     palco.style.aspectRatio = `${KM.W} / ${KM.H}`;
     palco.style.width = nome === 'largo' ? `min(100%, calc((100vh - 170px) * ${(KM.W / KM.H).toFixed(4)}))` : '100%';
-    if (estado.luzJogos && KM.jogos) KM.jogos.apagar();
-    for (const p of Object.values(estado.pessoas)) {
-      const a = KM.LAYOUT.assentos[p.funcao]; if (!a) continue;
-      if (p.acao === 'rotina' || p.acao === 'soneca') KM.pararRotina(p);
-      Object.assign(p, { modo: 'sentado', X: a.X, Y: a.Y, dir: a.dir, Z: 0, foraDaMesa: false });
+    if (antes !== nome) { // trocou PC ↔ celular: todo mundo volta para a mesa (se só a Execução cresceu, ninguém se mexe)
+      if (estado.luzJogos && KM.jogos) KM.jogos.apagar();
+      for (const p of Object.values(estado.pessoas)) {
+        const a = KM.LAYOUT.assentos[p.funcao]; if (!a) continue;
+        if (p.acao === 'rotina' || p.acao === 'soneca') KM.pararRotina(p);
+        Object.assign(p, { modo: 'sentado', X: a.X, Y: a.Y, dir: a.dir, Z: 0, foraDaMesa: false });
+      }
     }
+    if (KM.execucao) KM.execucao.layoutMudou();
     for (const r of $$('.rotulo-sala')) r.remove();
-    const ICONE_SALA = { reuniao: ' 🗓️', meta: ' 🎯', refeitorio: ' 🍽️' };
+    const ICONE_SALA = { reuniao: ' 🗓️', meta: ' 🎯', refeitorio: ' 🍽️', execucao: ' ⚙️', financeiro: ' 📈', precificacao: ' 🧮', diretoria: ' 👑' };
+    const ABRIR_SALA = { reuniao: () => KM.reuniao.abrir(), meta: () => KM.meta.abrir(), execucao: () => KM.execucao.abrir() };
     for (const s of Object.values(KM.LAYOUT.salas)) {
-      const clicavel = s.id === 'reuniao' || s.id === 'meta';
-      const r = el('div', { class: 'rotulo-sala' + (s.id === 'jogos' ? ' jogos' : '') + (clicavel ? ' clicavel' : ''), style: `left:${((s.x + KM.RW / 2) / KM.W * 100).toFixed(2)}%;top:${((s.y + 2) / KM.H * 100).toFixed(2)}%` }, s.nome + (ICONE_SALA[s.id] || ''));
-      if (clicavel) r.addEventListener('click', e => { e.stopPropagation(); s.id === 'reuniao' ? KM.reuniao.abrir() : KM.meta.abrir(); });
+      const clicavel = !!ABRIR_SALA[s.id];
+      const r = el('div', { class: 'rotulo-sala' + (s.id === 'jogos' ? ' jogos' : '') + (clicavel ? ' clicavel' : '') + (s.id === 'diretoria' ? ' ceo' : ''), style: `left:${((s.x + s.w / 2) / KM.W * 100).toFixed(2)}%;top:${((s.y + 2) / KM.H * 100).toFixed(2)}%` }, s.nome + (ICONE_SALA[s.id] || ''));
+      if (clicavel) r.addEventListener('click', e => { e.stopPropagation(); ABRIR_SALA[s.id](); });
       palco.append(r);
     }
   }
@@ -1048,12 +1089,13 @@
       const sala = KM.salaEm(x, y);
       if (sala === 'reuniao' && KM.reuniao) return KM.reuniao.abrir();
       if (sala === 'meta' && KM.meta) return KM.meta.abrir();
+      if (sala === 'execucao' && KM.execucao) return KM.execucao.abrir();
       if (estado.selecionado) selecionar(null); // tocar no vazio esconde o nome
     });
     tela.addEventListener('mousemove', e => {
       const [x, y] = pontoLogico(e);
       const sala = KM.salaEm(x, y);
-      tela.style.cursor = KM.pessoaEm(estado, x, y) || KM.jogos.sobre(x, y) || sala === 'reuniao' || sala === 'meta' ? 'pointer' : 'default';
+      tela.style.cursor = KM.pessoaEm(estado, x, y) || KM.jogos.sobre(x, y) || ['reuniao', 'meta', 'execucao'].includes(sala) ? 'pointer' : 'default';
     });
     document.addEventListener('keydown', ativo);
     window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (ABAS.includes(h)) irPara(h); });
@@ -1113,6 +1155,11 @@
       cfg.versao = 5;
     }
     for (const f of cfg.funcionarios) if (!f.funcao) f.funcao = (PADRAO.funcionarios.find(x => x.id === f.id) || { funcao: 'noticias' }).funcao;
+    if ((cfg.versao || 1) < 6) { // versão 6: família KWIK — Kauã CEO, chefes de setor, Rodrigo (Financeiro) e Dona Iva (Precificação)
+      const CARGOS = { f1: 'CEO · Fundador da KWIK', clara: 'Assistente do CEO', maycon: 'Chefe da Controladoria', enzo: 'Chefe do Marketing', lena: 'Chefe do Comercial', bia: 'Chefe do Relacionamento com o Cliente' };
+      for (const f of cfg.funcionarios) if (CARGOS[f.id]) f.cargo = CARGOS[f.id];
+      cfg.versao = 6; migrou = true;
+    }
     sincronizarPessoas();
     estado.relatorios = (j && j.relatorios) || [];
     estado.caixa = cfg.economia.caixa; caixaMostrado = cfg.economia.caixa;
@@ -1169,6 +1216,7 @@
     aplicarLayout();
     const j = await conectarBackend();
     aplicarDados(j);
+    aplicarLayout(); // a Sala de Execução pode precisar de mais mesas com as atividades salvas
     montarCampos(); ligarEventos(); mudou(true); preencherCampos();
     mostrarAviso();
     renderUltimo(); renderListaRel();
@@ -1187,7 +1235,7 @@
     if (ABAS.includes(h) && h !== 'escritorio') irPara(h);
     requestAnimationFrame(quadro);
     KM.clara.iniciar(); KM.maycon.iniciar(); KM.jogos.iniciar(); KM.rotinas.iniciar();
-    KM.limpeza.iniciar(); KM.refeitorio.iniciar(); KM.reuniao.iniciar(); KM.pesquisa.iniciar();
+    KM.limpeza.iniciar(); KM.refeitorio.iniciar(); KM.reuniao.iniciar(); KM.pesquisa.iniciar(); KM.execucao.iniciar();
     $('#btPuxarFiscal').addEventListener('click', puxarFiscal);
     $('#btNovoCliente').addEventListener('click', () => { cfg.clientes = cfg.clientes || []; cfg.clientes.push({ nome: '', telefone: '', valor: 0, status: 'ativo' }); renderClientes(); const ins = $$('#clientesBox .cliente-linha > input[type=text]'); ins.at(-1) && ins.at(-1).focus(); });
     $('#btAbrirMeta').addEventListener('click', () => KM.meta.abrir());
@@ -1200,7 +1248,9 @@
     setInterval(() => { if ($('#aba-equipe').classList.contains('ativa')) renderEquipe(); }, 3000);
     const hh = new Date().getHours(), sauda = hh < 12 ? 'Bom dia' : hh < 18 ? 'Boa tarde' : 'Boa noite';
     const APRESENTA = { noticias: `${sauda}! Clique em um de nós para mandar trabalhar 👋`, checklist: 'Oi! Eu cuido da sua prancheta de tarefas 📋', prospeccao: 'E eu acho clientes novos! 📞📸',
-      video: 'Eu transformo as notícias em vídeo! 🎬', contato: 'E eu chamo os clientes no WhatsApp 💬', relacionamento: 'E eu cuido de quem já é cliente 💚', limpeza: 'E eu deixo tudo brilhando! 🧹✨' };
+      video: 'Eu transformo as notícias em vídeo! 🎬', contato: 'E eu chamo os clientes no WhatsApp 💬', relacionamento: 'E eu cuido de quem já é cliente 💚', limpeza: 'E eu deixo tudo brilhando! 🧹✨',
+      financas: 'Eu fico de olho na bolsa 📈', precificacao: 'E eu cuido dos preços, meus netos 🧮💜' };
+    APRESENTA.noticias = `${sauda}, família KWIK! Bora trabalhar 👑`;
     cfg.funcionarios.forEach((f, i) => setTimeout(() => falar(f.id, APRESENTA[f.funcao] || 'Oi! 👋', 3400), 700 + i * 1500));
   }
 
@@ -1209,7 +1259,7 @@
     el, toast, salvar, mudou, cfg: () => cfg, estado, func, pessoaDe, pagar, concluir, falar, irPara, brl, fmtData,
     BK: () => BK, online: () => online, abrirConexao, carregarRelatorios, abrirRelatorio, animarCaixa, atualizarBotoes, atualizarFuncionario,
     iniciarPainelTarefa, callbacksTarefa, esperarLivre, apagarRel: r => apagarRel(r), desenharAvatar, obterRelatorio, escolher, perguntar,
-    todosComemoram, renderClientes,
+    todosComemoram, renderClientes, aplicarLayout: () => aplicarLayout(),
   };
   iniciar();
 })();

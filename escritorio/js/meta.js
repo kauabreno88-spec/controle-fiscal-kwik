@@ -9,7 +9,12 @@
   const A = () => KM.app;
   const $ = s => document.querySelector(s);
   const brl = v => (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  const num = s => { const t = String(s ?? '').replace(/[^\d,.-]/g, ''); if (!t) return 0; const n = t.includes(',') ? t.replace(/\./g, '').replace(',', '.') : t; return Math.max(0, Number(n) || 0); };
+  const num = s => {
+    let t = String(s ?? '').replace(/[^\d,.-]/g, ''); if (!t) return 0;
+    if (t.includes(',')) t = t.replace(/\./g, '').replace(',', '.');
+    else if (/^\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, '');
+    return Math.max(0, Number(t) || 0);
+  };
 
   const ativo = c => (c.status || 'ativo') === 'ativo';
   KM.metaDados = cfg => {

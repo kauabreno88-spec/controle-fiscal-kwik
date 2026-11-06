@@ -45,7 +45,7 @@
       const k = (Math.sin(bola * 1.6) + 1) / 2, x = pg.X - 2 + k * (pg.w + 4), z = Math.abs(Math.sin(bola * 3.2)) * 8;
       r(ctx, x, pg.Y - pg.h + (pg.d >> 1) - 1 - z, 2, 2, '#ffffff');
     }
-    const W = KM.RW, H = KM.RH;
+    const W = s.w, H = s.h;
     if (luzK < 0.99) { ctx.fillStyle = `rgba(8,6,22,${0.72 * (1 - luzK)})`; ctx.fillRect(s.x, s.y, W, H); }
     if (on) { ctx.fillStyle = 'rgba(255,224,102,0.06)'; ctx.fillRect(s.fx + 40, s.fy + 20, 60, 44); ctx.fillRect(s.fx + 84, s.fy + 54, 44, 36); }
     if (!estado.luzJogos && luzK < 0.1) {
@@ -55,7 +55,7 @@
     }
   }
 
-  function naArea(x, y) { const s = sala(); return !!s && x >= s.x && x <= s.x + KM.RW && y >= s.y && y <= s.y + KM.RH; }
+  function naArea(x, y) { const s = sala(); return !!s && x >= s.x && x <= s.x + s.w && y >= s.y && y <= s.y + s.h; }
   const alvoEm = (x, y) => {
     const fl = KM.LAYOUT && movel('fliperama');
     if (fl && x >= fl.X - 2 && x <= fl.X + fl.w + 2 && y >= fl.Y - fl.h - 2 && y <= fl.Y + fl.d + 2) return 'fliperama';

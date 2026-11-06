@@ -10,7 +10,7 @@
     id: r.id, criadoEm: r.criadoEm, funcionario: r.funcionario, tarefa: r.tarefa, diaData: r.diaData, ganho: r.ganho,
     duracao: r.duracao, qtdPrincipais: (r.principais || []).length, qtdDia: (r.dia || []).length,
     tipo: r.tipo || 'noticias', cidade: r.cidade, uf: r.uf, qtdClinicas: r.qtdClinicas, qtdComTelefone: r.qtdComTelefone,
-    titulo: r.titulo, qtdContatos: r.qtdContatos,
+    titulo: r.titulo, qtdContatos: r.qtdContatos, categoria: r.categoria, aporte: r.aporte,
   });
   KM.resumoRelatorio = resumo;
 
@@ -29,7 +29,7 @@
     },
     async carregar() { const j = await this.req('GET', '/api/estado'); return { config: j.config, relatorios: j.relatorios || [] }; },
     salvarConfig(cfg) { return this.req('PUT', '/api/config', cfg); },
-    async iniciar(ped) { return (await this.req('POST', '/api/tarefas', { funcionario: ped.funcionario, tipo: 'noticias', ganho: ped.ganho })).id; },
+    async iniciar(ped) { return (await this.req('POST', '/api/tarefas', { funcionario: ped.funcionario, tipo: ped.tipo || 'noticias', ganho: ped.ganho, opcoes: ped.opcoes })).id; },
     async acompanhar(id, cb) {
       let vistos = 0;
       for (;;) {
@@ -132,12 +132,12 @@
     },
     salvarConfig(cfg) { return this.gravarJson('nuvem/config.json', cfg, 'Personalização do escritório'); },
     async iniciar(ped) {
-      await this.gravarJson('nuvem/pedidos/' + ped.id + '.json', ped, `Pedido: notícias contábeis (${ped.funcionario.nome})`);
+      await this.gravarJson('nuvem/pedidos/' + ped.id + '.json', ped, ped.tipo === 'financas' ? `Pedido: análise de investimentos (${ped.funcionario.nome})` : `Pedido: notícias contábeis (${ped.funcionario.nome})`);
       return ped.id;
     },
     cacheRel: new Map(),
     async acompanhar(id, cb) {
-      const roteiro = [
+      const roteiro = cb.roteiro || [
         [0, 'Pedido enviado ao GitHub 📨', 6], [5, 'Ligando o computador da nuvem…', 14], [14, 'Abrindo o Portal Contábeis…', 28],
         [20, 'Lendo as manchetes do dia…', 42], [27, 'Lendo as matérias e os resumos…', 60], [37, 'Separando as principais notícias…', 78],
         [48, 'Organizando o relatório…', 90], [80, 'A fila do GitHub está mais lenta hoje, já já sai…', 94],

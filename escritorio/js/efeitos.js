@@ -90,6 +90,10 @@
           break;
         }
         case 'gota': ctx.fillStyle = '#8fd3ff'; ctx.fillRect(x, y, 1, 2); ctx.fillRect(x - 1, y + 1, 3, 1); break;
+        case 'coracao':
+          ctx.fillStyle = f < 0.7 ? '#ff6b9a' : '#ffb3c6';
+          ctx.fillRect(x - 2, y - 1, 2, 2); ctx.fillRect(x + 1, y - 1, 2, 2); ctx.fillRect(x - 2, y, 5, 2); ctx.fillRect(x - 1, y + 2, 3, 1); ctx.fillRect(x, y + 3, 1, 1);
+          break;
       }
     }
   };
