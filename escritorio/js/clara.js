@@ -146,8 +146,9 @@
       if (!clara.acao && !clara.trabalhando) { clara.prop = 'prancheta'; setTimeout(() => { if (!clara.trabalhando) clara.prop = null; }, 4500); }
     }
     KM.tocar('notif');
-    A().toast(`📋 Clara: ${avisos.map(a => a[0]).join(' · ')}`, { botao: ['Abrir prancheta', abrirComClara], ms: 9000 });
-    if (document.hidden || origem === 'inicio') avisos.forEach(([t, c]) => notificarSistema('Clara · ' + t.replace(/^\S+\s/, ''), c));
+    const nomeC = ((A().cfg().funcionarios.find(x => x.funcao === 'checklist') || {}).nome || 'Prancheta').split(' ')[0];
+    A().toast(`📋 ${nomeC}: ${avisos.map(a => a[0]).join(' · ')}`, { botao: ['Abrir prancheta', abrirComClara], ms: 9000 });
+    if (document.hidden || origem === 'inicio') avisos.forEach(([t, c]) => notificarSistema(nomeC + ' · ' + t.replace(/^\S+\s/, ''), c));
   }
   function abrirComClara() {
     const f = A().cfg().funcionarios.find(x => x.funcao === 'checklist');
@@ -171,8 +172,8 @@
     const BK = A().BK();
     const temPush = BK && BK.nome === 'github' && A().online() && 'serviceWorker' in navigator && 'PushManager' in window;
     if (!temPush) {
-      notificarSistema('Clara · Notificações ativadas', 'Com o app aberto eu aviso quando um prazo estiver perto. 📋');
-      return A().toast('🔔 Ativado! Com o app aberto a Clara avisa dos prazos.');
+      notificarSistema('KWIK · Notificações ativadas', 'Com o app aberto eu aviso dos prazos, reuniões e respostas da pesquisa. 🔔');
+      return A().toast('🔔 Ativado! Com o app aberto chegam os avisos de prazos, reuniões e pesquisas.');
     }
     try {
       const chave = await BK.lerTexto('nuvem/push-publica.txt');
@@ -185,7 +186,7 @@
       if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: chaveParaBytes(chave.trim()) });
       await BK.salvarInscricao(sub.toJSON(), navigator.userAgent.includes('iPhone') ? 'iPhone' : navigator.platform || 'aparelho');
       await BK.pedirTestePush({ id: 'teste-' + Date.now(), endpoint: sub.endpoint });
-      A().toast('🔔 Pronto! Em 1 minuto chega uma notificação de teste. Depois a Clara avisa às 8h, 12h e 18h quando houver prazo perto.', { ms: 10000 });
+      A().toast('🔔 Pronto! Em 1 minuto chega uma notificação de teste. Depois chegam os avisos de prazos, reuniões e respostas da pesquisa.', { ms: 10000 });
     } catch (e) {
       A().toast('Não consegui ativar o push: ' + e.message, { erro: true, ms: 9000 });
     }
@@ -206,7 +207,7 @@
   }
 
   KM.clara = {
-    trabalhar, resumo, verificar,
+    trabalhar, resumo, verificar, ativarNotificacoes, notificarSistema,
     iniciar() {
       $('#formTarefa').addEventListener('submit', adicionar);
       $('#dlgPrancheta').addEventListener('close', fechou);

@@ -68,7 +68,8 @@
       const c = longe ? camS : cam, dx = est.tecla && costas ? (longe ? -1 : 1) : 0;
       for (let i = 0; i < 5; i++) r(x + (i > 2 ? dx : 0), 22 + i, 3, 1, i < manga ? (estilo === 'casual' && i === manga - 1 ? camH : c) : (longe ? peleS : pele));
     }
-    const PROP_BRACOS = { camera: 'camera', prancheta: 'segura', disco: 'segura', cartas: 'cartas', claquete: 'aceno', desejo: 'aceno', taco: 'taco', varinha: 'aceno' };
+    const PROP_BRACOS = { camera: 'camera', prancheta: 'segura', disco: 'segura', cartas: 'cartas', claquete: 'aceno', desejo: 'aceno', taco: 'taco', varinha: 'aceno',
+      rodo: 'taco', pano: 'segura', chave: 'aceno', sacola: 'segura', celular: 'camera', garfo: 'segura', marmita: 'segura' };
     const b = est.bracos || PROP_BRACOS[prop] || 'baixo';
     const antebraco = (x0, y0, x1, y1, longe) => { // segmento de pele (ou manga longa)
       const cor = manga >= 9 ? (longe ? camS : cam) : (longe ? peleS : pele);
@@ -286,6 +287,28 @@
         r(21, 5, 1, 7, '#6b4a2a'); p(21, 4, '#ffd93b'); p(20, 3, '#fff3a0'); p(22, 3, '#fff3a0');
       } else if (prop === 'taco') {
         for (let i = 0; i < 26; i++) p(2 + i, 34 - Math.round(i * 0.7), i > 22 ? '#ffffff' : i > 18 ? '#e9d5b7' : '#7a4a2e');
+      } else if (prop === 'rodo') { // esfregão: cabo na diagonal, cabeça no chão (est.esfrega mexe para os lados)
+        const dx = est.esfrega ? 2 : 0;
+        for (let i = 0; i < 28; i++) p(Math.round(21 - i * 0.62 + (i > 18 ? dx * (i - 18) / 10 : 0)), 13 + i, '#9c6b43');
+        r(1 + dx, 40, 9, 2, '#dee2e6'); for (let x = 1 + dx; x < 10 + dx; x += 2) p(x, 42, '#adb5bd');
+      } else if (prop === 'pano') { // borrifador numa mão, paninho amarelo na outra
+        r(14, 19, 4, 7, '#4dabf7'); r(15, 17, 2, 2, '#1c7ed6'); p(18, 17, '#1c7ed6'); p(15, 21, '#a5d8ff');
+        r(6 + (est.esfrega ? 1 : 0), 26, 5, 3, '#ffd43b'); p(7 + (est.esfrega ? 1 : 0), 26, '#fff3a0');
+      } else if (prop === 'chave') {
+        r(21, 5, 2, 7, '#adb5bd'); r(20, 4, 4, 2, '#ced4da'); p(21, 4, '#868e96'); r(21, 11, 2, 2, '#e8590c');
+      } else if (prop === 'sacola') { // bag de entrega
+        r(7, 21, 12, 10, '#c92a2a'); r(8, 22, 10, 8, '#e03131'); r(8, 22, 10, 2, '#ff6b6b'); r(11, 25, 4, 3, '#ffffff'); p(12, 26, '#e03131');
+        r(6, 25, 2, 3, pele); r(18, 24, 2, 3, peleS);
+      } else if (prop === 'marmita') {
+        r(8, 23, 10, 6, '#f1f3f5'); r(8, 23, 10, 2, '#ced4da'); r(10, 25, 6, 3, '#e8590c'); r(11, 25, 2, 1, '#ffa94d');
+        r(7, 26, 2, 3, pele); r(17, 25, 2, 3, peleS);
+      } else if (prop === 'celular') {
+        r(9, Y(14), 6, 8, '#212529'); r(10, Y(15), 4, 6, '#ff6b6b'); r(10, Y(17), 4, 1, '#ffffff'); p(11, Y(19), '#ffffff');
+        r(15, Y(17), 3, 3, peleS); r(7, Y(18), 3, 3, pele);
+      } else if (prop === 'garfo') {
+        const sobe = est.mastiga ? 6 : 0;
+        r(10, 25 - sobe, 1, 5, '#ced4da'); r(9, 24 - sobe, 3, 1, '#ced4da'); p(9, 23 - sobe, '#ced4da'); p(11, 23 - sobe, '#ced4da');
+        if (est.mastiga) p(10, 22 - sobe, '#e8590c');
       }
     }
 

@@ -445,7 +445,8 @@
   // ------------------------------------------------------------------ trabalhar
   async function trabalharVideo(f, p) {
     if (p.trabalhando || U().semConexao()) return;
-    const formato = await A().escolher('🎬 O que o Enzo vai criar?', [
+    const eu = U().primeiro(f.id);
+    const formato = await A().escolher(`🎬 O que ${eu} vai criar?`, [
       { v: 'stories', ic: '📱', nome: 'Stories', desc: 'Vídeo vertical de 30 s ou mais, com música' },
       { v: 'reels', ic: '🎞️', nome: 'Reels', desc: 'Tema mais completo, até 1:30, com música' },
       { v: 'post', ic: '🖼️', nome: 'Post', desc: 'Você descreve a imagem e ele cria a arte' },
@@ -456,8 +457,8 @@
     const leo = U().pessoaFuncao('noticias'), nomeL = leo ? U().primeiro(leo.id) : 'pessoal das notícias';
     const resumo = (est.relatorios || []).find(r => (r.tipo || 'noticias') === 'noticias');
     if (!resumo) {
-      A().falar(p.id, `Preciso que o ${nomeL} busque as notícias primeiro! 📰`, 3200);
-      return A().toast(`🎬 O Enzo faz o vídeo a partir das notícias do dia. Coloque o ${nomeL} para trabalhar primeiro 📰`, { ms: 7000 });
+      A().falar(p.id, `Preciso que ${nomeL} busque as notícias primeiro! 📰`, 3200);
+      return A().toast(`🎬 ${eu} faz o vídeo a partir das notícias do dia. Coloque ${nomeL} para trabalhar primeiro 📰`, { ms: 7000 });
     }
     let rel;
     try { rel = await A().obterRelatorio(resumo.id); } catch (e) { return A().toast('Não consegui abrir as notícias: ' + e.message, { erro: true }); }
@@ -473,14 +474,14 @@
     const ok = await KM.rodar('trabalho', async q => {
       A().pagar(f, q);
       A().iniciarPainelTarefa(`🎬 ${nomeF} para o Instagram`);
-      A().callbacksTarefa(q, false).etapa(`Indo falar com o ${nomeL} 🚶`);
+      A().callbacksTarefa(q, false).etapa(`Indo falar com ${nomeL} 🚶`);
       await U().irConversar(q, leo, [
         ['eu', `${nomeL}, quais as principais notícias de hoje?`, 2300],
         ['alvo', `Separei ${lista.length} hoje! Escolhe uma 📰`, 2300],
         ['eu', `Vou fazer um ${nomeF} sobre: "${U().curto(n.titulo, 40)}" 🎬`, 3000],
       ]);
     }, [p.id]);
-    if (ok === false) return A().toast('O Enzo está ocupado com outra coisa. Tente de novo 😉');
+    if (ok === false) return A().toast(`${eu} está com outra coisa agora. Tente de novo 😉`);
 
     p.trabalhando = true; p.digitando = true; est.trabalhoDe.video = true; A().atualizarBotoes();
     const cb = A().callbacksTarefa(p, false);
@@ -501,10 +502,10 @@
       A().salvar(); cb.progresso(100);
     } catch (e) { erro = e; }
     p.trabalhando = false; p.digitando = false; est.trabalhoDe.video = false; A().atualizarBotoes();
-    if (erro) { A().falar(p.id, 'Deu ruim na edição 😓', 3000); return A().toast('Enzo: ' + erro.message, { erro: true, ms: 9000 }); }
+    if (erro) { A().falar(p.id, 'Deu ruim na edição 😓', 3000); return A().toast(`${eu}: ` + erro.message, { erro: true, ms: 9000 }); }
     await A().carregarRelatorios(KM.resumoRelatorio(salvo));
     A().falar(p.id, `${nomeF} pronto! Tá nos Relatórios 🎬`, 3000);
-    A().toast(`🎬 Enzo terminou o ${nomeF} (${Math.round(salvo.video.duracao)} s, com música e legenda).`, { botao: ['Ver', () => A().abrirRelatorio(salvo.id)], ms: 10000 });
+    A().toast(`🎬 ${eu} terminou o ${nomeF} (${Math.round(salvo.video.duracao)} s, com música e legenda).`, { botao: ['Ver', () => A().abrirRelatorio(salvo.id)], ms: 10000 });
     await A().concluir(f, p);
   }
 
@@ -515,7 +516,8 @@
       { id: 'frase', rotulo: 'Frase principal (opcional)', placeholder: 'Ex.: Vai abrir empresa? Chama a KWIK!' },
     ], '🎨 Criar post');
     if (!resp || !resp.desc.trim()) return;
-    if (!(await A().esperarLivre(p, 1500))) return A().toast('Espere o Enzo terminar o que está fazendo 😉');
+    const eu = U().primeiro(f.id);
+    if (!(await A().esperarLivre(p, 1500))) return A().toast(`Espere ${eu} terminar o que está fazendo 😉`);
     if (p.modo !== 'sentado') await KM.voltarSentar(p);
     A().pagar(f, p);
     A().iniciarPainelTarefa('🖼️ Post para o Instagram');
@@ -530,23 +532,21 @@
       cfg.marketing.ultimoPost = post.fundo; A().salvar(); cb.progresso(100);
     } catch (e) { erro = e; }
     p.trabalhando = false; p.digitando = false; est.trabalhoDe.video = false; A().atualizarBotoes();
-    if (erro) { A().falar(p.id, 'Não consegui fechar a arte 😓', 3000); return A().toast('Enzo: ' + erro.message, { erro: true, ms: 9000 }); }
+    if (erro) { A().falar(p.id, 'Não consegui fechar a arte 😓', 3000); return A().toast(`${eu}: ` + erro.message, { erro: true, ms: 9000 }); }
     await A().carregarRelatorios(KM.resumoRelatorio(salvo));
     A().falar(p.id, 'Post pronto! Ficou top 🖼️', 3000);
-    A().toast('🖼️ Enzo criou o post com legenda.', { botao: ['Ver', () => A().abrirRelatorio(salvo.id)], ms: 10000 });
+    A().toast(`🖼️ ${eu} criou o post com legenda.`, { botao: ['Ver', () => A().abrirRelatorio(salvo.id)], ms: 10000 });
     await A().concluir(f, p);
   }
 
   // ------------------------------------------------------------------ relatórios
-  async function salvarOuCompartilhar(blob, nome, legenda, status) {
-    const arq = new File([blob], nome, { type: blob.type });
-    if (!KM.ehPC && navigator.canShare && navigator.canShare({ files: [arq] })) {
-      status.textContent = 'Pronto! Escolha "Salvar" ou o Instagram 📲';
-      await navigator.share({ files: [arq], text: legenda }).catch(() => {});
-    } else {
-      const a = A().el('a', { href: URL.createObjectURL(blob), download: nome }); document.body.append(a); a.click(); a.remove();
-      status.textContent = 'Baixado: ' + nome;
-    }
+  // Baixa o arquivo (no PC vai para Downloads; no iPhone o Safari pergunta "Baixar" e salva em Arquivos).
+  async function baixarArquivo(blob, nome, legenda, status) {
+    const url = URL.createObjectURL(blob);
+    const a = A().el('a', { href: url, download: nome }); document.body.append(a); a.click(); a.remove();
+    status.innerHTML = '';
+    status.append('✅ Baixado: ' + nome + ' · ', A().el('a', { href: url, target: '_blank', rel: 'noopener' }, 'não baixou? abrir o arquivo'));
+    setTimeout(() => URL.revokeObjectURL(url), 10 * 60000);
   }
   const nomeArq = (s, ext) => `KWIK - ${U().curto(s || 'conteudo', 40).replace(/[\\/:*?"<>|…]/g, '')}.${ext}`;
   function blocoLegenda(r) {
@@ -581,11 +581,11 @@
         btBaixar.disabled = true; pararSom();
         try {
           const blob = await gravarVideo(spec, k => { status.textContent = `Gravando o vídeo com música… ${Math.round(k * 100)}% (deixe esta tela aberta)`; });
-          await salvarOuCompartilhar(blob, nomeArq(n.titulo, blob.type.includes('mp4') ? 'mp4' : 'webm'), r.legenda, status);
+          await baixarArquivo(blob, nomeArq(n.titulo, blob.type.includes('mp4') ? 'mp4' : 'webm'), r.legenda, status);
         } catch (e) { status.textContent = '❌ ' + e.message; }
         btBaixar.disabled = false;
       },
-    }, KM.ehPC ? '⬇️ Baixar vídeo' : '📲 Salvar / compartilhar');
+    }, '⬇️ Baixar vídeo');
     rel.append(el('div', { class: 'video-grade' },
       el('div', { class: 'video-col' }, cv, el('div', { class: 'video-bts' }, btPlay, btDe, spec.musica ? btSom : null, btBaixar), status, ...blocoLegenda(r)),
       el('div', {},
@@ -618,7 +618,7 @@
       el('div', { class: 'rel-bts' }, el('button', { class: 'bt peq perigo', onclick: () => A().apagarRel(r) }, '🗑️ Apagar'))));
     const cv = el('canvas', { width: spec.w, height: spec.h, class: 'video-cv' });
     const status = el('small', { class: 'vazio' });
-    const bt = el('button', { class: 'bt prim', onclick: () => cv.toBlob(b => salvarOuCompartilhar(b, nomeArq(r.titulo, 'png'), r.legenda, status), 'image/png') }, KM.ehPC ? '⬇️ Baixar imagem' : '📲 Salvar / compartilhar');
+    const bt = el('button', { class: 'bt prim', onclick: () => cv.toBlob(b => baixarArquivo(b, nomeArq(r.titulo, 'png'), r.legenda, status), 'image/png') }, '⬇️ Baixar imagem');
     rel.append(el('div', { class: 'video-grade' },
       el('div', { class: 'video-col' }, cv, el('div', { class: 'video-bts' }, bt), status, ...blocoLegenda(r)),
       el('div', {}, el('h3', {}, '✍️ O que você pediu'), el('p', { class: 'legenda' }, r.descricao),

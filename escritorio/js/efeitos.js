@@ -140,6 +140,9 @@
       case 'magia': [880, 1175, 1568, 2093].forEach((f, i) => tom(f, i * 0.06, 0.25, 'triangle', 0.04)); break;
       case 'tchau': tom(523, 0, 0.1, 'triangle', 0.05); tom(392, 0.12, 0.2, 'triangle', 0.05); break;
       case 'notif': tom(988, 0, 0.09, 'triangle', 0.06); tom(1480, 0.1, 0.18, 'triangle', 0.06); break;
+      case 'campainha': tom(1319, 0, 0.25, 'sine', 0.07); tom(1047, 0.28, 0.4, 'sine', 0.07); break;
+      case 'moto': tom(70, 0, 0.9, 'sawtooth', 0.04, 140); ruido(0, 0.9, 0.03, 500); break;
+      case 'agua': ruido(0, 0.5, 0.06, 1200); break;
       case 'batida': {
         for (let i = 0; i < 16; i++) {
           tom(110, i * 0.25, 0.12, 'sine', 0.18, 50);
@@ -237,7 +240,10 @@
   async function irAte(p, X, Y, vel) {
     await levantar(p);
     p.foraDaMesa = true;
-    for (const [x, y] of KM.rota(p.X, p.Y, X, Y)) await andarAte(p, x, y, vel);
+    for (const [x, y] of KM.rota(p.X, p.Y, X, Y)) {
+      if (p.pararRotina && p.acao === 'rotina') break; // foi chamado (trabalho/animação): larga o passeio no meio
+      await andarAte(p, x, y, vel);
+    }
   }
   async function irAoTapete(p, ponto) { const [x, y] = ponto || assento(p).tapete; await irAte(p, x, y); p.dir = 'fe'; }
   async function voltarSentar(p) {
@@ -249,7 +255,7 @@
     p.foraDaMesa = false;
     p.modo = 'sentado'; p.X = a.X; p.Y = a.Y; p.dir = a.dir; p.est = {}; p.Z = 0;
   }
-  function cabeca(p) { const [x, y] = KM.ancora(p); return [x, p.modo === 'sentado' ? y - 27 : y - 35]; }
+  function cabeca(p) { const [x, y] = KM.ancora(p); return [x, p.modo === 'sentado' || p.modo === 'sentado-mesa' ? y - 27 : y - 35]; }
   function pes(p) { return KM.ancora(p); }
   const fala = (p, txt, ms = 2400) => p && KM.onFala(p.id, txt, ms);
   KM.voltarSentar = voltarSentar;

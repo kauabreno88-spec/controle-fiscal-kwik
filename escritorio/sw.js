@@ -1,7 +1,8 @@
 /* KWIK Mini Escritório — deixa o app abrir sem internet.
    Arquivos do app: rede primeiro (pega atualizações), cache se estiver offline. A API do GitHub nunca passa pelo cache. */
-const CACHE = 'kwik-mini-v7';
-const APP = ['./', './index.html', './manifest.webmanifest', './js/cena.js', './js/boneco.js', './js/efeitos.js', './js/nuvem.js', './js/clara.js', './js/maycon.js', './js/filmes.js', './js/jogos.js', './js/marketing.js', './js/enzo.js', './js/relacionamento.js', './js/rotinas.js', './js/app.js', './pesquisa.html',
+const CACHE = 'kwik-mini-v8';
+const APP = ['./', './index.html', './manifest.webmanifest', './js/cena.js', './js/boneco.js', './js/efeitos.js', './js/nuvem.js', './js/clara.js', './js/maycon.js', './js/filmes.js', './js/gatinhos.js', './js/jogos.js', './js/marketing.js', './js/enzo.js', './js/relacionamento.js', './js/rotinas.js',
+  './js/limpeza.js', './js/refeitorio.js', './js/reuniao.js', './js/meta.js', './js/pesquisa.js', './js/app.js', './pesquisa.html',
   './assets/kwik-simbolo.svg', './assets/kwik-simbolo.png', './assets/icone-192.png', './assets/icone-512.png', './assets/apple-touch-icon.png',
   './assets/fontes/Montserrat-Medium.ttf', './assets/fontes/Montserrat-Bold.ttf', './assets/fontes/Montserrat-ExtraBold.ttf', './assets/fontes/Montserrat-Black.ttf'];
 
@@ -22,7 +23,7 @@ self.addEventListener('fetch', e => {
   }).catch(() => caches.match(req, { ignoreSearch: true }).then(r => r || caches.match('./index.html'))));
 });
 
-// Notificações da Clara (enviadas pela Action "Lembretes da Clara").
+// Notificações (prazos da prancheta, reuniões e respostas da pesquisa), enviadas pela Action "Lembretes".
 self.addEventListener('push', e => {
   let d = {};
   try { d = e.data.json(); } catch (x) { d = { titulo: 'KWIK Escritório', corpo: e.data ? e.data.text() : '' }; }

@@ -8,11 +8,14 @@
   const nome = p => (A().func(p.id).nome || '').split(' ')[0];
 
   const PAPOS = [
-    ['Viu a notícia de hoje?', 'Vi! Já mandei pro Enzo 🎬'],
+    ['Viu a notícia de hoje?', 'Vi! Já mandei pro {video} 🎬'],
     ['Bora um café? ☕', 'Bora! Só termino isso aqui'],
     ['Fechou o mês?', 'Quase! Falta conciliar 😅'],
     ['O cliente elogiou o atendimento 💚', 'Isso é KWIK!'],
-    ['Já viu o prazo do DAS?', 'Tá na prancheta da Clara 📋'],
+    ['Já viu o prazo do DAS?', 'Tá na prancheta, {checklist} anotou 📋'],
+    ['Que cheirinho de almoço! 😋', 'Bora pro refeitório daqui a pouco 🍽️'],
+    ['O ar tá geladinho hoje ❄️', '{limpeza} fez a manutenção ontem 🔧'],
+    ['Quantos clientes falta pra meta? 🎯', 'Tá subindo! Olha o tanque lá na sala META 💚'],
     ['Me ajuda numa planilha depois?', 'Claro, me chama 👍'],
     ['Que dia corrido!', 'Mas rendeu bastante 💪'],
     ['Tem reunião hoje?', 'Às 15h, na sala de reunião 🗓️'],
@@ -21,7 +24,7 @@
   ];
   const SOZINHO = ['Hmm… deixa eu conferir isso 🤔', 'Alongando um pouco 🙆', 'Que vista boa daqui ☀️', 'Cadê meu carregador? 🔌', 'Lembrar de beber água 💧'];
 
-  const livre = p => p && p.visivel !== false && !p.acao && !p.trabalhando && !p.dormindo && p.modo === 'sentado' && !p.lugarJogo;
+  const livre = p => p && p.visivel !== false && !p.acao && !p.trabalhando && !p.dormindo && p.modo === 'sentado' && !p.lugarJogo && p.funcao !== 'limpeza';
   const pode = () => {
     const est = A() && A().estado, cfg = A() && A().cfg();
     return est && cfg && cfg.opcoes.rotinas !== false && !document.hidden && !est.jogando && !KM.fx.ocupado;
@@ -77,7 +80,8 @@
       await KM.mov.irAte(a, as.X + 17, as.Y + 3, 36);
       if (parar(a)) return;
       KM.olhar(a, b);
-      const [l1, l2] = sorteio(PAPOS);
+      const nomes = s => s.replace(/\{(\w+)\}/g, (m, f) => (KM.nomeDe && KM.nomeDe(f)) || 'a equipe');
+      const [l1, l2] = sorteio(PAPOS).map(nomes);
       KM.mov.fala(a, `${nome(b)}, ${l1.charAt(0).toLowerCase()}${l1.slice(1)}`, 2600);
       a.est = { bracos: 'aceno', aceno: 1, boca: 'sorriso' };
       await KM.esperar(2700);

@@ -158,15 +158,16 @@ out center tags;`;
 
   async function trabalhar(f, p, trocarCidade) {
     if (p.trabalhando) return;
+    const eu = (f.nome || '').split(' ')[0];
     if (!A().online()) {
       const BK = A().BK();
-      if (BK && BK.nome === 'github') { A().toast('Conecte ao GitHub para salvar o relatório do Maycon 🔗'); return A().abrirConexao(); }
+      if (BK && BK.nome === 'github') { A().toast(`Conecte ao GitHub para salvar o relatório de ${eu} 🔗`); return A().abrirConexao(); }
       return A().toast('O servidor está desligado. Abra o ABRIR-ESCRITORIO.bat.', { erro: true });
     }
     const cfg = A().cfg();
     let alvo = cfg.maycon.cidade && cfg.maycon.uf && !trocarCidade ? { cidade: cfg.maycon.cidade, uf: cfg.maycon.uf } : await pedirCidade();
     if (!alvo) return;
-    if (!(await A().esperarLivre(p, 1500))) return A().toast('Espere o Maycon terminar o que está fazendo 😉');
+    if (!(await A().esperarLivre(p, 1500))) return A().toast(`Espere ${eu} terminar o que está fazendo 😉`);
     if (p.modo !== 'sentado') await KM.voltarSentar(p);
     p.trabalhando = true; p.digitando = true; A().estado.trabalhoDe.prospeccao = true; A().atualizarBotoes();
     A().pagar(f, p);
@@ -205,11 +206,11 @@ out center tags;`;
     p.trabalhando = false; p.digitando = false; A().estado.trabalhoDe.prospeccao = false; A().atualizarBotoes();
     if (erro) {
       A().falar(p.id, 'Não deu certo dessa vez 😓', 3000);
-      return A().toast('Maycon: ' + erro.message, { erro: true, ms: 10000, botao: ['Trocar cidade', () => trabalhar(f, p, true)] });
+      return A().toast(`${eu}: ` + erro.message, { erro: true, ms: 10000, botao: ['Trocar cidade', () => trabalhar(f, p, true)] });
     }
     await A().carregarRelatorios({ id: rel.id, criadoEm: rel.criadoEm, funcionario: rel.funcionario, tipo: rel.tipo, cidade: rel.cidade, uf: rel.uf, qtdClinicas: rel.qtdClinicas, qtdComTelefone: rel.qtdComTelefone });
     A().falar(p.id, `Pronto! ${rel.qtdComTelefone} contatos com telefone ☎️`, 3000);
-    A().toast(`📞 Maycon entregou: ${rel.qtdClinicas} clínicas em ${rel.cidade} (${rel.qtdComTelefone} com telefone).`, { botao: ['Ver relatório', () => A().abrirRelatorio(rel.id)], ms: 10000 });
+    A().toast(`📞 ${eu} entregou: ${rel.qtdClinicas} clínicas em ${rel.cidade} (${rel.qtdComTelefone} com telefone).`, { botao: ['Ver relatório', () => A().abrirRelatorio(rel.id)], ms: 10000 });
     await A().concluir(f, p);
   }
 

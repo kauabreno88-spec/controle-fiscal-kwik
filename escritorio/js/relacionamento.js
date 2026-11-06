@@ -32,14 +32,20 @@
     },
   };
   const montarMsg = (modelo, ctx) => modelo.replace(/\{(\w+)\}/g, (m, k) => ctx[k] ?? m).replace(/Olá, !|Oi, !/g, s => s.replace(', !', '!'));
-  const linkDe = (cliente, cfg) => `${LINK_PESQUISA}?c=${encodeURIComponent(cliente || '')}&w=${digitos(cfg.marketing.whats || '')}`;
+  const linkDe = (cliente, cfg) => `${LINK_PESQUISA}?c=${encodeURIComponent(cliente || '')}&w=${digitos(cfg.marketing.whats || '')}${KM.pesquisa ? '&t=' + KM.pesquisa.topico() : ''}`;
+  const ativos = cfg => (cfg.clientes || []).filter(c => (c.status || 'ativo') === 'ativo' && (c.nome || '').trim());
 
   async function trabalhar(f, p) {
-    if (p.trabalhando || U().semConexao()) return;
-    const cfg = A().cfg(), est = A().estado;
-    const acao = await A().escolher('💚 O que a Bia vai fazer?', Object.entries(ACOES).map(([v, a]) => ({ v, ic: a.ic, nome: a.nome, desc: a.desc })));
+    if (p.trabalhando) return;
+    const cfg = A().cfg(), est = A().estado, nome = f.nome.split(' ')[0];
+    const m = KM.pesquisa ? KM.pesquisa.medias() : { n: 0 };
+    const opcoes = Object.entries(ACOES).map(([v, a]) => ({ v, ic: a.ic, nome: a.nome, desc: a.desc }));
+    opcoes.push({ v: 'respostas', ic: '📊', nome: 'Ver respostas e média', desc: m.n ? `${m.n} resposta(s) · média ${m.media.toFixed(1).replace('.', ',')} de 10` : 'Ainda não chegou nenhuma resposta' });
+    const acao = await A().escolher(`💚 O que ${nome} vai fazer?`, opcoes);
     if (!acao) return;
-    if (!(await A().esperarLivre(p, 1500))) return A().toast('Espere a Bia terminar o que está fazendo 😉');
+    if (acao === 'respostas') { A().falar(p.id, m.n ? `Média de ${m.media.toFixed(1).replace('.', ',')} até agora! 📊` : 'Ainda sem respostas, bora mandar a pesquisa! 📋', 3000); return KM.pesquisa.abrir(); }
+    if (U().semConexao()) return;
+    if (!(await A().esperarLivre(p, 1500))) return A().toast(`Espere ${nome} terminar o que está fazendo 😉`);
     if (p.modo !== 'sentado') await KM.voltarSentar(p);
     const a = ACOES[acao];
     A().pagar(f, p);
@@ -60,10 +66,10 @@
       cb.progresso(100);
     } catch (e) { erro = e; }
     p.trabalhando = false; p.digitando = false; est.trabalhoDe.relacionamento = false; A().atualizarBotoes();
-    if (erro) { A().falar(p.id, 'Não consegui terminar 😓', 3000); return A().toast('Bia: ' + erro.message, { erro: true, ms: 9000 }); }
+    if (erro) { A().falar(p.id, 'Não consegui terminar 😓', 3000); return A().toast(`${nome}: ` + erro.message, { erro: true, ms: 9000 }); }
     await A().carregarRelatorios(KM.resumoRelatorio(salvo));
     A().falar(p.id, acao === 'pesquisa' ? 'Formulário pronto! 📋' : 'Mensagem pronta! 💬', 3000);
-    A().toast(`${a.ic} Bia preparou: ${a.nome}.`, { botao: ['Enviar', () => A().abrirRelatorio(salvo.id)], ms: 10000 });
+    A().toast(`${a.ic} ${nome} preparou: ${a.nome}.`, { botao: ['Enviar', () => A().abrirRelatorio(salvo.id)], ms: 10000 });
     await A().concluir(f, p);
   }
 
@@ -76,11 +82,13 @@
     const a = ACOES[r.acao] || ACOES.checkin;
     const rel = el('div', { class: 'rel' });
     rel.append(el('div', { class: 'rel-cab' },
-      el('div', {}, el('h2', {}, `${a.ic} ${r.titulo}`), el('p', {}, `Preparado por ${r.funcionario?.nome || 'Bia'} em ${fmtData(r.criadoEm)}`)),
-      el('div', { class: 'rel-bts' }, el('button', { class: 'bt peq perigo', onclick: () => A().apagarRel(r) }, '🗑️ Apagar'))));
+      el('div', {}, el('h2', {}, `${a.ic} ${r.titulo}`), el('p', {}, `Preparado por ${r.funcionario?.nome || 'Relacionamento'} em ${fmtData(r.criadoEm)}`)),
+      el('div', { class: 'rel-bts' },
+        r.acao === 'pesquisa' && KM.pesquisa ? el('button', { class: 'bt peq', onclick: () => KM.pesquisa.abrir() }, '📊 Ver respostas e média') : null,
+        el('button', { class: 'bt peq perigo', onclick: () => A().apagarRel(r) }, '🗑️ Apagar'))));
 
     // enviar para um cliente
-    const clientes = cfg.clientes || [];
+    const clientes = ativos(cfg);
     const sel = el('select', {}, el('option', { value: '' }, clientes.length ? 'Escolha o cliente…' : 'Nenhum cliente cadastrado'), clientes.map((c, i) => el('option', { value: i }, c.nome)));
     const inpNome = el('input', { type: 'text', placeholder: 'Nome do cliente' });
     const inpTel = el('input', { type: 'tel', placeholder: 'WhatsApp do cliente — ex.: (98) 98888-7777' });
@@ -116,9 +124,9 @@
         el('div', { class: 'lead-bts' },
           el('a', { class: 'bt peq', href: exemplo, target: '_blank', rel: 'noopener' }, '👀 Ver o formulário'),
           el('button', { class: 'bt peq', onclick: async () => { try { await navigator.clipboard.writeText('Pesquisa de satisfação — KWIK Contabilidade\n\n' + r.perguntas.map((q, i) => `${i + 1}. ${q}`).join('\n')); A().toast('Perguntas copiadas: cole no Google Forms 📋'); } catch (e) { A().toast('Não consegui copiar.', { erro: true }); } } }, '📄 Copiar perguntas p/ Google Forms')),
-        el('small', { class: 'vazio' }, 'Quando o cliente toca em "Enviar respostas", o WhatsApp dele abre com tudo preenchido para o seu número — as respostas chegam direto no seu WhatsApp Business.')));
+        el('small', { class: 'vazio' }, 'Quando o cliente toca em "Enviar respostas", a resposta chega aqui no app (com notificação no celular) e entra na média. Ele ainda pode mandar uma cópia pelo WhatsApp, se quiser.')));
     }
-    if (!clientes.length) rel.append(el('div', { class: 'obs', style: 'margin-top:14px' }, '👥 Cadastre seus clientes ativos em Personalizar → Clientes ativos. Eles aparecem no telão da sala de Relacionamento e na lista acima.'));
+    if (!clientes.length) rel.append(el('div', { class: 'obs', style: 'margin-top:14px' }, '👥 Cadastre seus clientes ativos em Configurações → Clientes ativos (ou na sala META). Eles aparecem no telão da sala de Relacionamento e na lista acima.'));
     box.append(rel);
   }
 

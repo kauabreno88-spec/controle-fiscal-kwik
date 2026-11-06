@@ -74,24 +74,35 @@
       },
       xp: 0, tarefas: 0, ganhos: 0,
     }, {
-      id: 'bia', nome: 'Bia', cargo: 'Relacionamento com o cliente', funcao: 'relacionamento',
+      id: 'bia', nome: 'João', cargo: 'Relacionamento com o cliente', funcao: 'relacionamento',
       aparencia: {
         pele: '#8D5524', cabelo: 'cacheado', corCabelo: '#1C1C1C', estiloCamisa: 'casual', corCamisa: '#28BE52', corGravata: '#28BE52',
-        calca: '#111A19', sapato: '#E64980', oculos: 'redondo', fone: true, bone: false, barba: false, corBone: '#28BE52',
-        cracha: true, corCordao: '#111A19', chapeu: '', baixo: 'saia', calcado: 'tenis', altura: 'normal', cachecol: false, corCachecol: '#c9453a',
-        olhos: 'grandes', sobrancelha: 'normal', boca: 'sorriso', sardas: false, bochechas: true, pinta: false, estampa: 'lisa', corEstampa: '#ffffff', relogio: true, corRelogio: '#E64980', colar: false, corColar: '#e2b33c', brinco: true, corBrinco: '#e2b33c', corFone: '#E64980', corOculos: '#8a5a2b',
+        calca: '#111A19', sapato: '#111A19', oculos: 'redondo', fone: true, bone: false, barba: false, corBone: '#28BE52',
+        cracha: true, corCordao: '#111A19', chapeu: '', baixo: 'calca', calcado: 'tenis', altura: 'normal', cachecol: false, corCachecol: '#c9453a',
+        olhos: 'grandes', sobrancelha: 'normal', boca: 'sorriso', sardas: false, bochechas: false, pinta: false, estampa: 'lisa', corEstampa: '#ffffff', relogio: true, corRelogio: '#28BE52', colar: false, corColar: '#e2b33c', brinco: false, corBrinco: '#e2b33c', corFone: '#28BE52', corOculos: '#8a5a2b',
+      },
+      xp: 0, tarefas: 0, ganhos: 0,
+    }, {
+      id: 'zeca', nome: 'Seu Zeca', cargo: 'Limpeza e manutenção', funcao: 'limpeza',
+      aparencia: {
+        pele: '#C68642', cabelo: 'curto', corCabelo: '#4a4a4a', estiloCamisa: 'kwik', corCamisa: '#3f7fc1', corGravata: '#28BE52',
+        calca: '#2F3A4A', sapato: '#1A1A1A', oculos: false, fone: false, bone: true, barba: true, corBone: '#3f7fc1',
+        cracha: true, corCordao: '#3f7fc1', chapeu: 'bone', baixo: 'calca', calcado: 'bota', altura: 'normal', cachecol: false, corCachecol: '#c9453a',
+        olhos: 'normal', sobrancelha: 'normal', boca: 'sorriso', sardas: false, bochechas: false, pinta: false, estampa: 'lisa', corEstampa: '#ffffff', relogio: false, corRelogio: '#212529', colar: false, corColar: '#e2b33c', brinco: false, corBrinco: '#e2b33c', corFone: '#28BE52', corOculos: '#1b1b1b',
       },
       xp: 0, tarefas: 0, ganhos: 0,
     }],
     clientes: [],
-    relacionamento: { enviados: {} },
+    meta: { clientes: 10 },
+    reunioes: [],
+    relacionamento: { enviados: {}, respostas: [] },
     checklist: [],
     maycon: { cidade: '', uf: '', fotos: 0 },
     marketing: { whats: '98988663080', dono: 'Kauã', empresa: 'KWIK Contabilidade', usadas: [], ultima: '', ultimoFundo: '' },
     contatos: { enviados: {} },
     jogos: { gatos: { fase: 1, estrelas: {} } },
     economia: { valorTarefa: 150, caixa: 0 },
-    opcoes: { comemorar: true, soneca: true, som: true, fotos: true, rotinas: true },
+    opcoes: { comemorar: true, todosJuntos: true, soneca: true, som: true, fotos: true, rotinas: true },
   };
   const TEMAS = {
     'KWIK Clássico': { parede: '#EBDCCB', rodape: '#6B4A35', piso: 'madeira', corPiso: '#B98A62', corTapete: '#F5C27E', padraoTapete: 'losango', mesa: '#9C5B3A', cadeira: '#2A2F33', estante: '#2b2f33' },
@@ -145,7 +156,9 @@
   KM.estado = estado;
   const func = id => cfg.funcionarios.find(f => f.id === (id || estado.selecionado || estado.principal)) || cfg.funcionarios[0];
   const pessoaDe = id => estado.pessoas[id || estado.selecionado || estado.principal];
-  const ROTULO_TRABALHO = { noticias: '📰 Buscar notícias', checklist: '📋 Abrir prancheta', prospeccao: '📞 Buscar clientes', video: '🎬 Criar conteúdo', contato: '💬 Preparar contatos', relacionamento: '💚 Falar com clientes' };
+  const ROTULO_TRABALHO = { noticias: '📰 Buscar notícias', checklist: '📋 Abrir prancheta', prospeccao: '📞 Buscar clientes', video: '🎬 Criar conteúdo', contato: '💬 Preparar contatos', relacionamento: '💚 Falar com clientes', limpeza: '🧹 Faxina geral' };
+  // Primeiro nome de quem cuida de uma função (os textos do app usam o nome que você coloca em Visual).
+  KM.nomeDe = funcao => { const f = cfg.funcionarios.find(x => x.funcao === funcao); return f ? (f.nome || '').trim().split(' ')[0] : ''; };
 
   // Cria/atualiza os bonecos da cena a partir dos funcionários da configuração.
   const doms = {};
@@ -274,12 +287,13 @@
     $('#dlgEquipe').showModal();
   }
   const OLA = {
-    noticias: 'Oi! Sou {n}. Busco as notícias contábeis do dia 📰',
-    checklist: 'Oi! Sou {n}. Vamos organizar suas tarefas? 📋',
-    prospeccao: 'Opa! Sou o {n}. Vou achar clientes novos 📞',
-    video: 'E aí! Sou o {n}. Faço os vídeos do Instagram 🎬',
-    contato: 'Oi! Sou a {n}. Faço o primeiro contato com os clientes 💬',
-    relacionamento: 'Oi! Sou a {n}. Cuido dos nossos clientes 💚',
+    noticias: 'Oi! Eu sou {n}. Busco as notícias contábeis do dia 📰',
+    checklist: 'Oi! Eu sou {n}. Vamos organizar suas tarefas? 📋',
+    prospeccao: 'Opa! Eu sou {n}. Vou achar clientes novos 📞',
+    video: 'E aí! Eu sou {n}. Faço os vídeos do Instagram 🎬',
+    contato: 'Oi! Eu sou {n}. Faço o primeiro contato com os clientes 💬',
+    relacionamento: 'Oi! Eu sou {n}. Cuido dos nossos clientes 💚',
+    limpeza: 'Opa! Eu sou {n}. Deixo tudo limpinho e funcionando 🧹',
   };
   function selecionar(id) {
     estado.selecionado = id;
@@ -304,12 +318,23 @@
     return !p.acao;
   }
 
+  // Quando alguém vai trabalhar (ou fecha um cliente), todo mundo que está livre larga o que está fazendo
+  // (rotina, almoço, sinuca, cochilo…) e comemora junto.
+  const livresMenos = exceto => Object.values(estado.pessoas).filter(q => q.id !== exceto && !q.trabalhando && q.visivel !== false);
+  function todosComemoram(exceto, tipo = 'pulos') {
+    livresMenos(exceto).forEach((q, i) => setTimeout(() => {
+      if (q.trabalhando) return;
+      if (tipo === 'saiyan') KM.superSayajin(Math.random() < 0.5 ? 1 : 2, { fala: ['Uhuul! 🎉', 'Isso aí! 💪', 'KWIK!! ⚡', 'Bora!! 🔥'][i % 4], dur: 2600 }, q.id);
+      else { KM.pulos(q.id); setTimeout(() => falar(q.id, ['Bora, equipe! 💪', 'Uhuul! 🎉', 'Vai que é sua! 🚀', 'Partiu! 💚', 'É isso aí! 👏'][i % 5], 1800), 500); }
+    }, i * 140));
+  }
   // Dinheiro na hora de mandar a tarefa.
   function pagar(f, p) {
     const valor = Number(cfg.economia.valorTarefa) || 0;
     KM.explosaoDinheiro(valor, p.id);
     cfg.economia.caixa += valor; f.ganhos += valor;
     estado.caixa = cfg.economia.caixa; animarCaixa(); atualizarFuncionario(); salvar();
+    if (cfg.opcoes.todosJuntos !== false) todosComemoram(p.id);
     return valor;
   }
   // XP, nível e comemoração ao entregar.
@@ -322,7 +347,11 @@
       setTimeout(() => KM.onBanner('SUBIU DE NÍVEL: ' + depois.nome.toUpperCase() + '!', 'verde'), 300);
       toast(`🎖️ ${f.nome} subiu para ${depois.nome}!`);
     }
-    if (cfg.opcoes.comemorar) { await KM.esperar(depois.i > antes.i ? 2200 : 900); KM.comemorar(depois.i >= 5 && depois.i > antes.i ? 'deus' : saiyanDoNivel(depois.i), p.id); }
+    if (cfg.opcoes.comemorar) {
+      await KM.esperar(depois.i > antes.i ? 2200 : 900);
+      if (cfg.opcoes.todosJuntos !== false) todosComemoram(p.id, 'saiyan');
+      KM.comemorar(depois.i >= 5 && depois.i > antes.i ? 'deus' : saiyanDoNivel(depois.i), p.id);
+    }
     else KM.confete(80);
   }
 
@@ -340,6 +369,7 @@
     if (f.funcao === 'video') return KM.marketing.trabalharVideo(f, p);
     if (f.funcao === 'contato') return KM.marketing.trabalharContato(f, p);
     if (f.funcao === 'relacionamento') return KM.relacionamento.trabalhar(f, p);
+    if (f.funcao === 'limpeza') return KM.limpeza.trabalhar(f, p);
     return trabalharNoticias(f, p);
   }
 
@@ -422,31 +452,33 @@
 
   // ------------------------------------------------------------------ animações (menu)
   const SO_PARADO = new Set(['ss1', 'ss2', 'ss3', 'deus', 'branco', 'danca', 'pulos', 'teleporte', 'soneca']);
+  // Animações do menu: TODO MUNDO que não está trabalhando para o que estava fazendo e faz junto.
   async function animacao(nome) {
     ativo();
     $('#menuAnim').classList.remove('on');
-    const p = pessoaDe(), f = func();
-    if (nome === 'dinheiro') return KM.explosaoDinheiro(Number(cfg.economia.valorTarefa) || 0, p.id);
+    const livres = Object.values(estado.pessoas).filter(q => !q.trabalhando && q.visivel !== false);
+    if (nome === 'dinheiro') { (livres.length ? livres : [pessoaDe()]).forEach((q, i) => setTimeout(() => KM.explosaoDinheiro(i ? 0 : Number(cfg.economia.valorTarefa) || 0, q.id), i * 120)); return; }
     if (nome === 'confete') return KM.confete();
-    if (KM.filmes && KM.filmes[nome]) { // animações em grupo: só quem não está trabalhando
-      irPara('escritorio');
-      const livres = Object.values(estado.pessoas).filter(q => !q.trabalhando);
+    irPara('escritorio');
+    if (nome === 'almoco') return KM.refeitorio && KM.refeitorio.agora('ifood');
+    if (KM.filmes && KM.filmes[nome]) { // cenas em grupo: só quem não está trabalhando
       if (livres.length < 2) return toast('Precisa de pelo menos 2 funcionários livres para essa cena 🎬');
+      await Promise.all(livres.map(q => KM.pararRotina(q)));
       const ok = await KM.filmes[nome](livres.map(q => q.id));
       if (ok === false) toast('Alguém já está em outra animação. Tente de novo em instantes 😄');
       return;
     }
-    if (p.trabalhando && SO_PARADO.has(nome)) return toast(`${f.nome} está trabalhando! Espere terminar 💼`);
-    if (p.acao && p.acao !== 'soneca' && p.acao !== 'rotina') return toast('Calma! Uma animação de cada vez 😄');
-    irPara('escritorio');
-    const id = p.id;
+    if (!livres.length) return toast('A equipe toda está trabalhando agora 💼');
     const mapa = {
-      ss1: () => KM.superSayajin(1, {}, id), ss2: () => KM.superSayajin(2, {}, id), ss3: () => KM.superSayajin(3, {}, id),
-      deus: () => KM.superSayajin('deus', {}, id), branco: () => KM.superSayajin('branco', {}, id),
-      chuva: () => KM.rodar('chuva', () => KM.chuvaDinheiro(4), [id]), danca: () => KM.danca(id), cafe: () => KM.cafe(id), foco: () => KM.foco(id),
-      soneca: () => KM.soneca(8, id), pulos: () => KM.pulos(id), teleporte: () => KM.teleporte(id),
+      ss1: id => KM.superSayajin(1, {}, id), ss2: id => KM.superSayajin(2, {}, id), ss3: id => KM.superSayajin(3, {}, id),
+      deus: id => KM.superSayajin('deus', {}, id), branco: id => KM.superSayajin('branco', {}, id),
+      danca: id => KM.danca(id), cafe: id => KM.cafe(id), foco: id => KM.foco(id),
+      soneca: id => KM.soneca(8, id), pulos: id => KM.pulos(id), teleporte: id => KM.teleporte(id),
     };
-    if (mapa[nome]) await mapa[nome]();
+    if (nome === 'chuva') { await Promise.all(livres.map(q => KM.pararRotina(q))); return KM.rodar('chuva', () => KM.chuvaDinheiro(4), livres.filter(q => !q.acao).map(q => q.id)); }
+    if (!mapa[nome]) return;
+    const resultados = await Promise.all(livres.map((q, i) => KM.esperar(i * 120).then(() => mapa[nome](q.id))));
+    if (resultados.every(r => r === false)) toast('Calma! Uma animação de cada vez 😄');
   }
 
   // ------------------------------------------------------------------ relatórios
@@ -690,14 +722,16 @@
     camposEsc: [{ c: E + 'nome', t: 'texto', r: 'Nome do escritório' }],
     camposEco: [
       { c: 'economia.valorTarefa', t: 'num', r: 'R$ por tarefa' },
-      { c: 'maycon.cidade', t: 'texto', r: 'Cidade do Maycon' },
+      { c: 'maycon.cidade', t: 'texto', r: 'Cidade da prospecção' },
       { c: 'maycon.uf', t: 'sel', r: 'Estado (UF)', op: Object.fromEntries(['', 'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'].map(u => [u, u || '—'])) },
-      { sec: 'Marketing (Enzo e Lena)' },
+      { c: 'meta.clientes', t: 'num', r: '🎯 Meta de clientes', passo: 1 },
+      { sec: 'Marketing e mensagens' },
       { c: 'marketing.whats', t: 'texto', r: 'WhatsApp Business' },
       { c: 'marketing.dono', t: 'texto', r: 'Seu nome nas mensagens' },
       { c: 'marketing.empresa', t: 'texto', r: 'Nome da empresa' },
-      { sec: 'Comemorações' },
-      { t: 'checks', itens: [['opcoes.comemorar', '⚡ Vira Super Sayajin ao entregar'], ['opcoes.soneca', '😴 Cochila se ficar parado (3 min)'], ['opcoes.fotos', '📸 Maycon tira fotos quando está livre'], ['opcoes.rotinas', '🚶 Equipe circula e conversa pelo prédio'], ['opcoes.som', '🔊 Sons']] },
+    ],
+    camposCom: [
+      { t: 'checks', itens: [['opcoes.comemorar', '⚡ Vira Super Sayajin ao entregar'], ['opcoes.todosJuntos', '🙌 A equipe toda para e comemora junto'], ['opcoes.soneca', '😴 Cochila se ficar parado (3 min)'], ['opcoes.fotos', '📸 Prospecção tira fotos quando está livre'], ['opcoes.rotinas', '🚶 Equipe circula, almoça e conversa pelo prédio'], ['opcoes.som', '🔊 Sons']] },
     ],
   };
 
@@ -772,7 +806,7 @@
         }
         let ctrl;
         if (d.t === 'texto') ctrl = el('input', { type: 'text', 'data-c': d.c, maxlength: 40, oninput: e => { definir(d.c, e.target.value); mudou(); } });
-        else if (d.t === 'num') ctrl = el('input', { type: 'number', min: 0, step: 10, 'data-c': d.c, oninput: e => { definir(d.c, Math.max(0, Number(e.target.value) || 0)); mudou(); } });
+        else if (d.t === 'num') ctrl = el('input', { type: 'number', min: d.passo ? 1 : 0, step: d.passo || 10, 'data-c': d.c, oninput: e => { definir(d.c, Math.max(d.passo ? 1 : 0, Number(e.target.value) || 0)); mudou(); } });
         else if (d.t === 'sel') ctrl = el('select', { 'data-c': d.c, onchange: e => { definir(d.c, e.target.value); mudou(); } }, Object.entries(d.op).map(([v, r]) => el('option', { value: v }, r)));
         box.append(el('div', { class: 'campo' }, el('label', {}, d.r), ctrl));
       }
@@ -827,11 +861,21 @@
     const box = $('#clientesBox'); if (!box) return;
     cfg.clientes = cfg.clientes || [];
     box.innerHTML = '';
-    cfg.clientes.forEach((c, i) => box.append(el('div', { class: 'cliente-linha' },
-      el('input', { type: 'text', value: c.nome || '', placeholder: 'Nome do cliente', oninput: e => { c.nome = e.target.value; salvar(); } }),
-      el('input', { type: 'tel', value: c.telefone || '', placeholder: 'WhatsApp (com DDD)', oninput: e => { c.telefone = e.target.value; salvar(); } }),
-      el('button', { class: 'bt peq perigo', title: 'Remover', onclick: () => { cfg.clientes.splice(i, 1); salvar(); renderClientes(); } }, '🗑️'))));
-    if (!cfg.clientes.length) box.append(el('p', { class: 'vazio' }, 'Nenhum cliente ainda. Adicione à mão ou puxe do KWIK Fiscal.'));
+    const num = s => { const t = String(s ?? '').replace(/[^\d,.-]/g, ''); if (!t) return 0; return Math.max(0, Number(t.includes(',') ? t.replace(/\./g, '').replace(',', '.') : t) || 0); };
+    const fmt = v => v ? Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '';
+    let n = 0;
+    cfg.clientes.forEach((c, i) => {
+      if ((c.status || 'ativo') !== 'ativo') return;
+      n++;
+      box.append(el('div', { class: 'cliente-linha' },
+        el('input', { type: 'text', value: c.nome || '', placeholder: 'Nome do cliente', oninput: e => { c.nome = e.target.value; salvar(); } }),
+        el('input', { type: 'tel', value: c.telefone || '', placeholder: 'WhatsApp (com DDD)', oninput: e => { c.telefone = e.target.value; salvar(); } }),
+        el('div', { class: 'valor-cli' }, el('span', {}, 'R$'), el('input', { type: 'text', inputmode: 'decimal', value: fmt(c.valor), placeholder: 'mensal', title: 'Quanto o cliente paga por mês (entra na sala META)', oninput: e => { c.valor = num(e.target.value); salvar(); }, onblur: e => { e.target.value = fmt(c.valor); } })),
+        el('button', { class: 'bt peq perigo', title: 'Remover', onclick: () => { cfg.clientes.splice(i, 1); salvar(); renderClientes(); } }, '🗑️')));
+    });
+    if (!n) box.append(el('p', { class: 'vazio' }, 'Nenhum cliente ainda. Adicione à mão ou puxe do KWIK Fiscal.'));
+    const md = KM.metaDados ? KM.metaDados(cfg) : null;
+    if (md) box.append(el('p', { class: 'vazio', style: 'margin:8px 0 0;font-size:12px' }, `💰 Total: ${brl(md.total)} por mês · 🎯 ${md.qAtivos} de ${md.meta} da meta` + (md.qNeg ? ` · 🟡 ${md.qNeg} em negociação (veja na sala META)` : '')));
   }
   async function puxarFiscal() {
     try {
@@ -851,7 +895,7 @@
       let novos = 0;
       for (const c of lista) {
         const ja = cfg.clientes.find(x => (x.nome || '').trim().toLowerCase() === c.nome.trim().toLowerCase());
-        if (ja) { if (!ja.telefone && c.telefone) ja.telefone = c.telefone; } else { cfg.clientes.push({ nome: c.nome, telefone: c.telefone }); novos++; }
+        if (ja) { if (!ja.telefone && c.telefone) ja.telefone = c.telefone; } else { cfg.clientes.push({ nome: c.nome, telefone: c.telefone, valor: 0, status: 'ativo' }); novos++; }
       }
       salvar(); renderClientes();
       toast(`📥 ${lista.length} clientes no KWIK Fiscal · ${novos} novos adicionados`);
@@ -890,11 +934,12 @@
     $$('.abas button').forEach(b => b.classList.toggle('ativa', b.dataset.aba === aba));
     $$('.aba').forEach(s => s.classList.toggle('ativa', s.id === 'aba-' + aba));
     if (location.hash !== '#' + aba) history.replaceState(null, '', '#' + aba);
-    if (aba === 'personalizar') preencherCampos();
+    if (aba === 'personalizar' || aba === 'config') preencherCampos();
     if (aba === 'relatorios') renderListaRel();
     if (aba === 'equipe') renderEquipe();
-    if (aba === 'personalizar') renderClientes();
+    if (aba === 'config') renderClientes();
   }
+  const ABAS = ['escritorio', 'equipe', 'relatorios', 'personalizar', 'config'];
 
   // ------------------------------------------------------------------ inatividade (soneca)
   let ultimaAtividade = performance.now();
@@ -919,8 +964,12 @@
       Object.assign(p, { modo: 'sentado', X: a.X, Y: a.Y, dir: a.dir, Z: 0, foraDaMesa: false });
     }
     for (const r of $$('.rotulo-sala')) r.remove();
+    const ICONE_SALA = { reuniao: ' 🗓️', meta: ' 🎯', refeitorio: ' 🍽️' };
     for (const s of Object.values(KM.LAYOUT.salas)) {
-      palco.append(el('div', { class: 'rotulo-sala' + (s.id === 'jogos' ? ' jogos' : ''), style: `left:${((s.x + KM.RW / 2) / KM.W * 100).toFixed(2)}%;top:${((s.y + 2) / KM.H * 100).toFixed(2)}%` }, s.nome));
+      const clicavel = s.id === 'reuniao' || s.id === 'meta';
+      const r = el('div', { class: 'rotulo-sala' + (s.id === 'jogos' ? ' jogos' : '') + (clicavel ? ' clicavel' : ''), style: `left:${((s.x + KM.RW / 2) / KM.W * 100).toFixed(2)}%;top:${((s.y + 2) / KM.H * 100).toFixed(2)}%` }, s.nome + (ICONE_SALA[s.id] || ''));
+      if (clicavel) r.addEventListener('click', e => { e.stopPropagation(); s.id === 'reuniao' ? KM.reuniao.abrir() : KM.meta.abrir(); });
+      palco.append(r);
     }
   }
   mqCelular.addEventListener ? mqCelular.addEventListener('change', aplicarLayout) : mqCelular.addListener(aplicarLayout);
@@ -964,7 +1013,7 @@
     // soneca automática (Léo e Clara; o Maycon fica tirando fotos)
     if (cfg.opcoes.soneca && agora - ultimaAtividade > 180000) {
       ultimaAtividade = agora;
-      for (const q of Object.values(estado.pessoas)) if (q.funcao !== 'prospeccao' && !q.trabalhando && !q.acao && q.modo === 'sentado') KM.soneca(0, q.id);
+      for (const q of Object.values(estado.pessoas)) if (q.funcao !== 'prospeccao' && q.funcao !== 'limpeza' && !q.trabalhando && !q.acao && q.modo === 'sentado') KM.soneca(0, q.id);
     }
     requestAnimationFrame(quadro);
   }
@@ -996,14 +1045,18 @@
       const id = KM.pessoaEm(estado, x, y);
       if (id) return selecionar(estado.selecionado === id ? null : id);
       if (KM.jogos.cliqueArea(x, y)) return;
+      const sala = KM.salaEm(x, y);
+      if (sala === 'reuniao' && KM.reuniao) return KM.reuniao.abrir();
+      if (sala === 'meta' && KM.meta) return KM.meta.abrir();
       if (estado.selecionado) selecionar(null); // tocar no vazio esconde o nome
     });
     tela.addEventListener('mousemove', e => {
       const [x, y] = pontoLogico(e);
-      tela.style.cursor = KM.pessoaEm(estado, x, y) || KM.jogos.sobre(x, y) ? 'pointer' : 'default';
+      const sala = KM.salaEm(x, y);
+      tela.style.cursor = KM.pessoaEm(estado, x, y) || KM.jogos.sobre(x, y) || sala === 'reuniao' || sala === 'meta' ? 'pointer' : 'default';
     });
     document.addEventListener('keydown', ativo);
-    window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (['escritorio', 'equipe', 'relatorios', 'personalizar'].includes(h)) irPara(h); });
+    window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (ABAS.includes(h)) irPara(h); });
     $$('[data-fechar]').forEach(b => b.addEventListener('click', () => b.closest('dialog').close()));
   }
 
@@ -1039,6 +1092,16 @@
     const remoto = j && j.config;
     const salvo = remoto && local ? ((local.salvoEm || 0) > (remoto.salvoEm || 0) ? local : remoto) : (remoto || local);
     cfg = mesclar(PADRAO, salvo || {});
+    // respostas da pesquisa chegam por vários caminhos (este aparelho, outro aparelho, Action): junta tudo
+    if (remoto && local) {
+      const rl = cfg.relacionamento, ro = (remoto.relacionamento || {}), lo = (local.relacionamento || {});
+      const apagadas = new Set([...(ro.apagadas || []), ...(lo.apagadas || [])]);
+      const m = new Map();
+      for (const x of [...(rl.respostas || []), ...(ro.respostas || []), ...(lo.respostas || [])]) if (x && x.id && !apagadas.has(x.id) && !m.has(x.id)) m.set(x.id, x);
+      rl.respostas = [...m.values()].sort((a, b) => String(b.quando).localeCompare(String(a.quando)));
+      rl.apagadas = [...apagadas].slice(-300);
+      if (ro.topico) rl.topico = ro.topico; else if (lo.topico) rl.topico = lo.topico;
+    }
     let migrou = false;
     if (salvo && (salvo.versao || 1) < 2) { // versão 2: boneco novo em 3/4 — aplica o visual novo, mantém nome e progresso
       for (const f of cfg.funcionarios) f.aparencia = clone(PADRAO.funcionarios[0].aparencia);
@@ -1121,20 +1184,24 @@
     $('#btGithub').addEventListener('click', abrirConexao);
     $('#dlgGithub [data-fechar]').addEventListener('click', () => $('#dlgGithub').close());
     const h = location.hash.slice(1);
-    if (['equipe', 'relatorios', 'personalizar'].includes(h)) irPara(h);
+    if (ABAS.includes(h) && h !== 'escritorio') irPara(h);
     requestAnimationFrame(quadro);
     KM.clara.iniciar(); KM.maycon.iniciar(); KM.jogos.iniciar(); KM.rotinas.iniciar();
+    KM.limpeza.iniciar(); KM.refeitorio.iniciar(); KM.reuniao.iniciar(); KM.pesquisa.iniciar();
     $('#btPuxarFiscal').addEventListener('click', puxarFiscal);
-    $('#btNovoCliente').addEventListener('click', () => { cfg.clientes = cfg.clientes || []; cfg.clientes.push({ nome: '', telefone: '' }); renderClientes(); const ins = $$('#clientesBox input[type=text]'); ins.at(-1) && ins.at(-1).focus(); });
+    $('#btNovoCliente').addEventListener('click', () => { cfg.clientes = cfg.clientes || []; cfg.clientes.push({ nome: '', telefone: '', valor: 0, status: 'ativo' }); renderClientes(); const ins = $$('#clientesBox .cliente-linha > input[type=text]'); ins.at(-1) && ins.at(-1).focus(); });
+    $('#btAbrirMeta').addEventListener('click', () => KM.meta.abrir());
+    $('#atMeta').addEventListener('click', () => KM.meta.abrir());
+    $('#atAgenda').addEventListener('click', () => KM.reuniao.abrir());
+    $('#atRespostas').addEventListener('click', () => KM.pesquisa.abrir());
+    $('#atNotif').addEventListener('click', () => KM.clara.ativarNotificacoes());
+    document.addEventListener('close', e => { if (e.target && e.target.id === 'dlgMeta' && $('#aba-config').classList.contains('ativa')) renderClientes(); }, true);
     $('#fecharTarefa').addEventListener('click', () => { $('#cardTarefa').hidden = true; });
     setInterval(() => { if ($('#aba-equipe').classList.contains('ativa')) renderEquipe(); }, 3000);
     const hh = new Date().getHours(), sauda = hh < 12 ? 'Bom dia' : hh < 18 ? 'Boa tarde' : 'Boa noite';
-    setTimeout(() => falar('f1', `${sauda}! Clique em um de nós para mandar trabalhar 👋`, 3800), 700);
-    setTimeout(() => falar('clara', 'Oi! Eu cuido da sua prancheta de tarefas 📋', 3400), 2300);
-    setTimeout(() => falar('maycon', 'E eu acho clientes novos! 📞📸', 3400), 3900);
-    setTimeout(() => falar('enzo', 'Eu transformo as notícias em vídeo! 🎬', 3400), 5400);
-    setTimeout(() => falar('lena', 'E eu chamo os clientes no WhatsApp 💬', 3400), 6900);
-    setTimeout(() => falar('bia', 'E eu cuido de quem já é cliente 💚', 3400), 8400);
+    const APRESENTA = { noticias: `${sauda}! Clique em um de nós para mandar trabalhar 👋`, checklist: 'Oi! Eu cuido da sua prancheta de tarefas 📋', prospeccao: 'E eu acho clientes novos! 📞📸',
+      video: 'Eu transformo as notícias em vídeo! 🎬', contato: 'E eu chamo os clientes no WhatsApp 💬', relacionamento: 'E eu cuido de quem já é cliente 💚', limpeza: 'E eu deixo tudo brilhando! 🧹✨' };
+    cfg.funcionarios.forEach((f, i) => setTimeout(() => falar(f.id, APRESENTA[f.funcao] || 'Oi! 👋', 3400), 700 + i * 1500));
   }
 
   // API para os módulos (Clara, Maycon, jogos, filmes).
@@ -1142,6 +1209,7 @@
     el, toast, salvar, mudou, cfg: () => cfg, estado, func, pessoaDe, pagar, concluir, falar, irPara, brl, fmtData,
     BK: () => BK, online: () => online, abrirConexao, carregarRelatorios, abrirRelatorio, animarCaixa, atualizarBotoes, atualizarFuncionario,
     iniciarPainelTarefa, callbacksTarefa, esperarLivre, apagarRel: r => apagarRel(r), desenharAvatar, obterRelatorio, escolher, perguntar,
+    todosComemoram, renderClientes,
   };
   iniciar();
 })();

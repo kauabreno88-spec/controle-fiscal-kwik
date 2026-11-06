@@ -72,14 +72,14 @@
   async function trabalharContato(f, p) {
     if (p.trabalhando || semConexao()) return;
     const est = A().estado, cfg = A().cfg();
-    const may = pessoaFuncao('prospeccao'), nomeM = may ? primeiro(may.id) : 'Maycon';
+    const may = pessoaFuncao('prospeccao'), nomeM = may ? primeiro(may.id) : 'Prospecção', eu = primeiro(f.id);
     const resumo = (est.relatorios || []).find(r => r.tipo === 'prospeccao');
     if (!resumo) {
-      A().falar(p.id, `Preciso que o ${nomeM} busque clientes primeiro! 📞`, 3200);
-      return A().toast(`💬 A Lena usa os contatos que o ${nomeM} encontra. Coloque ele para trabalhar primeiro 📞`, { ms: 7000 });
+      A().falar(p.id, `Preciso que ${nomeM} busque clientes primeiro! 📞`, 3200);
+      return A().toast(`💬 ${eu} usa os contatos que ${nomeM} encontra. Coloque ${nomeM} para trabalhar primeiro 📞`, { ms: 7000 });
     }
     let rel;
-    try { rel = await A().obterRelatorio(resumo.id); } catch (e) { return A().toast('Não consegui abrir a lista do Maycon: ' + e.message, { erro: true }); }
+    try { rel = await A().obterRelatorio(resumo.id); } catch (e) { return A().toast(`Não consegui abrir a lista de ${nomeM}: ` + e.message, { erro: true }); }
     const vistos = new Set(), leads = [];
     for (const [grupo, arr] of [['saude', rel.clinicas || []], ['outras', rel.outras || []]]) {
       for (const i of arr) {
@@ -88,20 +88,20 @@
       }
     }
     if (!leads.length) {
-      A().falar(p.id, `O ${nomeM} ainda não achou ninguém com telefone 😕`, 3200);
-      return A().toast(`💬 O último relatório do ${nomeM} não tem telefones. Peça uma nova busca (talvez em outra cidade).`, { ms: 8000 });
+      A().falar(p.id, `${nomeM} ainda não achou ninguém com telefone 😕`, 3200);
+      return A().toast(`💬 O último relatório de ${nomeM} não tem telefones. Peça uma nova busca (talvez em outra cidade).`, { ms: 8000 });
     }
     const ok = await KM.rodar('trabalho', async q => {
       A().pagar(f, q);
       A().iniciarPainelTarefa('💬 Primeiro contato pelo WhatsApp');
-      A().callbacksTarefa(q, false).etapa(`Indo falar com o ${nomeM} 🚶‍♀️`);
+      A().callbacksTarefa(q, false).etapa(`Indo falar com ${nomeM} 🚶‍♀️`);
       await irConversar(q, may, [
         ['eu', `${nomeM}, me passa os números dos clientes?`, 2300],
         ['alvo', `Tenho ${leads.length} com telefone! Toma 📇`, 2300],
         ['eu', 'Valeu! Vou preparar as mensagens 💬', 2200],
       ]);
     }, [p.id]);
-    if (ok === false) return A().toast('A Lena está ocupada com outra coisa. Tente de novo 😉');
+    if (ok === false) return A().toast(`${eu} está com outra coisa agora. Tente de novo 😉`);
 
     p.trabalhando = true; p.digitando = true; est.trabalhoDe.contato = true; A().atualizarBotoes();
     const cb = A().callbacksTarefa(p, false);
@@ -119,10 +119,10 @@
       cb.progresso(100);
     } catch (e) { erro = e; }
     p.trabalhando = false; p.digitando = false; est.trabalhoDe.contato = false; A().atualizarBotoes();
-    if (erro) { A().falar(p.id, 'Não consegui terminar 😓', 3000); return A().toast('Lena: ' + erro.message, { erro: true, ms: 9000 }); }
+    if (erro) { A().falar(p.id, 'Não consegui terminar 😓', 3000); return A().toast(`${eu}: ` + erro.message, { erro: true, ms: 9000 }); }
     await A().carregarRelatorios(KM.resumoRelatorio(salvo));
     A().falar(p.id, `${salvo.qtdContatos} mensagens prontas! 💬`, 3000);
-    A().toast(`💬 Lena preparou ${salvo.qtdContatos} mensagens de primeiro contato.`, { botao: ['Ver contatos', () => A().abrirRelatorio(salvo.id)], ms: 10000 });
+    A().toast(`💬 ${eu} preparou ${salvo.qtdContatos} mensagens de primeiro contato.`, { botao: ['Ver contatos', () => A().abrirRelatorio(salvo.id)], ms: 10000 });
     await A().concluir(f, p);
   }
 

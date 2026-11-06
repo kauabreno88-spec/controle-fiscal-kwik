@@ -89,10 +89,10 @@
   // ------------------------------------------------------------------ planta do prédio
   const G = 4, T = 4, RW = 136, RH = 124, NB = 20, CH = 40, TOPO = 34, BAIXO = 48;
   const PORTA = [8, 32]; // a porta de cada sala fica sempre à esquerda; essa faixa nunca tem móveis
-  const NOMES = { recepcao: 'Recepção', contabil: 'Contábil', comercial: 'Comercial', copa: 'Copa', jogos: 'Sala de jogos', marketing: 'Marketing', relacionamento: 'Relacionamento', reuniao: 'Reunião' };
+  const NOMES = { recepcao: 'Recepção', contabil: 'Contábil', comercial: 'Comercial', copa: 'Copa', jogos: 'Sala de jogos', marketing: 'Marketing', relacionamento: 'Relacionamento', reuniao: 'Reunião', meta: 'META', refeitorio: 'Refeitório' };
   const PLANTAS = {
-    largo: { margem: 30, linhas: [['recepcao', 'contabil', 'comercial', 'relacionamento'], ['copa', 'jogos', 'marketing', 'reuniao']] },
-    alto: { margem: 12, linhas: [['recepcao', 'contabil'], ['comercial', 'relacionamento'], ['marketing', 'reuniao'], ['copa', 'jogos']] },
+    largo: { margem: 30, linhas: [['recepcao', 'contabil', 'comercial', 'relacionamento', 'meta'], ['copa', 'refeitorio', 'jogos', 'marketing', 'reuniao']] },
+    alto: { margem: 12, linhas: [['recepcao', 'contabil'], ['comercial', 'relacionamento'], ['meta', 'reuniao'], ['marketing', 'refeitorio'], ['copa', 'jogos']] },
   };
   KM.P = (X, Y, Z = 0) => [X, Y - Z];
   KM.chaoEm = (x, y) => [x, y];
@@ -250,6 +250,42 @@
       sinuca: J(66, 25, 'fe', 'taco'), sinuca2: J(37, 44, 'fd', 'taco'), pingA: J(82, 73, 'fd'), pingB: J(130, 73, 'fe'), cartas: J(112, 21, 'fe', 'cartas'),
     };
 
+    // META: tanque com o "dinheiro" dos clientes subindo até a meta
+    add('meta', 'tanqueMeta', 50, 42, 44, 16, 48, { ordenar: true });
+    add('meta', 'podio', 104, 52, 20, 10, 9);
+    add('meta', 'cofrinho', 42, 70, 10, 8, 8);
+    planta('meta', 124, 88);
+    planta('meta', 42, 90);
+    parede('meta', 'painelMeta', 40, 46, { din: true });
+    if (lay.salas.meta.linha === 0 && it.janela !== false) parede('meta', 'janela', 108, 22, { din: true });
+    lay.pontos.meta = { X: lay.salas.meta.fx + 72, Y: lay.salas.meta.fy + 74 };
+
+    // Refeitório: mesa grande, buffet, cardápio e o cantinho da limpeza
+    add('refeitorio', 'buffet', 64, 2, 60, 12, 8, { din: true });
+    add('refeitorio', 'mesaRefeicao', 48, 46, 64, 18, 10, { ordenar: true });
+    for (const rx of [54, 72, 90, 108]) add('refeitorio', 'banco', rx, 66, 10, 6, 5, { bloq: true });
+    add('refeitorio', 'carrinhoLimpeza', 116, 62, 16, 10, 12);
+    planta('refeitorio', 40, 90);
+    parede('refeitorio', 'cardapio', 40, 22);
+    {
+      const s = lay.salas.refeitorio, X = s.fx + 124, Y = s.fy + 81;
+      add('refeitorio', 'cadeira', 117, 73, 14, 9, 0, { ordenar: true, chave: Y + 2, sx: X, sy: Y, funcao: 'limpeza' });
+      const corr = s.corrBaixo || s.corrCima;
+      lay.assentos.limpeza = { X, Y, dir: 'ce', pe: [X - 14, Y + 8], sala: 'refeitorio', tapete: [Math.min(corr.x + corr.w - 20, s.fx + 96), corr.y + 26] };
+      // lugares à mesa: em cima (de frente para nós) e embaixo (de costas)
+      lay.pontos.refeicao = [[60, 40, 'fe'], [80, 40, 'fe'], [100, 40, 'fe'], [60, 78, 'ce'], [80, 78, 'ce'], [100, 78, 'ce']].map(([rx, ry, dir]) => ({ X: s.fx + rx, Y: s.fy + ry, dir }));
+      lay.pontos.entrega = [s.porta[0], s.porta[1]];
+    }
+
+    // ar-condicionado (a limpeza faz a manutenção)
+    parede('recepcao', 'arCond', 33, 14, { din: true });
+    parede('relacionamento', 'arCond', 62, 18, { din: true });
+    parede('reuniao', 'arCond', 40, 18, { din: true });
+    parede('marketing', 'arCond', 40, 18, { din: true });
+    parede('refeitorio', 'arCond', 106, 16, { din: true });
+    parede('meta', 'arCond', 89, 16, { din: true });
+    parede('reuniao', 'calendario', 104, 14, { din: true });
+
     // corredor: bancos e plantas encostados em cima, longe das portas
     for (const s of Object.values(lay.salas)) {
       if (!s.corrBaixo) continue;
@@ -381,6 +417,7 @@
     const w = RW, h = RH - NB;
     if (s.id === 'copa') return texXadrez('#f4f6f7', '#dfe5e8', w, h, 8);
     if (s.id === 'jogos') return texTabuas('#b07a4f', w, h);
+    if (s.id === 'refeitorio') return texXadrez('#f3e3c9', '#e8d2b0', w, h, 8);
     return texPiso(e, w, h);
   }
   function texFace(s, e) {
@@ -622,6 +659,87 @@
       const { X, Y, w } = m; r(g, X, Y, w, 9, '#ced4da'); for (let x = X; x < X + w; x += 13) { r(g, x, Y, 12, 8, '#f1f3f5'); r(g, x + 10, Y + 3, 1, 3, '#868e96'); }
       r(g, X, Y + 9, w, 1, '#adb5bd');
     },
+    // ----- META
+    tanqueMeta(g, m, cfg) {
+      const { X, Y, w, d, h } = m, t = performance.now() / 1000;
+      const md = KM.metaDados ? KM.metaDados(cfg) : { meta: 10, qAtivos: 0, qNeg: 0, pctAtivo: 0, pctTotal: 0 };
+      sombra(g, X - 2, Y, w + 4, d);
+      // base metálica
+      caixa(g, X - 3, Y + 4, w + 6, d - 4, 7, '#495057');
+      r(g, X - 1, Y + d - 5, w + 2, 1, '#868e96');
+      texto(g, `${md.qAtivos}/${md.meta}`, X + (w >> 1) - ((`${md.qAtivos}/${md.meta}`.length * 4 - 1) >> 1), Y + d - 3, md.qAtivos >= md.meta ? '#ffd43b' : '#d3f9d8');
+      // vidro
+      const x0 = X, y0 = Y - h, x1 = X + w, y1 = Y + 6;
+      r(g, x0 - 1, y0 - 1, w + 2, y1 - y0 + 2, '#1c1612');
+      r(g, x0, y0, w, y1 - y0, '#cfe8f3');
+      r(g, x0 + 1, y0 + 1, w - 2, y1 - y0 - 2, '#e8f6fb');
+      // líquido
+      const ix = x0 + 2, iw = w - 4, ib = y1 - 2, it = y0 + 5, ih = ib - it;
+      const hV = Math.round(ih * Math.min(1, md.pctAtivo)), hT = Math.round(ih * Math.min(1, md.pctTotal));
+      const onda = x => Math.round(Math.sin(t * 3 + x * 0.45) * 1.2);
+      if (hT > hV) { // possível fechamento: amarelo transparente
+        g.fillStyle = 'rgba(255,212,59,0.45)';
+        for (let x = 0; x < iw; x++) { const top = ib - hT + onda(x + 9); g.fillRect(ix + x, top, 1, ib - hV - top); }
+        g.fillStyle = 'rgba(255,236,153,0.85)'; for (let x = 0; x < iw; x++) g.fillRect(ix + x, ib - hT + onda(x + 9), 1, 1);
+      }
+      if (hV > 0) {
+        for (let x = 0; x < iw; x++) {
+          const top = ib - hV + onda(x);
+          g.fillStyle = '#20a548'; g.fillRect(ix + x, top, 1, ib - top);
+          g.fillStyle = '#51cf66'; g.fillRect(ix + x, top, 1, 1);
+          if (x < 3) { g.fillStyle = '#2fbf5c'; g.fillRect(ix + x, top + 1, 1, ib - top - 1); }
+        }
+        // bolhas e moedinhas
+        for (let i = 0; i < 6; i++) {
+          const k = (t * 0.6 + i * 0.37) % 1, bx = ix + 3 + ((i * 7) % (iw - 6)), by = ib - Math.round(k * (hV - 2));
+          if (by > ib - hV + 2) r(g, bx, by, 1, 1, i % 3 ? '#b2f2bb' : '#ffe066');
+        }
+      }
+      // marcas da meta (uma por cliente) e linha da meta
+      for (let k = 1; k <= md.meta; k++) { const yy = ib - Math.round(ih * k / md.meta); r(g, x1 - 6, yy, 4, 1, k === md.meta ? '#e03131' : 'rgba(28,22,18,0.45)'); }
+      r(g, ix, it, iw, 1, '#e03131');
+      // reflexo do vidro
+      r(g, x0 + 2, y0 + 2, 1, y1 - y0 - 6, 'rgba(255,255,255,0.7)'); r(g, x0 + 4, y0 + 3, 1, 8, 'rgba(255,255,255,0.5)');
+      // tampa
+      r(g, x0 - 2, y0 - 3, w + 4, 3, '#868e96'); r(g, x0 - 2, y0 - 3, w + 4, 1, '#ced4da');
+      if (md.qAtivos >= md.meta && Math.floor(t * 3) % 2) r(g, x0 + (w >> 1) - 2, y0 - 7, 4, 3, '#ffd43b');
+    },
+    podio(g, m) {
+      const { X, Y, w, d, h } = m; sombra(g, X, Y, w, d); caixa(g, X, Y, w, d, h, '#f1f3f5', { frente: '#dee2e6' });
+      r(g, X + (w >> 1) - 1, Y + d - h + 2, 3, 5, VERDE);
+      const tx = X + (w >> 1) - 4, ty = Y - h - 12; // troféu
+      r(g, tx + 1, ty, 7, 5, '#f2c14e'); r(g, tx, ty + 1, 1, 3, '#f2c14e'); r(g, tx + 8, ty + 1, 1, 3, '#f2c14e'); r(g, tx + 2, ty + 1, 2, 3, '#fff3a0');
+      r(g, tx + 3, ty + 5, 3, 3, '#d4a72c'); r(g, tx + 1, ty + 8, 7, 2, '#8d5a3b');
+    },
+    cofrinho(g, m) {
+      const { X, Y } = m; sombra(g, X, Y, 10, 8);
+      r(g, X, Y - 6, 10, 8, '#f783ac'); r(g, X + 1, Y - 7, 8, 10, '#f783ac'); r(g, X + 2, Y - 6, 3, 2, '#ffd0e0'); r(g, X + 8, Y - 4, 2, 2, '#e64980');
+      r(g, X + 4, Y - 7, 3, 1, '#1c1612'); r(g, X + 2, Y + 2, 2, 1, '#e64980'); r(g, X + 7, Y + 2, 2, 1, '#e64980'); r(g, X + 3, Y - 4, 1, 1, '#1c1612');
+    },
+    // ----- Refeitório
+    buffet(g, m) {
+      const { X, Y, w, d, h } = m; caixa(g, X, Y, w, d, h, '#ced4da', { frente: '#adb5bd' });
+      const cores = [['#e8590c', '#ffa94d'], ['#f8f9fa', '#e9ecef'], ['#5c940d', '#94d82d'], ['#c92a2a', '#ff8787']];
+      cores.forEach(([a, b], i) => { const x = X + 3 + i * 14; r(g, x, Y - h + 2, 12, 7, '#868e96'); r(g, x + 1, Y - h + 3, 10, 5, a); r(g, x + 2, Y - h + 3, 5, 2, b); });
+      for (let x = X + 2; x < X + w - 6; x += 12) r(g, x, Y + d - h + 2, 10, h - 3, '#c3c9cf');
+    },
+    mesaRefeicao(g, m) {
+      const { X, Y, w, d, h } = m; sombra(g, X, Y, w, d); caixa(g, X, Y, w, d, h, '#d9a066');
+      r(g, X + 2, Y - h + 2, w - 4, d - 4, '#e6b17a'); r(g, X + 2, Y - h + (d >> 1) - 1, w - 4, 2, '#f1f3f5');
+      r(g, X + (w >> 1) - 2, Y - h + (d >> 1) - 4, 4, 4, '#ffffff'); r(g, X + (w >> 1) - 1, Y - h + (d >> 1) - 5, 2, 2, '#e03131'); // vasinho
+    },
+    carrinhoLimpeza(g, m) {
+      const { X, Y, w, d, h } = m; sombra(g, X, Y, w, d);
+      caixa(g, X, Y, w, d, h, '#ffd43b', { frente: '#fab005' });
+      r(g, X + 2, Y - h - 6, 5, 7, '#4dabf7'); r(g, X + 3, Y - h - 8, 3, 2, '#1c7ed6'); // borrifador
+      r(g, X + 9, Y - h - 4, 5, 5, '#868e96'); r(g, X + 10, Y - h - 3, 3, 2, '#74c0fc'); // balde
+      r(g, X + w - 2, Y - h - 16, 1, 18, '#8d5a3b'); r(g, X + w - 4, Y + d - 3, 5, 2, '#f8f9fa'); // rodo
+      r(g, X + 2, Y + d - h + 3, w - 4, 1, '#e67700');
+    },
+    cardapio(g, m) {
+      const { X, Y, w } = m; r(g, X, Y + 1, w, 14, '#5c3d2e'); r(g, X + 1, Y + 2, w - 2, 12, '#2b2f33');
+      texto(g, 'MENU', X + 3, Y + 3, '#ffd43b'); r(g, X + 3, Y + 9, w - 8, 1, '#f1f3f5'); r(g, X + 3, Y + 11, w - 10, 1, '#f1f3f5');
+    },
   };
 
   // ------------------------------------------------------------------ desenho dinâmico (telas, relógio, janela…)
@@ -652,7 +770,7 @@
     const { X, Y, w } = m, y = Y + 1, h = 13;
     r(ctx, X - 1, y - 1, w + 2, h + 2, '#0b0f10'); r(ctx, X, y, w, h, '#111A19'); r(ctx, X, y, w, 5, VERDE);
     texto(ctx, 'CLIENTES', X + 2, y, '#111A19');
-    const lista = (cfg.clientes || []).map(c => c.nome).filter(Boolean);
+    const lista = (cfg.clientes || []).filter(c => (c.status || 'ativo') === 'ativo').map(c => c.nome).filter(Boolean);
     const txt = (lista.length ? lista.join(' * ') : 'CADASTRE SEUS CLIENTES ATIVOS') + ' * ';
     const larg = KM.larguraTexto(txt) + 4, off = Math.floor(t * 14) % larg;
     ctx.save(); ctx.beginPath(); ctx.rect(X + 1, y + 6, w - 2, 6); ctx.clip();
@@ -714,6 +832,39 @@
     else tela1(cx - 9, 18);
     if (modo === 'trab' || estado.matrix) { ctx.fillStyle = estado.matrix ? 'rgba(80,255,130,0.18)' : 'rgba(120,230,160,' + (0.08 + 0.05 * Math.sin(t * 10)) + ')'; ctx.fillRect(cx - 18, ty - 4, 36, 18); }
   }
+  // ar-condicionado: soprando (linhas de vento) ou aberto na manutenção
+  function arCond(ctx, d, estado, t) {
+    const { X, Y, w } = d, y = Y + 1, manut = estado.manutencaoAC === d;
+    r(ctx, X - 1, y - 1, w + 2, 9, CONTORNO); r(ctx, X, y, w, 7, '#f8f9fa'); r(ctx, X, y + 5, w, 2, '#dee2e6');
+    r(ctx, X + 1, y + 1, 3, 1, VERDE);
+    if (manut) {
+      r(ctx, X + 1, y + 2, w - 2, 3, '#495057'); for (let x = X + 2; x < X + w - 2; x += 2) r(ctx, x, y + 3, 1, 1, '#adb5bd');
+      if (Math.floor(t * 8) % 2) r(ctx, X + (w >> 1), y + 2, 1, 1, '#ffe066');
+      r(ctx, X + w - 3, y - 3, 3, 3, '#ff6b6b'); r(ctx, X + w - 2, y - 2, 1, 1, '#ffffff'); // etiqueta "em manutenção"
+      return;
+    }
+    const k = Math.floor(t * 2) % 2; r(ctx, X + 1, y + 5 + k, w - 2, 1, '#adb5bd');
+    for (let i = 0; i < 3; i++) { const f = (t * 1.6 + i / 3) % 1; ctx.fillStyle = `rgba(165,216,255,${0.6 * (1 - f)})`; ctx.fillRect(X + 2 + i * ((w - 4) / 3 | 0), y + 9 + Math.round(f * 8), 2, 1); }
+  }
+  function painelMeta(ctx, d, cfg, t) {
+    const { X, Y, w } = d, md = KM.metaDados ? KM.metaDados(cfg) : { total: 0, meta: 10, qAtivos: 0 };
+    r(ctx, X, Y + 1, w, 14, CONTORNO); r(ctx, X + 1, Y + 2, w - 2, 12, '#0f1f17');
+    const valor = 'R$' + Math.round(md.total || 0).toLocaleString('pt-BR');
+    const larg = KM.larguraTexto(valor);
+    texto(ctx, valor, X + Math.max(2, (w - larg) >> 1), Y + 3, '#51cf66');
+    const pct = Math.min(1, (md.qAtivos || 0) / (md.meta || 10));
+    r(ctx, X + 3, Y + 10, w - 6, 2, '#2b3a33'); r(ctx, X + 3, Y + 10, Math.round((w - 6) * pct), 2, Math.floor(t * 2) % 2 && pct >= 1 ? '#ffd43b' : VERDE);
+  }
+  function calendarioParede(ctx, d, cfg, t) {
+    const { X, Y, w } = d, hoje = new Date();
+    const prox = KM.reuniaoProxima ? KM.reuniaoProxima(cfg) : null;
+    const hojeTem = prox && prox.ehHoje;
+    r(ctx, X, Y + 1, w, 14, CONTORNO); r(ctx, X + 1, Y + 2, w - 2, 12, '#ffffff'); r(ctx, X + 1, Y + 2, w - 2, 4, hojeTem && Math.floor(t * 2) % 2 ? '#ffd43b' : '#e03131');
+    r(ctx, X + 3, Y, 1, 3, '#495057'); r(ctx, X + w - 4, Y, 1, 3, '#495057');
+    const dia = String(hoje.getDate());
+    texto(ctx, dia, X + ((w - KM.larguraTexto(dia)) >> 1), Y + 8, '#1c1612');
+    if (hojeTem) r(ctx, X + w - 4, Y + 11, 2, 2, '#e03131');
+  }
   function desenharDinamicos(ctx, cfg, estado, t) {
     for (const d of L.decor) {
       if (d.tipo === 'janela') janela(ctx, d, cfg, t);
@@ -722,11 +873,15 @@
       else if (d.tipo === 'relogio') relogio(ctx, d);
       else if (d.tipo === 'painel') painelTV(ctx, d, estado, t);
       else if (d.tipo === 'mural') mural(ctx, d, cfg);
+      else if (d.tipo === 'arCond') arCond(ctx, d, estado, t);
+      else if (d.tipo === 'painelMeta') painelMeta(ctx, d, cfg, t);
+      else if (d.tipo === 'calendario') calendarioParede(ctx, d, cfg, t);
     }
     for (const m of L.moveis) {
       if (m.tipo === 'mesa') monitorDe(ctx, m, estado, t);
       else if (m.tipo === 'cofre') moedas(ctx, m, estado.caixa || 0, t);
       else if (m.tipo === 'ringlight') { const on = estado.trabalhoDe && estado.trabalhoDe.video; const x = m.X + 2, y = m.Y - 26; r(ctx, x - 4, y - 4, 9, 9, '#343a40'); r(ctx, x - 3, y - 3, 7, 7, on ? '#fff9db' : '#adb5bd'); r(ctx, x - 1, y - 1, 3, 3, '#343a40'); if (on) { ctx.fillStyle = 'rgba(255,249,219,0.18)'; ctx.fillRect(x - 10, y - 8, 30, 40); } }
+      else if (m.tipo === 'buffet' && estado.refeicaoAtiva) { for (let i = 0; i < 4; i++) { const fy = (t * 7 + i * 3) % 9; ctx.fillStyle = `rgba(255,255,255,${0.75 - fy / 12})`; ctx.fillRect(m.X + 8 + i * 14 + Math.round(Math.sin(t * 3 + i)), m.Y - m.h - 3 - fy, 1, 1); } }
       else if (m.tipo === 'bancada' && estado.cafeCopa) { for (let i = 0; i < 3; i++) { const fy = (t * 8 + i * 4) % 10; ctx.fillStyle = `rgba(255,255,255,${0.7 - fy / 14})`; ctx.fillRect(m.X + 10 + Math.round(Math.sin(t * 3 + i)), m.Y - m.h - 8 - fy, 1, 1); } }
     }
   }
@@ -886,6 +1041,8 @@
     const pessoas = Object.values(estado.pessoas || {}).filter(p => p.visivel !== false);
     for (const p of pessoas) lista.push({ p: p.Y + (p.modo === 'sentado' ? 0.5 : 0.5), f: c => KM.desenharPessoa(c, cfg, p, t) });
     for (const x of estado.extras || []) lista.push({ p: x.Y != null ? x.Y : x.p, f: x.f });
+    for (const x of KM.objetos || []) lista.push({ p: x.Y != null ? x.Y : x.p, f: c => x.f(c, t) }); // comida, entregador, rodo… (refeitorio.js, limpeza.js)
+    for (const x of KM.noChao || []) x(ctx, t); // marcas no chão (molhado, brilho), desenhadas antes das pessoas
     lista.sort((a, b) => a.p - b.p);
     for (const o of lista) o.f(ctx);
     if (KM.jogos && KM.jogos.desenharFrente) KM.jogos.desenharFrente(ctx, cfg, estado, t);
@@ -897,8 +1054,9 @@
   };
 
   KM.salaEm = (x, y) => { if (!L) return null; for (const s of Object.values(L.salas)) if (x >= s.x && x <= s.x + RW && y >= s.y && y <= s.y + RH) return s.id; return null; };
+  const sentado = p => p.modo === 'sentado' || p.modo === 'sentado-mesa'; // sentado-mesa: no refeitório
   KM.ancora = function (pers) {
-    if (pers.modo === 'sentado') return [Math.round(pers.X), Math.round(pers.Y) - 2];
+    if (sentado(pers)) return [Math.round(pers.X), Math.round(pers.Y) - 2];
     return [Math.round(pers.X), Math.round(pers.Y - (pers.Z || 0))];
   };
 
@@ -944,7 +1102,7 @@
     if (p.fantasia) est.fantasia = p.fantasia;
     if (p.prop) est.prop = p.prop;
     est.vista = KM.vistaDe(dirDe(p)).vista;
-    if (p.modo === 'sentado') {
+    if (sentado(p)) {
       est.pose = 'sentado';
       if (!est.bracos && !est.prop) est.bracos = 'frente';
       if (p.digitando && t !== undefined && est.vista === 'costas') est.tecla = Math.floor(t * (p.turbo ? 22 : 9) + (p.fase || 0)) % 2;
@@ -959,17 +1117,17 @@
     const s = sprite(ap, est);
     const [ax, ay] = opc.ancora || KM.ancora(p);
     const chao = ay + (p.Z || 0);
-    if (p.selecionado && p.modo !== 'sentado') {
+    if (p.selecionado && !sentado(p)) {
       ctx.fillStyle = 'rgba(40,190,82,' + (0.35 + 0.2 * Math.sin(t * 5)) + ')';
       ctx.fillRect(ax - 10, chao - 1, 20, 2); ctx.fillRect(ax - 8, chao - 2, 16, 4);
     }
-    if (p.modo !== 'sentado') {
+    if (!sentado(p)) {
       ctx.fillStyle = 'rgba(0,0,0,0.2)';
       const so = (p.Z || 0) > 0 ? 4 : 7;
       ctx.fillRect(ax - so, chao - 2, so * 2, 3); ctx.fillRect(ax - so + 2, chao - 3, so * 2 - 4, 5);
     }
     if (p.auraAtras) p.auraAtras(ctx, ax, ay, t);
-    const ox = ax - 15, oy = p.modo === 'sentado' ? ay - 37 : ay - 45;
+    const ox = ax - 15, oy = sentado(p) ? ay - 37 : ay - 45;
     if (p.opacidade !== undefined) ctx.globalAlpha = p.opacidade;
     if (v.espelho) { ctx.save(); ctx.translate(ox + SPR_W, oy); ctx.scale(-1, 1); ctx.drawImage(s, 0, 0); ctx.restore(); }
     else ctx.drawImage(s, ox, oy);
@@ -988,7 +1146,7 @@
     for (const p of Object.values(estado.pessoas || {})) {
       if (p.visivel === false) continue;
       const [ax, ay] = KM.ancora(p);
-      const topo = p.modo === 'sentado' ? ay - 37 : ay - 45;
+      const topo = sentado(p) ? ay - 37 : ay - 45;
       if (x >= ax - 11 && x <= ax + 11 && y >= topo + 4 && y <= ay + 2 && p.Y > melhor) { melhor = p.Y; achou = p.id; }
     }
     return achou;

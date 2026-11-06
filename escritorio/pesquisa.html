@@ -55,10 +55,12 @@ footer { text-align: center; color: #6b7774; font-size: 12px; font-weight: 700; 
   <div class="cartao"><h2><i>5.</i> Quer marcar uma conversa com a gente?</h2><div class="sim-nao" id="conversa"><button data-v="Sim">Sim, quero</button><button data-v="Não">Agora não</button></div></div>
   <button class="enviar" id="enviar">💬 Enviar respostas</button>
 </main>
-<main id="fim" hidden><div class="cartao obrigado"><div class="big">💚</div><h2>Obrigado pela sua opinião!</h2><p>O WhatsApp abriu com as suas respostas. É só tocar em enviar. A equipe KWIK agradece!</p></div></main>
+<main id="fim" hidden><div class="cartao obrigado"><div class="big">💚</div><h2>Obrigado pela sua opinião!</h2><p id="fimTexto">Suas respostas chegaram para a equipe KWIK. Muito obrigado!</p><a class="enviar" id="fimWhats" href="#" style="display:none;text-decoration:none;margin-top:12px">💬 Enviar também pelo WhatsApp</a></div></main>
 <footer>KWIK Contabilidade · Contabilidade, BPO e consultoria</footer>
 <script>
 const q = new URLSearchParams(location.search), cliente = (q.get('c') || '').slice(0, 80), destino = (q.get('w') || '5598988663080').replace(/\D/g, '');
+// t = "caixa de entrada" das respostas (tópico do ntfy.sh criado pelo app KWIK). Sem t, as respostas vão pelo WhatsApp.
+const topico = (q.get('t') || '').replace(/[^\w-]/g, '').slice(0, 64);
 if (cliente) document.getElementById('titulo').innerHTML = `${cliente.replace(/[<>&]/g, '')}, como está a sua experiência com a <span>KWIK</span>?`;
 const r = { nps: null, notas: {}, conversa: '' };
 const nps = document.getElementById('nps');
@@ -72,13 +74,31 @@ for (const it of itens) {
   linha.append(est); notas.append(linha);
 }
 document.querySelectorAll('#conversa button').forEach(b => b.onclick = () => { r.conversa = b.dataset.v; document.querySelectorAll('#conversa button').forEach(x => x.classList.toggle('on', x === b)); });
-document.getElementById('enviar').onclick = () => {
+document.getElementById('enviar').onclick = async () => {
   if (r.nps === null) { alert('Escolha uma nota de 0 a 10 na pergunta 1 🙂'); return; }
+  const gosta = document.getElementById('gosta').value.trim().slice(0, 1000), melhorar = document.getElementById('melhorar').value.trim().slice(0, 1000);
   const l = ['*Pesquisa de satisfação — KWIK*', cliente ? `Cliente: ${cliente}` : '', '', `⭐ Nota (0 a 10): *${r.nps}*`];
   for (const it of itens) l.push(`• ${it}: ${r.notas[it] ? '⭐'.repeat(r.notas[it]) + ` (${r.notas[it]}/5)` : '—'}`);
-  l.push('', `💚 O que mais gosta: ${document.getElementById('gosta').value.trim() || '—'}`, `🛠️ O que melhorar: ${document.getElementById('melhorar').value.trim() || '—'}`, `🗓️ Quer conversar: ${r.conversa || '—'}`);
-  location.href = `https://wa.me/${destino}?text=${encodeURIComponent(l.filter((x, i) => x || i > 1).join('\n'))}`;
+  l.push('', `💚 O que mais gosta: ${gosta || '—'}`, `🛠️ O que melhorar: ${melhorar || '—'}`, `🗓️ Quer conversar: ${r.conversa || '—'}`);
+  const linkWhats = `https://wa.me/${destino}?text=${encodeURIComponent(l.filter((x, i) => x || i > 1).join('\n'))}`;
+  const bt = document.getElementById('enviar');
+  let foi = false;
+  if (topico) {
+    bt.disabled = true; bt.textContent = 'Enviando…';
+    const dados = { v: 1, id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8), cliente, nps: r.nps, notas: r.notas, gosta, melhorar, conversa: r.conversa, quando: new Date().toISOString() };
+    try {
+      // sem cabeçalhos extras: o navegador manda direto (sem pré-verificação CORS)
+      const resp = await fetch('https://ntfy.sh/', { method: 'POST', body: JSON.stringify({ topic: topico, title: `Pesquisa KWIK · ${cliente || 'Cliente'} · nota ${r.nps}`, message: JSON.stringify(dados), tags: ['green_heart'] }) });
+      foi = resp.ok;
+    } catch (e) { foi = false; }
+    bt.disabled = false; bt.textContent = '💬 Enviar respostas';
+  }
   document.getElementById('form').hidden = true; document.getElementById('fim').hidden = false;
+  window.scrollTo(0, 0);
+  const w = document.getElementById('fimWhats');
+  w.href = linkWhats;
+  if (foi) { w.style.display = 'block'; w.textContent = '💬 Mandar também pelo WhatsApp (opcional)'; }
+  else { document.getElementById('fimTexto').textContent = 'Toque no botão abaixo para enviar suas respostas pelo WhatsApp. A equipe KWIK agradece!'; w.style.display = 'block'; location.href = linkWhats; }
 };
 </script>
 </body>

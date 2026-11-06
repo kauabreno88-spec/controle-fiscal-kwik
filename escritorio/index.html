@@ -23,6 +23,7 @@
   --raio: 14px; --sombra: 0 1px 2px rgba(17,26,25,.06), 0 6px 24px rgba(17,26,25,.07);
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { margin: 0; height: 100%; }
 body { font-family: 'Montserrat', system-ui, sans-serif; font-weight: 500; color: var(--grafite); background: var(--nevoa); }
 button { font: inherit; cursor: pointer; }
@@ -293,8 +294,19 @@ dialog::backdrop { background: rgba(17,26,25,.55); backdrop-filter: blur(2px); }
 .jogo-bts { display: flex; gap: 6px; flex-wrap: wrap; }
 .jogo-bts .bt { background: #2b2046; color: #fff; border-color: #4c3a75; }
 .jogo-bts .bt:disabled { opacity: .35; }
-.jogo-area { position: relative; min-height: 360px; height: min(64vh, 560px); display: grid; place-items: center; background: repeating-linear-gradient(90deg, #a87545 0 22px, #9c6a3c 22px 44px); border-radius: 14px; overflow: hidden; touch-action: none; }
-#jogoCanvas { image-rendering: pixelated; cursor: pointer; }
+.jogo-area { position: relative; min-height: 380px; height: min(70vh, 640px); display: grid; place-items: center; background: radial-gradient(circle at 50% 30%, #ffb3c6 0, #f783ac 45%, #c2255c 100%); border-radius: 18px; overflow: hidden; touch-action: none; }
+#jogoCanvas { cursor: grab; touch-action: none; filter: drop-shadow(0 8px 14px rgba(0,0,0,.3)); }
+#jogoCanvas:active { cursor: grabbing; }
+.tela-jogo .jogo-hud { background: linear-gradient(180deg, #e8456b, #c2255c); border-radius: 18px; padding: 8px 10px; color: #fff; box-shadow: 0 4px 0 #8f1640; }
+.tela-jogo .jogo-hud .bt { background: rgba(255,255,255,.18); color: #fff; border-color: rgba(255,255,255,.35); }
+.jogo-nivel { display: flex; flex-direction: column; align-items: center; line-height: 1.15; }
+.jogo-nivel small { font-size: 10.5px; font-weight: 700; opacity: .85; }
+.jogo-nivel b { font-size: 17px; font-weight: 900; background: #fff; color: #c2255c; padding: 1px 12px; border-radius: 99px; }
+.jogo-nivel em { font-style: normal; font-size: 10px; font-weight: 900; background: #1c1612; color: #ff8787; padding: 1px 7px; border-radius: 99px; margin-top: 2px; }
+.jogo-moedas { background: #fff3bf; color: #7a5200; font-weight: 900; padding: 4px 10px; border-radius: 99px; box-shadow: inset 0 -2px 0 #fcc419; font-variant-numeric: tabular-nums; }
+.tela-jogo.dificil .jogo-hud { background: linear-gradient(180deg, #5f3dc4, #2b1a6b); box-shadow: 0 4px 0 #1a0f45; }
+.tela-jogo.dificil .jogo-area { background: radial-gradient(circle at 50% 30%, #9775fa 0, #5f3dc4 50%, #2b1a6b 100%); }
+.tela-jogo.dificil .jogo-nivel b { color: #5f3dc4; }
 .jogo-dica { font-size: 12.5px; color: var(--cinza); margin: 10px 2px 0; line-height: 1.5; }
 .jogando .palco-card { background: #2b1d4a; border-color: #4c3a75; color: #f3e8ff; }
 .jogando .jogo-dica { color: #d6c8ff; }
@@ -302,8 +314,10 @@ dialog::backdrop { background: rgba(17,26,25,.55); backdrop-filter: blur(2px); }
 .relogio-jogo.alerta { background: linear-gradient(135deg, #e03131, #f76707); animation: pisca .8s infinite; }
 .relogio-jogo.gelo { background: linear-gradient(135deg, #4dabf7, #99e9f2); color: #0b3d5c; }
 .reforcos { display: flex; gap: 12px; justify-content: center; margin-top: 12px; }
-.reforco { width: 84px; border: 0; border-radius: 50%; aspect-ratio: 1; background: radial-gradient(circle at 35% 30%, #d0bfff, #7048e8); color: #fff; font-size: 26px;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 4px 0 #4c2fa3; cursor: pointer; }
+.reforco { width: 74px; border: 3px solid #fff; border-radius: 50%; aspect-ratio: 1; background: radial-gradient(circle at 35% 30%, #ffc9de, #e64980); color: #fff; font-size: 24px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 4px 0 #a61e4d; cursor: pointer; }
+.jogo-vitoria h2 { font-size: 30px; color: #ffd43b; text-shadow: 0 3px 0 #c2255c, 0 0 20px rgba(255,212,59,.5); }
+.jogo-vitoria #fimExtra { background: rgba(255,255,255,.15); color: #fff; border-color: rgba(255,255,255,.4); }
 .reforco small { font-size: 11px; font-weight: 800; }
 .reforco.on { outline: 4px solid #ffd43b; }
 .reforco:active { transform: translateY(2px); }
@@ -427,8 +441,120 @@ dialog.prancheta { background: transparent; box-shadow: none; max-width: 560px; 
 .polaroid img { display: block; max-width: 100%; image-rendering: pixelated; }
 .polaroid span { position: absolute; bottom: 8px; left: 0; right: 0; font-weight: 800; color: #555; }
 
+/* ---------- salas clicáveis, configurações */
+.rotulo-sala.clicavel { pointer-events: auto; cursor: pointer; background: #1E8A45; box-shadow: 0 0 0 2px rgba(255,255,255,.5), 0 2px 6px rgba(0,0,0,.3); animation: chamarSala 2.4s infinite; }
+@keyframes chamarSala { 50% { box-shadow: 0 0 0 4px rgba(40,190,82,.35), 0 2px 6px rgba(0,0,0,.3); } }
+.cliente-linha { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, .8fr) auto; }
+.valor-cli { display: flex; align-items: center; border: 1px solid var(--linha); border-radius: 10px; padding-left: 8px; background: #fff; min-width: 0; }
+.valor-cli span { font-weight: 800; font-size: 12px; color: var(--verde-esc); }
+.valor-cli input { border: 0 !important; width: 100%; }
+.grade-config { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.grade-config > * { min-width: 0; }
+.config-atalhos { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.config-atalhos button { border: 2px solid var(--linha); background: #fff; border-radius: 14px; padding: 12px; font-weight: 800; text-align: left; }
+.config-atalhos button:hover { border-color: var(--verde); background: #f1fbf4; }
+.config-atalhos small { display: block; color: var(--cinza); font-weight: 600; font-size: 12px; margin-top: 2px; }
+
+/* ---------- agenda da sala de reunião */
+dialog.agenda { max-width: 860px; }
+.agenda-corpo { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 18px; }
+.cal-cab { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.cal-cab b { font-weight: 900; font-size: 16px; }
+.cal-sem, .cal-grade { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; text-align: center; }
+.cal-sem span { font-size: 11px; font-weight: 800; color: var(--cinza); padding: 2px 0; }
+.cal-grade .dia { position: relative; aspect-ratio: 1; border: 1px solid var(--linha); background: #fff; border-radius: 9px; font-weight: 800; font-size: 13px; padding: 0; }
+.cal-grade .dia:hover { border-color: var(--verde); }
+.cal-grade .dia.passado { color: #adb5bd; }
+.cal-grade .dia.hoje { border: 2px solid var(--verde); color: var(--verde-esc); }
+.cal-grade .dia.sel { background: var(--grafite); color: #fff; border-color: var(--grafite); }
+.cal-grade .dia i { position: absolute; left: 50%; bottom: 3px; transform: translateX(-50%); min-width: 7px; height: 7px; border-radius: 99px; background: #e03131; color: #fff; font-style: normal; font-size: 8px; line-height: 7px; padding: 0 2px; }
+.agenda-prox { margin-top: 14px; }
+.agenda-prox h4, .form-reuniao h4 { margin: 0 0 6px; font-size: 13px; font-weight: 900; }
+.agenda-prox ul { list-style: none; margin: 0; padding: 0; font-size: 12.5px; }
+.agenda-prox li { padding: 6px 8px; border-radius: 8px; cursor: pointer; display: flex; gap: 6px; }
+.agenda-prox li:hover { background: var(--nevoa); }
+.agenda-prox li b { color: var(--verde-esc); white-space: nowrap; }
+.agenda-dia h3 { margin: 0 0 8px; font-size: 16px; font-weight: 900; text-transform: capitalize; }
+.lista-reunioes { list-style: none; margin: 0 0 12px; padding: 0; }
+.lista-reunioes li.vazio { color: var(--cinza); font-size: 13px; padding: 10px; background: var(--nevoa); border-radius: 10px; }
+.reuniao { display: flex; gap: 10px; align-items: flex-start; border: 1px solid var(--linha); border-left: 5px solid var(--verde); border-radius: 12px; padding: 10px; margin-bottom: 6px; background: #fff; }
+.reuniao.passada { opacity: .55; border-left-color: #adb5bd; }
+.r-hora { font-weight: 900; font-size: 17px; min-width: 56px; }
+.r-hora small { display: block; font-size: 10.5px; color: var(--cinza); font-weight: 700; }
+.r-info { flex: 1; min-width: 0; font-size: 13px; }
+.r-info b { display: block; font-size: 14px; }
+.r-info span { display: block; color: var(--cinza); font-weight: 600; }
+.r-info a { color: var(--verde-esc); font-weight: 800; }
+.r-obs { margin: 4px 0 0; font-size: 12.5px; white-space: pre-wrap; }
+.r-obs:empty { display: none; }
+.r-bts { display: flex; gap: 4px; }
+.form-reuniao { background: var(--nevoa); border-radius: 14px; padding: 12px; display: grid; gap: 8px; }
+.form-reuniao label { display: grid; gap: 3px; font-size: 12px; font-weight: 800; color: var(--tinta); }
+.form-reuniao input, .form-reuniao select, .form-reuniao textarea { border: 1px solid var(--linha); border-radius: 10px; padding: 8px 10px; font: inherit; font-size: 14px; background: #fff; width: 100%; }
+.form-reuniao .linha2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.form-bts { display: flex; gap: 8px; flex-wrap: wrap; }
+.agenda-rodape { margin-top: 10px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.agenda-rodape small { color: var(--cinza); font-size: 11.5px; flex: 1; min-width: 180px; }
+
+/* ---------- sala META */
+dialog.meta-dlg { max-width: 860px; }
+.meta-topo { text-align: center; background: linear-gradient(135deg, #0f1f17, #1e5a33); color: #fff; border-radius: 16px; padding: 14px 10px 12px; margin-bottom: 14px; }
+.meta-topo small { color: #b2f2bb; font-weight: 700; font-size: 12px; }
+.meta-total { font-size: clamp(32px, 7vw, 54px); font-weight: 900; color: #51cf66; letter-spacing: -1px; line-height: 1.1; font-variant-numeric: tabular-nums; text-shadow: 0 0 24px rgba(81,207,102,.35); }
+.meta-grade { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 16px; align-items: start; }
+.meta-tanque { text-align: center; }
+#metaCanvas { width: 220px; height: 300px; }
+.meta-legenda { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; font-weight: 700; align-items: flex-start; margin: 6px auto 0; width: fit-content; }
+.meta-legenda i { display: inline-block; width: 12px; height: 12px; border-radius: 4px; vertical-align: -2px; margin-right: 4px; }
+.meta-legenda i.v { background: #2fb35a; } .meta-legenda i.a { background: rgba(255,212,59,.6); border: 1px solid #f2c14e; }
+.meta-alvo { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12.5px; font-weight: 800; margin-top: 10px; }
+.meta-alvo input { width: 64px; border: 1px solid var(--linha); border-radius: 8px; padding: 5px; font: inherit; text-align: center; }
+.meta-lista h3 { margin: 0 0 8px; font-size: 15px; font-weight: 900; display: flex; align-items: center; gap: 8px; }
+.meta-lista h3 .chip { background: var(--grafite); color: #51cf66; }
+.m-linha { display: grid; grid-template-columns: minmax(0, 1fr) 120px auto auto; gap: 6px; margin-bottom: 6px; padding: 6px; border-radius: 12px; }
+.m-linha.at { background: #ebfbee; } .m-linha.ng { background: #fff9db; }
+.m-linha input { border: 1px solid var(--linha); border-radius: 9px; padding: 7px 9px; font: inherit; font-size: 13.5px; min-width: 0; width: 100%; background: #fff; }
+.m-valor { display: flex; align-items: center; background: #fff; border: 1px solid var(--linha); border-radius: 9px; padding-left: 7px; }
+.m-valor span { font-size: 12px; font-weight: 800; color: var(--verde-esc); }
+.m-valor input { border: 0; }
+.meta-bts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+
+/* ---------- respostas da pesquisa */
+dialog.respostas-dlg { max-width: 760px; }
+.resp-resumo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.resp-media, .resp-nps { border-radius: 16px; padding: 12px; text-align: center; background: var(--nevoa); }
+.resp-media b, .resp-nps b { display: block; font-size: 42px; font-weight: 900; line-height: 1.1; }
+.resp-media small, .resp-nps small { font-size: 12px; font-weight: 700; color: var(--cinza); }
+.resp-media.prom { background: #ebfbee; } .resp-media.prom b { color: var(--verde-esc); }
+.resp-media.neut { background: #fff9db; } .resp-media.neut b { color: #b08900; }
+.resp-media.det { background: #fff0f0; } .resp-media.det b { color: #c92a2a; }
+.nps-barra { display: flex; height: 10px; border-radius: 99px; overflow: hidden; background: #e9ecef; margin: 6px 0 4px; }
+.nps-barra i.prom { background: #2fb35a; } .nps-barra i.neut { background: #fcc419; } .nps-barra i.det { background: #fa5252; }
+.resp-itens { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.resp-itens div { background: #fff; border: 1px solid var(--linha); border-radius: 12px; padding: 8px; text-align: center; }
+.resp-itens span { display: block; font-size: 11px; font-weight: 700; color: var(--cinza); }
+.resp-itens b { font-size: 20px; font-weight: 900; }
+.resp-itens .estr { display: block; color: #f59f00; font-style: normal; font-size: 12px; letter-spacing: 1px; }
+.resp-vazio { grid-column: 1 / -1; text-align: center; padding: 18px; background: var(--nevoa); border-radius: 16px; }
+.resp-vazio .grande { font-size: 40px; }
+.resp-vazio p { color: var(--cinza); font-size: 13px; margin: 6px 0 0; }
+.resp-filtro { display: flex; gap: 8px; margin-bottom: 10px; }
+.resp-filtro select { flex: 1; min-width: 0; border: 1px solid var(--linha); border-radius: 10px; padding: 8px 10px; font: inherit; font-size: 13.5px; background: #fff; }
+.resp-card { border: 1px solid var(--linha); border-radius: 14px; padding: 10px 12px; margin-bottom: 8px; background: #fff; }
+.rc-topo { display: flex; gap: 10px; align-items: center; }
+.rc-topo > div { flex: 1; min-width: 0; }
+.rc-topo b { display: block; font-size: 14px; }
+.rc-topo small { color: var(--cinza); font-size: 11.5px; font-weight: 600; }
+.rc-nota { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-weight: 900; font-size: 19px; color: #fff; flex: none; }
+.rc-nota.prom { background: #2fb35a; } .rc-nota.neut { background: #fab005; } .rc-nota.det { background: #fa5252; }
+.rc-notas { font-size: 12px; color: #b08900; font-weight: 700; margin-top: 6px; }
+.resp-card p { margin: 5px 0 0; font-size: 13px; line-height: 1.45; white-space: pre-wrap; }
+.resp-card p:empty, .rc-notas:empty { display: none; }
+
 @media (max-width: 980px) {
-  .grade-escritorio, .grade-rel, .grade-pers, .colunas { grid-template-columns: 1fr; }
+  .grade-escritorio, .grade-rel, .grade-pers, .colunas, .grade-config { grid-template-columns: 1fr; }
+  .agenda-corpo, .meta-grade { grid-template-columns: 1fr; }
+  .meta-tanque { order: -1; }
   .lista-rel { position: static; max-height: 300px; }
   .abas button span.txt { display: none; }
   .topo { gap: 8px; padding: 10px 12px; }
@@ -452,6 +578,14 @@ dialog.prancheta { background: transparent; box-shadow: none; max-width: 560px; 
   .jogando .acoes { display: none !important; }
   .acoes .bt.icone { min-width: 56px; padding: 4px 6px; }
   .linha-envio, .cliente-linha { grid-template-columns: 1fr; }
+  .cliente-linha { grid-template-columns: minmax(0, 1fr) minmax(0, .9fr) auto; margin-bottom: 6px; }
+  .cliente-linha > input:first-child { grid-column: 1 / -1; }
+  .m-linha { grid-template-columns: minmax(0, 1fr) auto auto; }
+  .m-linha .m-nome { grid-column: 1 / -1; }
+  .resp-itens { grid-template-columns: 1fr 1fr; }
+  .config-atalhos { grid-template-columns: 1fr; }
+  .abas button { padding: 6px 0; }
+  .abas button span.txt { font-size: 9.5px !important; }
   .equipe2 { grid-template-columns: 1fr; }
   main { padding: 10px 10px 20px; }
   .palco-card { padding: 10px; }
@@ -478,8 +612,11 @@ dialog.prancheta { background: transparent; box-shadow: none; max-width: 560px; 
   .rotulo-sala { font-size: 9.5px; padding: 1px 6px; }
   .objetos { grid-template-columns: repeat(4, 1fr); }
   .jogando .painel-jogos { display: none !important; }
-  .reforco { width: 74px; }
+  .reforco { width: 62px; font-size: 20px; }
+  .reforcos { gap: 8px; }
   .jogo-hud { gap: 6px; }
+  .jogo-nivel small { display: none; }
+  .jogo-moedas { font-size: 12px; padding: 3px 8px; }
   .jogo-bts .bt { padding: 6px 8px; }
   dialog { max-height: 88vh; }
 }
@@ -493,6 +630,7 @@ dialog.prancheta { background: transparent; box-shadow: none; max-width: 560px; 
     <button data-aba="equipe"><i class="ic">👥</i> <span class="txt">Equipe</span></button>
     <button data-aba="relatorios"><i class="ic">📑</i> <span class="txt">Relatórios</span> <span class="contador" id="qtdRel">0</span></button>
     <button data-aba="personalizar"><i class="ic">🎨</i> <span class="txt">Visual</span></button>
+    <button data-aba="config"><i class="ic">⚙️</i> <span class="txt">Config.</span></button>
   </nav>
   <div class="dir">
     <div class="caixa" id="caixa" title="Caixa do escritório: cresce a cada tarefa enviada"><span class="rotulo">Caixa</span>💰 <span class="valor" id="caixaValor">R$ 0,00</span></div>
@@ -517,29 +655,33 @@ dialog.prancheta { background: transparent; box-shadow: none; max-width: 560px; 
         </div>
         <div class="tela-jogo" id="telaJogo">
           <div class="jogo-hud">
-            <button class="bt peq" id="jogoSair">⬅ Sair</button>
-            <div class="jogo-info"><b>🐱 Gatinhos em Casa</b><span>Nível <b id="casaNivel">1</b></span></div>
+            <button class="bt peq" id="jogoSair" title="Sair do jogo">⬅</button>
+            <div class="jogo-nivel"><small>🐱 Gatinhos em Casa</small><b>Nível <span id="casaNivel">1</span></b><em id="casaDificil" hidden>💀 DIFÍCIL</em></div>
             <div class="relogio-jogo" id="casaTempo">00:00</div>
+            <div class="jogo-moedas" title="Caixa do escritório (paga os reforços)">💰 <b id="casaMoedas">0</b></div>
             <div class="jogo-bts">
               <button class="bt peq" id="jogoAnterior" title="Nível anterior">◀</button>
               <button class="bt peq" id="jogoReiniciar" title="Recomeçar o nível">🔄</button>
+              <button class="bt peq" id="jogoPausa" title="Pausar">⏸</button>
             </div>
           </div>
           <div class="jogo-area" id="jogoArea">
-            <canvas id="jogoCanvas" width="160" height="200"></canvas>
+            <canvas id="jogoCanvas" width="340" height="420"></canvas>
             <div class="jogo-vitoria" id="jogoFim" hidden>
               <div class="estrelas" id="fimIcone">⭐⭐⭐</div>
-              <h2 id="fimTitulo">Todos os gatinhos em casa!</h2>
+              <h2 id="fimTitulo">Muito bem!</h2>
               <p id="fimTexto"></p>
               <button class="bt prim" id="fimBotao">Próximo nível ▶</button>
+              <button class="bt" id="fimExtra" hidden style="margin-top:8px"></button>
             </div>
           </div>
           <div class="reforcos">
-            <button class="reforco" id="btGelo" title="Congela o tempo por 20 s">❄️<small>R$ 20</small></button>
+            <button class="reforco" id="btGelo" title="Congela o tempo por 15 s">❄️<small>R$ 20</small></button>
             <button class="reforco" id="btMartelo" title="Manda um gatinho direto para a caminha">🔨<small>R$ 30</small></button>
+            <button class="reforco" id="btIma" title="A caminha puxa 2 gatinhos da cor dela">🧲<small>R$ 40</small></button>
             <button class="reforco" id="btDica" title="Mostra qual caminha mover">💡<small><b id="casaDicas">3</b> dicas</small></button>
           </div>
-          <p class="jogo-dica"><b>Arraste as caminhas</b> pelo tabuleiro. Quando uma caminha passa por cima de gatinhos da <b>mesma cor</b>, eles pulam para dentro. O número é quantos ainda faltam; caminha cheia vai embora. Gatos de outra cor e outras caminhas bloqueiam o caminho. A seta ⇕ ⇔ indica que a caminha só anda naquela direção. Leve todos para casa antes do tempo acabar!</p>
+          <p class="jogo-dica"><b>Arraste as caminhas</b> para qualquer lado. Passando por cima de gatinhos da <b>mesma cor</b>, eles pulam para dentro (o número é quantos faltam) e a caminha cheia vai embora. Gatos de outra cor, outras caminhas e buracos bloqueiam. As <b>cestas</b> na borda soltam mais gatinhos quando a casa da frente fica livre. As <b>cercas roxas</b> abrem depois que o número do cadeado de caminhas forem para casa. Setas ⇔ ⇕: só anda naquela direção. 💀 Níveis difíceis têm menos tempo!</p>
         </div>
         <div class="acoes">
           <button class="bt icone" id="btSelecionar" title="Escolher funcionário">👤<small>Equipe</small></button>
@@ -547,7 +689,7 @@ dialog.prancheta { background: transparent; box-shadow: none; max-width: 560px; 
           <button class="bt icone" id="btAnimacoes" title="Animações">✨<small>Animar</small></button>
           <button class="bt icone jogos" id="btSalaJogos" title="Sala de jogos">💡<small>Jogos</small></button>
           <div class="menu-anim" id="menuAnim">
-            <h4>Transformações</h4>
+            <h4>Transformações (a equipe toda)</h4>
             <button class="ss" data-anim="ss1">⚡ Super Sayajin</button>
             <button class="ss" data-anim="ss2">⚡⚡ Super Sayajin 2</button>
             <button class="ss" data-anim="ss3">⚡⚡⚡ Super Sayajin 3</button>
@@ -564,6 +706,7 @@ dialog.prancheta { background: transparent; box-shadow: none; max-width: 560px; 
             <button data-anim="cafe">☕ Café turbo</button>
             <button data-anim="foco">🧠 Modo foco (Matrix)</button>
             <button data-anim="soneca">😴 Soneca</button>
+            <button data-anim="almoco">🍔 Almoço com iFood</button>
             <h4>Equipe, fantasias e filmes</h4>
             <button class="filme" data-anim="obsessao">🎬 Obsessão (2025) — paródia</button>
             <button class="grupo" data-anim="festa">🎉 Festa à fantasia</button>
@@ -663,22 +806,47 @@ dialog.prancheta { background: transparent; box-shadow: none; max-width: 560px; 
           <div class="objetos" id="objEsc"></div>
           <div class="painel-obj" id="painelEsc" hidden></div>
         </div>
-        <div class="card pers" style="margin-top:18px">
+      </div>
+    </div>
+  </section>
+
+  <!-- CONFIGURAÇÕES -->
+  <section class="aba" id="aba-config">
+    <div class="grade-config">
+      <div>
+        <div class="card pers">
           <h2>👥 Clientes ativos</h2>
-          <p class="sub">Aparecem rodando no telão da sala de Relacionamento e na hora da Bia enviar mensagens.</p>
+          <p class="sub">Aparecem no telão da sala de Relacionamento, na hora de mandar mensagens e enchem o tanque da sala META (com o valor que pagam por mês).</p>
           <div id="clientesBox" class="clientes-box"></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
             <button class="bt peq" id="btNovoCliente">＋ Adicionar cliente</button>
             <button class="bt peq" id="btPuxarFiscal">📥 Puxar do KWIK Fiscal</button>
+            <button class="bt peq" id="btAbrirMeta">🎯 Abrir sala META</button>
           </div>
         </div>
         <div class="card pers" style="margin-top:18px">
+          <h2>🎉 Comemorações</h2>
+          <p class="sub">O que a equipe faz sozinha pelo prédio e quando alguém entrega uma tarefa.</p>
+          <div id="camposCom"></div>
+        </div>
+      </div>
+      <div>
+        <div class="card pers">
           <h2>⚙️ Equipe e dinheiro</h2>
-          <p class="sub">Quanto cada tarefa rende para o caixa, a cidade do Maycon e os dados que o Marketing usa.</p>
+          <p class="sub">Quanto cada tarefa rende para o caixa, a meta de clientes, a cidade da prospecção e os dados das mensagens.</p>
           <div id="camposEco"></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
             <button class="bt peq perigo" id="btZerarCaixa">Zerar caixa</button>
             <button class="bt peq perigo" id="btRestaurar">Restaurar tudo ao padrão</button>
+          </div>
+        </div>
+        <div class="card pers" style="margin-top:18px">
+          <h2>🧭 Atalhos</h2>
+          <div class="config-atalhos">
+            <button id="atAgenda">🗓️ Agenda de reuniões<small>Marcar e ver as reuniões</small></button>
+            <button id="atRespostas">📊 Respostas da pesquisa<small>Notas, comentários e média</small></button>
+            <button id="atNotif">🔔 Ativar notificações<small>Prazos, reuniões e respostas</small></button>
+            <button id="atMeta">🎯 Sala META<small>Clientes, valores e meta</small></button>
           </div>
         </div>
       </div>
@@ -752,11 +920,17 @@ dialog.prancheta { background: transparent; box-shadow: none; max-width: 560px; 
 <script src="js/clara.js"></script>
 <script src="js/maycon.js"></script>
 <script src="js/filmes.js"></script>
+<script src="js/gatinhos.js"></script>
 <script src="js/jogos.js"></script>
 <script src="js/marketing.js"></script>
 <script src="js/enzo.js"></script>
 <script src="js/relacionamento.js"></script>
 <script src="js/rotinas.js"></script>
+<script src="js/limpeza.js"></script>
+<script src="js/refeitorio.js"></script>
+<script src="js/reuniao.js"></script>
+<script src="js/meta.js"></script>
+<script src="js/pesquisa.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
