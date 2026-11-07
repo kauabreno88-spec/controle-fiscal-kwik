@@ -229,7 +229,10 @@
       p.X += dx / dist * s; p.Y += dy / dist * s;
       p.est.passo = [1, 0, 2, 0][Math.floor(t * 8 + (p.fase || 0)) % 4];
       // vira para onde anda (vista de cima): subindo = de costas; direita = espelhado
-      p.dir = (dy < -Math.abs(dx) * 0.6 ? 'c' : 'f') + (Math.abs(dx) > 0.3 ? (dx > 0 ? 'd' : 'e') : (p.dir || 'fe')[1]);
+      if (KM.isoAtivo && KM.isoAtivo()) { // na visão diagonal, vira para onde anda na tela
+        const sx = dx - dy, sy = (dx + dy) / 2;
+        p.dir = (sy < -Math.abs(sx) * 0.3 ? 'c' : 'f') + (Math.abs(sx) > 0.3 ? (sx > 0 ? 'd' : 'e') : (p.dir || 'fe')[1]);
+      } else p.dir = (dy < -Math.abs(dx) * 0.6 ? 'c' : 'f') + (Math.abs(dx) > 0.3 ? (dx > 0 ? 'd' : 'e') : (p.dir || 'fe')[1]);
       return false;
     });
   }

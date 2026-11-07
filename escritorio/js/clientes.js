@@ -149,7 +149,7 @@
   const ofc = { x: null, alvo: null, dir: 1, vel: 0, visivel: true, kauaDentro: false, viagem: false };
   const vaga = () => { const L = KM.LAYOUT; return { x: Math.max(18, L.predio.x - 8), y: L.rua + 27 }; };
   KM.objetos = KM.objetos || [];
-  KM.objetos.push({ get Y() { return KM.LAYOUT ? KM.LAYOUT.rua + 41 : 0; }, f: (g, t) => {
+  KM.objetos.push({ get X() { return (ofc.x == null ? 0 : ofc.x) + 14; }, get Y() { return KM.LAYOUT ? KM.LAYOUT.rua + 41 : 0; }, f: (g, t) => {
     if (!KM.LAYOUT || !ofc.visivel) return;
     const v = vaga(); if (ofc.x == null) ofc.x = v.x;
     carroKwik(g, ofc.x, v.y, ofc.dir, t, ofc.vel !== 0);
@@ -167,9 +167,9 @@
       b = A().el('button', { id: 'btRua', class: 'bt-rua', title: 'Cliente: entrar no carro e visitar os clientes ativos na cidade', onclick: e => { e.stopPropagation(); sair(); } }, '🚗 Cliente');
       pal.append(b);
     }
-    const v = vaga();
-    b.style.left = ((v.x + 32) / KM.W * 100).toFixed(2) + '%';
-    b.style.top = ((L.rua + 17) / KM.H * 100).toFixed(2) + '%';
+    const v = vaga(), [bx, by] = KM.paraTela(...KM.prj(v.x + 32, L.rua + 17));
+    b.style.left = (bx / KM.W * 100).toFixed(2) + '%';
+    b.style.top = (by / KM.H * 100).toFixed(2) + '%';
   }
 
   // Kauã sai do prédio, entra no carro e vai embora

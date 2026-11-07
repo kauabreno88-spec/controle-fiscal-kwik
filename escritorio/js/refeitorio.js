@@ -43,12 +43,12 @@
   function criarEntregador() {
     const L = KM.LAYOUT, c0 = L.corredores[0];
     const npc = { id: 'entregador', X: L.predio.x + 8, Y: c0.y + 22, Z: 0, dir: 'fd', modo: 'em-pe', est: {}, fase: 0.5, prop: 'sacola', visivel: true };
-    const o = { get Y() { return npc.Y; }, f: (g, t) => KM.desenharPessoa(g, A().cfg(), npc, t, { aparencia: APAR_MOTO }) };
+    const o = { proprio: true, get X() { return npc.X; }, get Y() { return npc.Y; }, f: (g, t) => KM.desenharPessoa(g, A().cfg(), npc, t, { aparencia: APAR_MOTO }) };
     KM.objetos.push(o);
     return { npc, tirar: () => { const i = KM.objetos.indexOf(o); if (i >= 0) KM.objetos.splice(i, 1); } };
   }
   async function andarNpc(npc, x, y, vel = 40) { for (const [a, b] of KM.rota(npc.X, npc.Y, x, y)) await KM.mov.andarAte(npc, a, b, vel); }
-  const textoNaCabeca = (q, s, cor = '#ffffff') => KM.emitir('texto', 1, { x: q.X, y: q.Y - 52, vy: -10, vida: 1.8, s, cor });
+  const textoNaCabeca = (q, s, cor = '#ffffff') => { const [x, y] = KM.ancora(q); KM.emitir('texto', 1, { x, y: y - 52, vy: -10, vida: 1.8, s, cor }); };
 
   // ------------------------------------------------------------------ o almoço
   let emAndamento = false;
@@ -59,7 +59,7 @@
     const est = A().estado, L = KM.LAYOUT;
     const lugares = L.pontos.refeicao.slice().sort(() => Math.random() - 0.5).slice(0, grupo.length);
     const pratos = []; // {X, Y, tipo, resto}
-    const objPratos = { get Y() { return L.salas.refeitorio.fy + 63.6; }, f: g => pratos.forEach(pt => desenharComida(g, pt.X, pt.Y, pt.tipo, pt.resto)) };
+    const objPratos = { proprio: true, get X() { return L.salas.refeitorio.fx + 80; }, get Y() { return L.salas.refeitorio.fy + 63.6; }, f: g => pratos.forEach(pt => KM.bb(g, pt.X, pt.Y + 10, () => desenharComida(g, pt.X, pt.Y, pt.tipo, pt.resto))) };
     KM.objetos.push(objPratos);
     est.refeicaoAtiva = true;
     const [comida, frase] = sorteio(COMIDAS[modo]);

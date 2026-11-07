@@ -658,7 +658,7 @@
 
   // ------------------------------------------------------------------ desenho: utilidades
   const sombra = (g, X, Y, w, d) => { g.fillStyle = 'rgba(0,0,0,0.16)'; g.fillRect(X + 1, Y + d - 2, w, 3); };
-  KM.desenharCadeira = (ctx, x, y, ocupada) => cadeira(ctx, { sx: x, sy: y }, KM.config(), ocupada);
+  KM.desenharCadeira = (ctx, x, y, ocupada) => KM.bb(ctx, x, y, () => cadeira(ctx, { sx: x, sy: y }, KM.config(), ocupada));
   // Caixa vista de cima: topo em (X, Y-h) e frente em (X, Y+d-h) com altura h.
   function caixa(g, X, Y, w, d, h, cor, o = {}) {
     const topo = o.topo || cor, frente = o.frente || tom(cor, 0.76), borda = o.borda || tom(cor, 0.45);
@@ -1304,7 +1304,11 @@
     texto(ctx, String(Math.floor(t) % 3 + 1), x + ww - 5, y, '#ffd43b');
   }
   function desenharDinamicos(ctx, cfg, estado, t) {
-    for (const d of L.decor) {
+    for (const d of L.decor) desenharDecorDin(ctx, d, cfg, estado, t);
+    for (const m of L.moveis) { if (m.tipo === 'mesa') monitorDe(ctx, m, estado, t); else dinMovel(ctx, m, estado, t); }
+  }
+  function desenharDecorDin(ctx, d, cfg, estado, t) {
+    {
       if (d.tipo === 'janela') janela(ctx, d, cfg, t);
       else if (d.tipo === 'telao') telao(ctx, d, cfg, t);
       else if (d.tipo === 'tvReuniao') { r(ctx, d.X, d.Y + 1, d.w, 13, '#111'); r(ctx, d.X + 1, d.Y + 2, d.w - 2, 11, '#14352a'); const k = Math.floor(t / 4) % 3; [[4, 7, 5, 9], [6, 4, 8, 5], [3, 6, 8, 10]][k].forEach((a, i) => r(ctx, d.X + 4 + i * 6, d.Y + 12 - a, 4, a, i === 3 ? VERDE : '#2E8B45')); texto(ctx, 'KWIK', d.X + d.w - 18, d.Y + 3, '#ffffff'); }
@@ -1321,8 +1325,10 @@
       else if (d.tipo === 'quadroFiscal') quadroSetor(ctx, d, t, 'fiscal');
       else if (d.tipo === 'quadroFolha') quadroSetor(ctx, d, t, 'folha');
     }
-    for (const m of L.moveis) {
-      if (m.tipo === 'mesa') monitorDe(ctx, m, estado, t);
+  }
+  function dinMovel(ctx, m, estado, t) {
+    {
+      if (m.tipo === 'mesa') return;
       else if (m.tipo === 'cofre') moedas(ctx, m, estado.caixa || 0, t);
       else if (m.tipo === 'ringlight') { const on = estado.trabalhoDe && estado.trabalhoDe.video; const x = m.X + 2, y = m.Y - 26; r(ctx, x - 4, y - 4, 9, 9, '#343a40'); r(ctx, x - 3, y - 3, 7, 7, on ? '#fff9db' : '#adb5bd'); r(ctx, x - 1, y - 1, 3, 3, '#343a40'); if (on) { ctx.fillStyle = 'rgba(255,249,219,0.18)'; ctx.fillRect(x - 10, y - 8, 30, 40); } }
       else if (m.tipo === 'buffet' && estado.refeicaoAtiva) { for (let i = 0; i < 4; i++) { const fy = (t * 7 + i * 3) % 9; ctx.fillStyle = `rgba(255,255,255,${0.75 - fy / 12})`; ctx.fillRect(m.X + 8 + i * 14 + Math.round(Math.sin(t * 3 + i)), m.Y - m.h - 3 - fy, 1, 1); } }
@@ -1469,7 +1475,7 @@
 
   // ------------------------------------------------------------------ fundo em cache
   let fundo = null, fundoPer = '';
-  KM.limparCache = () => { cache.clear(); fundo = null; if (L && KM.config) { mobiliar(L, KM.config()); montarGrade(L); } };
+  KM.limparCache = () => { cache.clear(); fundo = null; limparIso(); if (L && KM.config) { mobiliar(L, KM.config()); montarGrade(L); } };
   function montarFundo(cfg) {
     const c = tela(L.W, L.H), g = c.getContext('2d');
     g.imageSmoothingEnabled = false;
@@ -1484,16 +1490,283 @@
 
   // ------------------------------------------------------------------ escolher a planta (computador x celular)
   // Monta a planta (computador ou celular). Também refaz quando a Sala de Execução precisa crescer/diminuir.
-  KM.definirLayout = function (nome, cfg) {
-    if (L && L.nome === nome) {
+  KM.definirLayout = function (nome, cfg, iso) {
+    iso = !!iso;
+    const cel = window.matchMedia('(max-width: 760px)').matches;
+    if (L && L.nome === nome && ISO.on === iso && (!iso || ISO.cel === cel)) {
       const ex = tamanhoExecucao(ativasExecucao(cfg));
       if (ex.span === L.exec.span && ex.fileiras === L.exec.fileiras) return false;
     }
+    const mudouVisao = ISO.on !== iso || ISO.cel !== cel;
     L = KM.LAYOUT = montarLayout(nome, cfg);
-    KM.W = L.W; KM.H = L.H;
+    KM.MW = L.W; KM.MH = L.H;
+    ISO.on = iso; ISO.cel = cel;
+    if (iso) {
+      ISO.ox = L.H + PADI; ISO.oy = WALLH + PADI + 8;
+      ISO.w = L.W + L.H + 2 * PADI; ISO.h = (L.W + L.H) / 2 + ISO.oy + PADI;
+      KM.W = cel ? 400 : 1000; KM.H = cel ? 620 : 600;
+      if (mudouVisao || !ISO.camPronta) { // começa perto da Recepção e da Diretoria (o ⤢ mostra o prédio inteiro)
+        const d = L.salas.diretoria; cel ? KM.camera.focar(d.x + 20, d.fy + 60, 0.8) : KM.camera.focar(d.x + 140, d.fy + 120, 1);
+        ISO.camPronta = true;
+      }
+    } else { KM.W = L.W; KM.H = L.H; }
+    limparIso();
     fundo = null;
     return true;
   };
+
+  // ================================================================== VISÃO DIAGONAL (isométrica)
+  // O mundo continua o mesmo (salas, móveis e caminhos em X/Y, de cima); só o desenho muda:
+  //   x_tela = X − Y      y_tela = (X + Y) / 2 − Z      (+ câmera com arrastar e zoom)
+  // Piso, tapetes e rua: o desenho de cima é "deitado" na diagonal. Paredes do fundo de cada sala ficam altas
+  // (com os janelões e os quadros); as da frente ficam baixinhas para dar para ver dentro. Mesas, estantes,
+  // sofás… viram caixas na diagonal; objetos pequenos (plantas, luminárias…) e pessoas ficam em pé.
+  const ISO = { on: false, cel: false, ox: 0, oy: 0, w: 0, h: 0, cam: { x: 0, y: 0, z: 1 }, chao: null, paredes: null, sprites: new Map(), ceu: null, per: '', camPronta: false };
+  const WALLH = 30, BAIXA = 6, PADI = 30;
+  KM.isoAtivo = () => ISO.on;
+  const prj = (X, Y, Z = 0) => [X - Y + ISO.ox, (X + Y) / 2 - Z + ISO.oy];
+  KM.prj = (X, Y, Z = 0) => (ISO.on ? prj(X, Y, Z) : [X, Y - Z]);
+  KM.paraTela = (x, y) => (ISO.on ? [(x - ISO.cam.x) * ISO.cam.z + KM.W / 2, (y - ISO.cam.y) * ISO.cam.z + KM.H / 2] : [x, y]);
+  KM.telaParaCena = (x, y) => (ISO.on ? [(x - KM.W / 2) / ISO.cam.z + ISO.cam.x, (y - KM.H / 2) / ISO.cam.z + ISO.cam.y] : [x, y]);
+  KM.telaParaMundo = (x, y) => { if (!ISO.on) return [x, y]; const [ix, iy] = KM.telaParaCena(x, y), a = ix - ISO.ox, b = 2 * (iy - ISO.oy); return [(a + b) / 2, (b - a) / 2]; };
+  // desenha algo feito "de cima" em pé, no lugar certo da diagonal (X, Y = ponto do chão)
+  KM.bb = (g, X, Y, fn) => { if (!ISO.on) return fn(); const [px, py] = prj(X, Y); g.save(); g.translate(px - X, py - Y); try { fn(); } finally { g.restore(); } };
+  KM.rotuloPos = s => (ISO.on ? KM.paraTela(...prj(s.x + s.w / 2, s.fy, WALLH + 10)) : [s.x + s.w / 2, s.y + 2]);
+  function limparIso() { ISO.chao = null; ISO.paredes = null; ISO.sprites.clear(); ISO.ceu = null; }
+
+  // ------------------------------------------------------------------ câmera
+  function limitarCam() { const c = ISO.cam; c.z = Math.max(0.3, Math.min(2.5, c.z)); c.x = Math.max(0, Math.min(ISO.w, c.x)); c.y = Math.max(0, Math.min(ISO.h, c.y)); }
+  KM.camera = {
+    ajustar() { const c = ISO.cam; c.z = Math.min(KM.W / ISO.w, KM.H / ISO.h) * 1.02; c.x = ISO.w / 2; c.y = ISO.h / 2 + 6; },
+    zoom(f, cx, cy) {
+      const c = ISO.cam, foco = cx != null ? KM.telaParaCena(cx, cy) : null;
+      c.z *= f; limitarCam();
+      if (foco) { const [bx, by] = KM.telaParaCena(cx, cy); c.x += foco[0] - bx; c.y += foco[1] - by; limitarCam(); }
+    },
+    mover(dx, dy) { const c = ISO.cam; c.x -= dx / c.z; c.y -= dy / c.z; limitarCam(); },
+    focar(X, Y, z) { const [x, y] = prj(X, Y); ISO.cam.x = x; ISO.cam.y = y; if (z) ISO.cam.z = z; limitarCam(); },
+    estado: () => ({ ...ISO.cam }),
+  };
+
+  // ------------------------------------------------------------------ caixa na diagonal (pixel a pixel, coluna por coluna)
+  // (X, Y) = canto de trás do móvel no chão; w ao longo de X, d ao longo de Y, h de altura; o.z = altura da base
+  function isoCaixa(g, X, Y, w, d, h, cor, o = {}) {
+    const [ax, ay] = prj(X, Y, o.z || 0);
+    const topo = o.topo || cor, sul = o.sul || tom(cor, 0.84), leste = o.leste || tom(cor, 0.68), borda = o.borda || tom(cor, 0.42);
+    const x0 = Math.floor(ax - d), x1 = Math.ceil(ax + w), cC = ax + w - d;
+    for (let x = x0; x < x1; x++) {
+      const xx = x + 0.5;
+      const yUp = xx <= ax ? ay + (ax - xx) / 2 : ay + (xx - ax) / 2;
+      const yLo = xx <= cC ? ay + d / 2 + (xx - (ax - d)) / 2 : ay + (w + d) / 2 - (xx - cC) / 2;
+      const t0 = Math.round(yUp - h), t1 = Math.round(yLo - h), b1 = Math.round(yLo);
+      g.fillStyle = topo; g.fillRect(x, t0, 1, Math.max(1, t1 - t0));
+      if (h > 0) { g.fillStyle = xx <= cC ? sul : leste; g.fillRect(x, t1, 1, Math.max(0, b1 - t1)); }
+      g.fillStyle = borda; g.fillRect(x, t0 - 1, 1, 1); g.fillRect(x, h > 0 ? b1 : t1, 1, 1);
+      if (Math.abs(xx - cC) < 0.6 && h > 0) { g.fillStyle = tom(topo, 1.12); g.fillRect(x, t1, 1, b1 - t1); }
+    }
+    g.fillStyle = borda; g.fillRect(x0 - 1, Math.round(ay + d / 2 - h), 1, h + 1); g.fillRect(x1, Math.round(ay + w / 2 - h), 1, h + 1);
+    g.fillStyle = tom(topo, 1.14); for (let x = Math.floor(ax); x < x1 - 1; x++) g.fillRect(x, Math.round(ay + (x + 0.5 - ax) / 2 - h), 1, 1);
+  }
+  // linha no chão/na face, entre dois pontos do mundo na altura z
+  function isoLinha(g, X1, Y1, X2, Y2, z, cor) {
+    const [a, b] = prj(X1, Y1, z), [c, d] = prj(X2, Y2, z), n = Math.max(1, Math.round(Math.abs(c - a)));
+    g.fillStyle = cor; for (let i = 0; i <= n; i++) g.fillRect(Math.round(a + (c - a) * i / n), Math.round(b + (d - b) * i / n), 1, 1);
+  }
+  // listras horizontais na face da frente (gavetas, prateleiras)
+  function faceSul(g, X, Y, w, d, h, n, cor) { for (let k = 1; k < n; k++) isoLinha(g, X, Y + d, X + w, Y + d, Math.round(h * k / n), cor); }
+
+  // móveis que viram caixas na diagonal (o resto fica em pé, com o desenho de sempre)
+  const ISO_MOVEIS = {
+    mesa: (g, m, e) => { isoCaixa(g, m.X, m.Y, m.w, m.d, m.h, e.mesa); isoCaixa(g, m.X + m.w - 12, m.Y + m.d - 2, 10, 2, m.h - 1, tom(e.mesa, 0.92)); faceSul(g, m.X + m.w - 12, m.Y, 10, m.d, m.h, 3, tom(e.mesa, 0.7)); },
+    mesaReuniao: (g, m) => { isoCaixa(g, m.X, m.Y, m.w, m.d, m.h, '#7a4a2e'); isoCaixa(g, m.X + 3, m.Y + 3, m.w - 6, m.d - 6, 0, '#8d5a3b', { z: m.h }); },
+    mesaJantar: (g, m) => isoCaixa(g, m.X, m.Y, m.w, m.d, m.h, '#c98a55'),
+    mesaRefeicao: (g, m) => { isoCaixa(g, m.X, m.Y, m.w, m.d, m.h, '#c98a55'); isoCaixa(g, m.X + 4, m.Y + 4, m.w - 8, m.d - 8, 0, '#f1f3f5', { z: m.h }); },
+    mesaApresentacao: (g, m) => { isoCaixa(g, m.X, m.Y, m.w, m.d, m.h, '#f8f9fa'); isoLinha(g, m.X, m.Y + m.d, m.X + m.w, m.Y + m.d, 2, VERDE); },
+    mesaCartas: (g, m) => isoCaixa(g, m.X, m.Y, m.w, m.d, m.h, '#1864ab', { topo: '#1c7ed6' }),
+    sinuca: (g, m) => { isoCaixa(g, m.X, m.Y, m.w, m.d, m.h, '#6b3f22'); isoCaixa(g, m.X + 3, m.Y + 3, m.w - 6, m.d - 6, 0, '#2f9e44', { z: m.h, borda: '#2b8a3e' }); },
+    pingue: (g, m) => { isoCaixa(g, m.X, m.Y, m.w, m.d, m.h, '#1971c2'); isoLinha(g, m.X + m.w / 2, m.Y, m.X + m.w / 2, m.Y + m.d, m.h + 2, '#f8f9fa'); },
+    pebolim: (g, m) => { isoCaixa(g, m.X, m.Y, m.w, m.d, m.h, '#5c3d2e'); isoCaixa(g, m.X + 2, m.Y + 2, m.w - 4, m.d - 4, 0, '#2f9e44', { z: m.h }); },
+    balcao: (g, m) => { isoCaixa(g, m.X, m.Y, m.w, m.d, m.h, '#f1f3f5', { sul: GRAFITE, leste: '#0b100f' }); isoLinha(g, m.X, m.Y + m.d, m.X + m.w, m.Y + m.d, m.h - 3, VERDE); },
+    mesinha: (g, m) => isoCaixa(g, m.X, m.Y, m.w, m.d, m.h, '#8d5a3b'),
+    mesaExec: (g, m) => { isoCaixa(g, m.X, m.Y, m.w, m.d, m.h, '#f1f3f5'); isoLinha(g, m.X, m.Y + m.d, m.X + m.w, m.Y + m.d, m.h - 2, VERDE); },
+    estante: (g, m, e) => {
+      isoCaixa(g, m.X, m.Y, m.w, m.d, m.h, e.estante || '#a0612f');
+      const cores = ['#3f7fc1', '#2E8B45', '#c9453a', '#e2b33c', '#5a4fa8', '#e9e4d8'];
+      for (let k = 0; k < 4; k++) { const z = 3 + k * 6; for (let i = 0; i < m.w - 2; i += 2) isoLinha(g, m.X + 1 + i, m.Y + m.d, m.X + 2 + i, m.Y + m.d, z + 3, cores[(i + k) % cores.length]); isoLinha(g, m.X, m.Y + m.d, m.X + m.w, m.Y + m.d, z, tom(e.estante || '#a0612f', 0.6)); }
+    },
+    arquivo: (g, m) => { isoCaixa(g, m.X, m.Y, m.w, m.d, m.h, '#868e96'); faceSul(g, m.X, m.Y, m.w, m.d, m.h, 3, '#495057'); },
+    geladeira: (g, m) => { isoCaixa(g, m.X, m.Y, m.w, m.d, m.h, '#e9ecef'); faceSul(g, m.X, m.Y, m.w, m.d, m.h, 2, '#adb5bd'); },
+    frigobar: (g, m) => isoCaixa(g, m.X, m.Y, m.w, m.d, m.h, '#e9ecef'),
+    cofre: (g, m) => { isoCaixa(g, m.X, m.Y, m.w, m.d, m.h, '#5b636a'); isoLinha(g, m.X + m.w / 2 - 2, m.Y + m.d, m.X + m.w / 2 + 2, m.Y + m.d, m.h / 2, '#e6c04a'); },
+    impressora: (g, m) => { isoCaixa(g, m.X, m.Y, m.w, m.d, m.h, '#dee2e6'); isoCaixa(g, m.X + 2, m.Y + 1, m.w - 4, 3, 2, '#ffffff', { z: m.h }); },
+    rackTV: (g, m) => { isoCaixa(g, m.X, m.Y, m.w, m.d, m.h, '#212529'); isoCaixa(g, m.X + 3, m.Y + 2, 3, 4, 12, '#f8f9fa', { z: m.h }); },
+    fliperama: (g, m) => { isoCaixa(g, m.X, m.Y, m.w, m.d, m.h, '#7048e8', { sul: '#5f3dc4' }); isoLinha(g, m.X + 2, m.Y + m.d, m.X + m.w - 2, m.Y + m.d, m.h - 6, '#4dabf7'); isoLinha(g, m.X + 2, m.Y + m.d, m.X + m.w - 2, m.Y + m.d, m.h - 8, '#ff4fd8'); },
+    bancada: (g, m) => isoCaixa(g, m.X, m.Y, m.w, m.d, m.h, '#dee2e6'),
+    buffet: (g, m) => { isoCaixa(g, m.X, m.Y, m.w, m.d, m.h, '#ced4da'); for (let i = 0; i < 4; i++) isoCaixa(g, m.X + 4 + i * 14, m.Y + 2, 10, m.d - 4, 1, ['#ffd43b', '#ff8787', '#69db7c', '#ffa94d'][i], { z: m.h }); },
+    sofa: (g, m, e) => {
+      const c = e.corSofa || '#3f7fc1';
+      isoCaixa(g, m.X, m.Y, m.w, 5, 14, tom(c, 0.92)); isoCaixa(g, m.X, m.Y + 3, 4, m.d - 3, 9, tom(c, 0.85));
+      isoCaixa(g, m.X + 3, m.Y + 5, m.w - 6, m.d - 5, 6, c);
+      if (e.modeloSofa === 'futon') for (const k of [0.2, 0.5, 0.8]) isoCaixa(g, m.X + m.w * k - 3, m.Y + 4, 6, 2, 5, '#e8913a', { z: 6 });
+      isoCaixa(g, m.X + m.w - 4, m.Y + 3, 4, m.d - 3, 9, tom(c, 0.85));
+    },
+    poltrona: (g, m, e) => { const c = e.corSofa || '#3f7fc1'; isoCaixa(g, m.X, m.Y, m.w, 4, 13, tom(c, 0.9)); isoCaixa(g, m.X + 2, m.Y + 4, m.w - 4, m.d - 4, 6, c); },
+    sofaCostas: (g, m) => { const c = '#5f3dc4'; isoCaixa(g, m.X + 2, m.Y - 2, m.w - 4, m.d - 2, 6, tom(c, 1.15)); isoCaixa(g, m.X, m.Y + m.d - 5, m.w, 5, 12, c); },
+    banco: (g, m) => isoCaixa(g, m.X, m.Y, m.w, m.d, m.h, '#8d5a3b'),
+    banco2: (g, m) => isoCaixa(g, m.X, m.Y, m.w, m.d, m.h, '#6b7088'),
+    puff: (g, m) => isoCaixa(g, m.X, m.Y, m.w, m.d, 7, m.cor || '#ff8c5a'),
+    pufeKwik: (g, m) => isoCaixa(g, m.X, m.Y, m.w, m.d, 7, VERDE),
+    carrinhoLimpeza: null, tanqueMeta: null,
+  };
+  // sprite (em cache) de cada móvel: caixa na diagonal ou o desenho de sempre em pé
+  function spriteMovel(m, cfg) {
+    let s = ISO.sprites.get(m);
+    if (s) return s;
+    const e = cfg.escritorio, fnIso = ISO_MOVEIS[m.tipo];
+    if (fnIso) {
+      const [lx] = prj(m.X, m.Y + m.d), [rx] = prj(m.X + m.w, m.Y), [, ty] = prj(m.X, m.Y, (m.h || 0) + 34), [, by] = prj(m.X + m.w, m.Y + m.d);
+      const x0 = Math.floor(lx) - 4, y0 = Math.floor(ty) - 4, c = tela(Math.ceil(rx - x0) + 6, Math.ceil(by - y0) + 6), g = c.getContext('2d');
+      g.translate(-x0, -y0); fnIso(g, m, e);
+      if (m.tipo === 'mesa') { // itens em cima da mesa (papéis, caneca…) no fundo do tampo
+        const cx = m.X + (m.w >> 1), [px, py] = prj(cx, m.Y + 2);
+        g.save(); g.translate(px - cx, py - (m.Y + 2)); (m.itens || []).forEach((o, i) => SOBRE[o] && SOBRE[o](g, i ? m.X + m.w - 9 : m.X + 3, m.Y + 2 - m.h + 1)); g.restore();
+      }
+      s = { c, x: x0, y: y0 };
+    } else {
+      const x0 = m.X - 26, y0 = m.Y - (m.h || 0) - 52, c = tela((m.w || 10) + 52, (m.h || 0) + (m.d || 8) + 64), g = c.getContext('2d');
+      g.translate(-x0, -y0); DES[m.tipo](g, m, cfg);
+      const ax = m.X + (m.w || 0) / 2, ay = m.Y + (m.d || 0), [px, py] = prj(ax, ay);
+      s = { c, x: px - (ax - x0), y: py - (ay - y0) };
+    }
+    ISO.sprites.set(m, s);
+    return s;
+  }
+  // parede do fundo de cada sala (alta, com janelões e quadros), em fatias para ficar na frente/atrás certo
+  function montarParedes(cfg) {
+    const e = cfg.escritorio, per = periodo(cfg), out = [];
+    for (const s of Object.values(L.salas)) {
+      const w = s.w + 2 * T, c = tela(w, WALLH + 4), g = c.getContext('2d');
+      g.imageSmoothingEnabled = false;
+      if (s.id === 'jogos') { g.fillStyle = '#2c2344'; g.fillRect(0, 4, w, WALLH); g.fillStyle = 'rgba(255,255,255,0.05)'; for (let u = 0; u < w; u += 8) g.fillRect(u, 4, 1, WALLH); g.fillStyle = '#ff4fd8'; g.fillRect(0, WALLH, w, 1); g.fillStyle = '#3fb6ff'; g.fillRect(0, WALLH + 1, w, 1); }
+      else if (s.id === 'diretoria' && moderno(e)) { g.fillStyle = '#9a5526'; g.fillRect(0, 4, w, WALLH); for (let u = 0; u < w; u += 5) { g.fillStyle = (u / 5) % 2 ? '#a65d2a' : '#8d4d22'; g.fillRect(u, 4, 5, WALLH - 2); g.fillStyle = '#7a4019'; g.fillRect(u, 4, 1, WALLH - 2); } g.fillStyle = '#c9a65b'; g.fillRect(0, WALLH + 1, w, 1); }
+      else if (moderno(e)) { g.save(); g.translate(0, 4); janelas(g, w, WALLH, per, s.id === 'execucao' || s.id === 'apresentacao' ? VERDE : null); g.restore(); }
+      else { g.fillStyle = e.parede; g.fillRect(0, 4, w, WALLH); g.drawImage(texFace(s, e), T, 4 + WALLH - (NB - 4)); g.fillStyle = e.rodape; g.fillRect(0, WALLH + 2, w, 2); }
+      g.fillStyle = TOPO_PAREDE; g.fillRect(0, 0, w, 4); g.fillStyle = TOPO_LUZ; g.fillRect(0, 0, w, 1);
+      // quadros fixos (os que mudam são desenhados a cada quadro)
+      g.save(); g.translate(-(s.x - T), -s.fy + WALLH - 2);
+      for (const d of L.decor) if (d.sala === s.id && DES[d.tipo] && !d.din) DES[d.tipo](g, d, cfg);
+      g.restore();
+      if (s.id === 'jogos') { const n = L.decor.find(d => d.tipo === 'neon'); if (n) { const u = n.X - (s.x - T), v = WALLH - 2 - (s.fy - n.Y) + 2; g.fillStyle = '#16102a'; g.fillRect(u, v, 40, 11); texto(g, 'KWIK', u + 3, v + 3, '#ff4fd8'); texto(g, 'PLAY', u + 21, v + 3, '#3fb6ff'); } }
+      const porta = s.portaCima ? [T + PORTA[0], T + PORTA[1]] : null;
+      out.push({ s, c, w, porta, M: [1, 0.5, 0, 1, (s.x - T) - s.fy + ISO.ox, (s.x - T + s.fy) / 2 + ISO.oy - WALLH - 4] });
+    }
+    return out;
+  }
+  // chão inteiro (rua, praça, pisos, tapetes) desenhado de cima e deitado na diagonal + paredes baixas
+  function montarChaoIso(cfg) {
+    const e = cfg.escritorio, m = tela(L.W, L.H), g = m.getContext('2d');
+    g.imageSmoothingEnabled = false;
+    g.fillStyle = '#3a3e57'; g.fillRect(0, 0, L.W, L.H);
+    for (let y = 0; y < L.H; y += 12) for (let x = (y / 12) % 2 ? 6 : 0; x < L.W; x += 12) { g.fillStyle = '#41465f'; g.fillRect(x, y, 11, 11); }
+    const yb = L.rua, c0 = L.corredores[0], P0 = L.predio;
+    g.fillStyle = '#5a5f78'; g.fillRect(0, yb + 11, L.W, 13); g.fillStyle = '#8a8fa8'; g.fillRect(0, yb + 24, L.W, 2);
+    g.fillStyle = '#262a38'; g.fillRect(0, yb + 26, L.W, L.H - yb - 26); g.fillStyle = '#c9c3b0'; for (let x = 4; x < L.W; x += 20) g.fillRect(x, yb + 36, 10, 2);
+    g.fillStyle = '#6b7088'; g.fillRect(0, c0.y + 14, P0.x + 2, 12); g.fillRect(3, c0.y + 14, 13, yb + 12 - c0.y - 14);
+    g.drawImage(moderno(e) ? texPiso({ piso: 'porcelanato', corPiso: '#cfd2cc' }, P0.w, P0.h) : texXadrez('#d9dde0', '#cfd4d8', P0.w, P0.h, 10), P0.x, P0.y);
+    for (const s of Object.values(L.salas)) g.drawImage(pisoDaSala(s, e), s.fx, s.fy);
+    for (const mv of L.moveis) if (mv.tipo === 'tapete') DES.tapete(g, mv, cfg);
+    for (const c of L.corredores) for (const s of Object.values(L.salas)) if (s.corrBaixo === c || s.corrCima === c) { g.fillStyle = '#a8b3be'; g.fillRect(s.fx + 45, c.y + 19, 78, 8); }
+    const c = tela(ISO.w, ISO.h), gi = c.getContext('2d');
+    gi.imageSmoothingEnabled = false;
+    gi.setTransform(1, 0.5, -1, 0.5, ISO.ox, ISO.oy); gi.drawImage(m, 0, 0); gi.setTransform(1, 0, 0, 1, 0, 0);
+    // paredes baixas: frente e laterais das salas (com as portas), pontas dos corredores
+    const pw = '#3a4060';
+    for (const s of Object.values(L.salas)) {
+      const yb2 = s.y + s.h;
+      if (s.portaBaixo) { isoCaixa(gi, s.x - T, yb2, PORTA[0] + T, T, BAIXA, pw); isoCaixa(gi, s.fx + PORTA[1], yb2, s.x + s.w + T - (s.fx + PORTA[1]), T, BAIXA, pw); }
+      else isoCaixa(gi, s.x - T, yb2, s.w + 2 * T, T, BAIXA, pw);
+      isoCaixa(gi, s.x + s.w, s.fy, T, s.h - NB, BAIXA, pw);
+      if (s.x - T <= P0.x + 1) isoCaixa(gi, s.x - T, s.fy, T, s.h - NB, BAIXA, pw);
+    }
+    L.corredores.forEach((cc, i) => { isoCaixa(gi, P0.x + P0.w - T, cc.y, T, cc.h, BAIXA, pw); if (i > 0) isoCaixa(gi, P0.x, cc.y, T, cc.h, BAIXA, pw); else { isoCaixa(gi, P0.x, cc.y, T, 12, BAIXA, pw); isoCaixa(gi, P0.x, cc.y + 28, T, cc.h - 28, BAIXA, pw); } });
+    return c;
+  }
+  function ceuIso(cfg) {
+    const per = periodo(cfg), k = per + KM.W + 'x' + KM.H;
+    if (ISO.ceu && ISO.ceu.k === k) return ISO.ceu.c;
+    const c = tela(KM.W, KM.H), g = c.getContext('2d'), [c1, c2, c3] = CEU_FORA[per] || CEU_FORA.tarde, rnd = semente(99);
+    for (let y = 0; y < KM.H; y++) { const f = y / KM.H; g.fillStyle = f < 0.4 ? c1 : f < 0.75 ? c2 : c3; g.fillRect(0, y, KM.W, 1); }
+    if (per !== 'dia') for (let i = 0; i < KM.W * KM.H / 700; i++) { g.fillStyle = rnd() < 0.3 ? '#fff3bf' : '#e9e4ff'; g.fillRect((rnd() * KM.W) | 0, (rnd() * KM.H) | 0, 1, 1); }
+    ISO.ceu = { k, c };
+    return c;
+  }
+  const dirIso = p => { const d = dirDe(p); return sentado(p) && d[0] === 'c' ? 'cd' : d; }; // sentado de costas: olhando para a mesa (diagonal para cima à direita)
+
+  function desenharIso(ctx, cfg, estado, t) {
+    const per = periodo(cfg);
+    if (ISO.per !== per) { limparIso(); ISO.per = per; }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(ceuIso(cfg), 0, 0);
+    const z = ISO.cam.z;
+    ctx.setTransform(z, 0, 0, z, KM.W / 2 - ISO.cam.x * z, KM.H / 2 - ISO.cam.y * z);
+    ctx.imageSmoothingEnabled = z < 0.97;
+    if (!ISO.chao) ISO.chao = montarChaoIso(cfg);
+    if (!ISO.paredes) ISO.paredes = montarParedes(cfg);
+    ctx.drawImage(ISO.chao, 0, 0);
+    // marcas no chão (piso molhado…) deitadas na diagonal
+    ctx.save(); ctx.transform(1, 0.5, -1, 0.5, ISO.ox, ISO.oy); for (const x of KM.noChao || []) x(ctx, t, 'chao'); ctx.restore();
+    // luz quente das luminárias no piso
+    if (moderno(cfg.escritorio)) {
+      const forca = per === 'noite' ? 0.38 : per === 'tarde' ? 0.3 : 0.16;
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      for (const [x, y, k] of L.luzes || []) { const [px, py] = prj(x, y); ctx.globalAlpha = forca * (k || 1); ctx.drawImage(brilho(), px - 34, py - 17, 68, 34); }
+      ctx.restore();
+    }
+    const lista = [];
+    // paredes do fundo, em fatias
+    for (const P of ISO.paredes) {
+      for (let u = 0; u < P.w; u += 8) {
+        if (P.porta && u + 8 > P.porta[0] && u < P.porta[1]) continue;
+        const uw = Math.min(8, P.w - u);
+        lista.push({ p: P.s.x - T + u + 4 + P.s.fy - 3, f: c => { c.save(); c.transform(...P.M); c.drawImage(P.c, u, 0, uw, P.c.height, u, 0, uw, P.c.height); c.restore(); } });
+      }
+      if (P.porta) { const [a] = P.porta; lista.push({ p: P.s.x - T + a + P.s.fy - 3, f: c => { c.save(); c.transform(...P.M); c.fillStyle = '#5c4632'; c.fillRect(a - 2, 4, 2, WALLH); c.fillRect(P.porta[1], 4, 2, WALLH); c.restore(); } }); }
+    }
+    // quadros que mudam (TV, relógio, slides, PS5…) na parede
+    for (const d of L.decor) if (d.din) {
+      const s = L.salas[d.sala]; if (!s) continue;
+      lista.push({ p: d.X + (d.w || 10) / 2 + s.fy - 2, f: c => { c.save(); c.transform(1, 0.5, 0, 1, ISO.ox - s.fy, ISO.oy - s.fy / 2 - 6); desenharDecorDin(c, d, cfg, estado, t); c.restore(); } });
+    }
+    // móveis
+    const ocupada = f => Object.values(estado.pessoas || {}).some(p => p.funcao === f && p.modo === 'sentado' && p.visivel !== false);
+    for (const m of L.moveis) {
+      if (m.tipo === 'tapete') continue;
+      if (m.tipo === 'cadeira') { lista.push({ p: m.sx + m.sy + 1.5, f: c => KM.bb(c, m.sx, m.sy, () => cadeira(c, m, cfg, ocupada(m.funcao))) }); continue; }
+      const fnIso = ISO_MOVEIS[m.tipo];
+      if (!DES[m.tipo] && !fnIso) continue;
+      const ax = m.X + (m.w || 0) / 2, ay = m.Y + (m.d || 0);
+      lista.push({ p: m.X + (m.w || 0) / 2 + m.Y + (m.d || 0) / 2, f: c => {
+        if (!fnIso && (m.din || m.ordenar)) KM.bb(c, ax, ay, () => DES[m.tipo](c, m, cfg)); // muda a cada quadro: desenha direto
+        else { const s = spriteMovel(m, cfg); c.drawImage(s.c, s.x, s.y); }
+        if (m.tipo === 'mesa') { const cx = m.X + (m.w >> 1); KM.bb(c, cx, m.Y, () => monitorDe(c, m, estado, t)); }
+        else KM.bb(c, ax, ay, () => dinMovel(c, m, estado, t));
+      } });
+    }
+    // postes e carro da rua
+    for (const [x, y] of L.postes || []) lista.push({ p: x + L.rua + 8, f: c => KM.bb(c, x, L.rua + 8, () => { r(c, x - 1, L.rua - 10, 2, 18, '#1b1e33'); r(c, x - 4, L.rua - 12, 8, 3, '#2b2f45'); r(c, x - 3, L.rua - 9, 6, 1, '#ffe8a3'); }) });
+    lista.push({ p: carro.x + L.rua + 33, f: c => KM.bb(c, carro.x, L.rua + 33, () => desenharCarro(c, t, ISO.dt || 0)) });
+    // pessoas e objetos dos outros módulos
+    for (const p of Object.values(estado.pessoas || {})) if (p.visivel !== false) lista.push({ p: p.X + p.Y + 0.5, f: c => KM.desenharPessoa(c, cfg, p, t) });
+    for (const x of estado.extras || []) lista.push({ p: (x.X != null ? x.X : L.W / 2) + (x.Y != null ? x.Y : x.p), f: c => (x.X != null ? KM.bb(c, x.X, x.Y, () => x.f(c, t)) : x.f(c, t)) });
+    for (const o of KM.objetos || []) {
+      const X = o.X != null ? o.X : L.W / 2, Y = o.Y != null ? o.Y : o.p;
+      lista.push({ p: X + Y, f: c => (o.X != null && !o.proprio ? KM.bb(c, o.X, Y, () => o.f(c, t)) : o.f(c, t)) });
+    }
+    lista.sort((a, b) => a.p - b.p);
+    for (const o of lista) o.f(ctx);
+    if (per === 'noite') { ctx.fillStyle = 'rgba(20,22,60,0.10)'; ctx.fillRect(0, 0, ISO.w, ISO.h); }
+  }
 
   // ------------------------------------------------------------------ carro passando
   const carro = { x: -40, vel: 0, cor: '#e03131', prox: 3 };
@@ -1511,11 +1784,12 @@
   let tAnterior = 0;
   KM.desenhar = function (ctx, cfg, estado, t) {
     if (!L) KM.definirLayout('largo', cfg);
+    const dt = Math.min(0.1, Math.max(0, t - tAnterior)); tAnterior = t;
+    if (ISO.on) { ISO.dt = dt; return desenharIso(ctx, cfg, estado, t); }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.imageSmoothingEnabled = false;
     if (!fundo || fundoPer !== periodo(cfg)) fundo = montarFundo(cfg);
     ctx.drawImage(fundo, 0, 0);
-    const dt = Math.min(0.1, Math.max(0, t - tAnterior)); tAnterior = t;
     desenharCarro(ctx, t, dt);
     desenharDinamicos(ctx, cfg, estado, t);
     if (KM.jogos && KM.jogos.desenharFundo) KM.jogos.desenharFundo(ctx, cfg, estado, t);
@@ -1564,6 +1838,7 @@
   KM.salaEm = (x, y) => { if (!L) return null; for (const s of Object.values(L.salas)) if (x >= s.x && x <= s.x + s.w && y >= s.y && y <= s.y + s.h) return s.id; return null; };
   const sentado = p => p.modo === 'sentado' || p.modo === 'sentado-mesa'; // sentado-mesa: no refeitório
   KM.ancora = function (pers) {
+    if (ISO.on) { const s = sentado(pers), [x, y] = prj(pers.X, pers.Y, s ? 0 : (pers.Z || 0)); return [Math.round(x), Math.round(y) - (s ? 2 : 0)]; }
     if (sentado(pers)) return [Math.round(pers.X), Math.round(pers.Y) - 2];
     return [Math.round(pers.X), Math.round(pers.Y - (pers.Z || 0))];
   };
@@ -1614,7 +1889,7 @@
     const est = Object.assign({}, p.est || {});
     if (p.fantasia) est.fantasia = p.fantasia;
     if (p.prop) est.prop = p.prop;
-    est.vista = KM.vistaDe(dirDe(p)).vista;
+    est.vista = KM.vistaDe(ISO.on ? dirIso(p) : dirDe(p)).vista;
     if (sentado(p)) {
       est.pose = 'sentado';
       if (!est.bracos && !est.prop) est.bracos = 'frente';
@@ -1625,7 +1900,7 @@
 
   KM.desenharPessoa = function (ctx, cfg, p, t, opc = {}) {
     const ap = opc.aparencia || KM.aparenciaDe(cfg, p.id);
-    const v = KM.vistaDe(dirDe(p));
+    const v = KM.vistaDe(ISO.on ? dirIso(p) : dirDe(p));
     const est = KM.estDe(p, t);
     const s = sprite(ap, est);
     const [ax, ay] = opc.ancora || KM.ancora(p);
@@ -1647,7 +1922,7 @@
     ctx.globalAlpha = 1;
     const chapeu = ap.chapeu || (ap.bone ? 'bone' : '');
     const topo = est.saiyan ? 0 : est.fantasia === 'mago' ? -4 : est.fantasia === 'pirata' ? 1 : ({ cacheado: 3, moicano: 1, coque: 1, careca: 6 }[ap.cabelo] ?? 5);
-    p.cabecaTela = [ax, oy + 2 + topo + (chapeu && !est.saiyan ? -2 : 0) + (ap.altura === 'baixo' ? 4 : 0)];
+    p.cabecaTela = KM.paraTela(ax, oy + 2 + topo + (chapeu && !est.saiyan ? -2 : 0) + (ap.altura === 'baixo' ? 4 : 0));
   };
 
   // Mãos no teclado: só quando está sentado de frente (as mesas atuais deixam todos de costas).

@@ -45,14 +45,15 @@
     await andar(npc, npc.seat.X, npc.seat.Y + 13);
     if (npc.estado !== 'entrando') return;
     Object.assign(npc, { modo: 'sentado', X: npc.seat.X, Y: npc.seat.Y, dir: 'ce', digitando: true, estado: 'sentado', est: {} });
-    KM.emitir('texto', 1, { x: npc.X, y: npc.Y - 44, vy: -10, vida: 1.5, s: 'BORA!', cor: '#51cf66' });
+    { const [ax, ay] = KM.ancora(npc); KM.emitir('texto', 1, { x: ax, y: ay - 44, vy: -10, vida: 1.5, s: 'BORA!', cor: '#51cf66' }); }
   }
   async function sair(npc) {
     npc.estado = 'saindo'; npc.digitando = false;
     const s = KM.LAYOUT.salas.execucao;
     Object.assign(npc, { modo: 'em-pe', X: npc.seat.X, Y: npc.seat.Y + 13, dir: 'fe', est: { bracos: 'cima', boca: 'sorriso', olhos: 'feliz' } });
-    KM.emitir('texto', 1, { x: npc.X, y: npc.Y - 52, vy: -12, vida: 1.8, s: 'FEITO!', cor: '#ffd43b' });
-    KM.emitir('confete', 30, i => ({ x: npc.X + (Math.random() * 30 - 15), y: npc.Y - 50 - Math.random() * 20, vy: 20, g: 40, vida: 2, cor: ['#28BE52', '#ffd93b', '#ffffff'][i % 3] }));
+    const [ax, ay] = KM.ancora(npc);
+    KM.emitir('texto', 1, { x: ax, y: ay - 52, vy: -12, vida: 1.8, s: 'FEITO!', cor: '#ffd43b' });
+    KM.emitir('confete', 30, i => ({ x: ax + (Math.random() * 30 - 15), y: ay - 50 - Math.random() * 20, vy: 20, g: 40, vida: 2, cor: ['#28BE52', '#ffd93b', '#ffffff'][i % 3] }));
     KM.tocar('sucesso');
     for (let i = 0; i < 2; i++) { await KM.mov.pular(npc, 10, 360); }
     npc.est = { bracos: 'aceno', aceno: 1, boca: 'sorriso' };
@@ -85,8 +86,9 @@
     const cfg = () => A().cfg();
     for (const seat of assentos()) {
       const o = {
-        Y: seat.Y + 0.4, f: (g, t) => {
+        X: seat.X, proprio: true, Y: seat.Y + 0.4, f: (g, t) => {
           const n = [...npcs.values()].find(q => q.seat === seat && q.estado === 'sentado');
+          if (n && KM.isoAtivo && KM.isoAtivo() && seat.mesa) { const m = seat.mesa, cx = m.X + (m.w >> 1); KM.bb(g, cx, m.Y, () => telaAcesa(g, m, n, t)); }
           if (n) { KM.desenharPessoa(g, cfg(), n, t, { aparencia: n.ap }); KM.desenharCadeira(g, seat.X, seat.Y, true); }
           else KM.desenharCadeira(g, seat.X, seat.Y, false);
         },
@@ -95,7 +97,14 @@
     }
   }
   // telas das mesas ocupadas acesas (desenhadas antes das pessoas)
-  KM.noChao.push((ctx, t) => {
+  function telaAcesa(ctx, m, n, t) {
+    const cx = m.X + (m.w >> 1), ty = m.Y - m.h;
+    ctx.fillStyle = '#0c2a16'; ctx.fillRect(cx - 7, ty - 12, 14, 8);
+    const k = Math.floor(t * 4 + n.fase * 3);
+    for (let l = 0; l < 3; l++) { ctx.fillStyle = l === 2 ? '#51cf66' : '#2f9e44'; ctx.fillRect(cx - 6, ty - 11 + l * 2, 3 + ((k + l * 3) % 9), 1); }
+  }
+  KM.noChao.push((ctx, t, modo) => {
+    if (modo === 'chao') return; // na visão diagonal a tela acesa é desenhada junto com quem está sentado
     for (const n of npcs.values()) {
       if (n.estado !== 'sentado' || !n.seat.mesa) continue;
       const m = n.seat.mesa, cx = m.X + (m.w >> 1), ty = m.Y - m.h;
@@ -110,7 +119,7 @@
   setInterval(() => {
     for (const n of npcs.values()) {
       if (n.estado === 'sentado') { const o = objsAndando.get(n); if (o) { KM.objetos.splice(KM.objetos.indexOf(o), 1); objsAndando.delete(n); } continue; }
-      if (!objsAndando.has(n)) { const o = { get Y() { return n.Y; }, f: (g, t) => KM.desenharPessoa(g, A().cfg(), n, t, { aparencia: n.ap }) }; objsAndando.set(n, o); KM.objetos.push(o); }
+      if (!objsAndando.has(n)) { const o = { proprio: true, get X() { return n.X; }, get Y() { return n.Y; }, f: (g, t) => KM.desenharPessoa(g, A().cfg(), n, t, { aparencia: n.ap }) }; objsAndando.set(n, o); KM.objetos.push(o); }
     }
     for (const [n, o] of objsAndando) if (!npcs.has(n.ativ) || npcs.get(n.ativ) !== n) { const i = KM.objetos.indexOf(o); if (i >= 0) KM.objetos.splice(i, 1); objsAndando.delete(n); }
   }, 100);

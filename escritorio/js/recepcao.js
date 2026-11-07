@@ -44,7 +44,7 @@
   const objs = new Map();
   setInterval(() => {
     for (const n of npcs) if (!objs.has(n)) {
-      const o = { get Y() { return n.Y + 0.5; }, f: (g, t) => { if (n.visivel && !n.cadeira) KM.desenharPessoa(g, A().cfg(), n, t, { aparencia: n.ap }); } };
+      const o = { proprio: true, get X() { return n.X; }, get Y() { return n.Y + 0.5; }, f: (g, t) => { if (n.visivel && !n.cadeira) KM.desenharPessoa(g, A().cfg(), n, t, { aparencia: n.ap }); } };
       objs.set(n, o); KM.objetos.push(o);
     }
     for (const [n, o] of objs) if (!npcs.has(n)) { const i = KM.objetos.indexOf(o); if (i >= 0) KM.objetos.splice(i, 1); objs.delete(n); }
@@ -56,7 +56,7 @@
     objCadeiras.length = 0;
     const pa = KM.LAYOUT && KM.LAYOUT.pontos.apresentacao; if (!pa) return;
     pa.cadeiras.forEach((c, i) => {
-      const o = { Y: c.Y + 0.4, f: (g, t) => {
+      const o = { X: c.X, proprio: true, Y: c.Y + 0.4, f: (g, t) => {
         const n = [...npcs].find(q => q.cadeira === i);
         if (n) { KM.desenharPessoa(g, A().cfg(), n, t, { aparencia: n.ap }); KM.desenharCadeira(g, c.X, c.Y, true); }
         else KM.desenharCadeira(g, c.X, c.Y, false);

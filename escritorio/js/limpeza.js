@@ -27,7 +27,7 @@
   });
   function cone(x, y) { // placa "piso molhado"
     const o = {
-      Y: y, f: g => {
+      X: x, Y: y, f: g => {
         g.fillStyle = 'rgba(0,0,0,0.18)'; g.fillRect(x - 4, y - 1, 9, 2);
         g.fillStyle = '#fab005'; g.fillRect(x - 3, y - 9, 7, 9); g.fillRect(x - 2, y - 11, 5, 2); g.fillRect(x - 1, y - 12, 3, 1);
         g.fillStyle = '#1c1612'; g.fillRect(x, y - 8, 1, 3); g.fillRect(x, y - 4, 1, 1);
@@ -39,7 +39,7 @@
   }
   function escada(p) { // escadinha para alcançar o ar-condicionado
     const o = {
-      get Y() { return p.Y - 0.2; }, f: g => {
+      get X() { return p.X; }, get Y() { return p.Y - 0.2; }, f: g => {
         const x = Math.round(p.X), y = Math.round(p.Y);
         g.fillStyle = 'rgba(0,0,0,0.2)'; g.fillRect(x - 7, y - 1, 14, 2);
         g.fillStyle = '#868e96'; g.fillRect(x - 6, y - 10, 1, 10); g.fillRect(x + 5, y - 10, 1, 10);

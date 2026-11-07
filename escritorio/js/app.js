@@ -25,7 +25,7 @@
       nome: 'Mini Escritório', parede: '#2f3550', rodape: '#1b1e33', piso: 'porcelanato', corPiso: '#d9dbd5',
       tapete: true, corTapete: '#c98a4e', padraoTapete: 'losango', mesa: '#eef0f2', cadeira: '#5c6370', estante: '#a0612f', ceu: 'auto',
       modeloParede: 'janelas', modeloMesa: 'moderna', modeloCadeira: 'escritorio', modeloPlanta: 'costela', corVaso: '#b5532f',
-      modeloSofa: 'futon', corSofa: '#2f62a8', modeloEstante: 'livros', modeloQuadro: 'paisagem', corMoldura: '#1c1612',
+      modeloSofa: 'futon', corSofa: '#2f62a8', modeloEstante: 'livros', modeloQuadro: 'paisagem', corMoldura: '#1c1612', visao: 'diagonal',
       itens: { planta: true, estante: true, janela: true, relogio: true, tv: true, grafico: true, logo: true, quadros: true, cofre: true, lixeira: true },
     },
     funcionarios: [{
@@ -491,7 +491,7 @@
       tique() {
         if (performance.now() - ultimaMoeda < 2200) return;
         ultimaMoeda = performance.now();
-        const [x, y] = p.cabecaTela || [126, 100];
+        const [x, y] = KM.mov.cabeca(p);
         KM.emitir('moeda', 3, i => ({ x: x + (Math.random() * 10 - 5), y, vx: Math.random() * 60 - 30, vy: -90, g: 220, vida: 0.9 }));
         KM.tocar('moeda');
       },
@@ -1016,13 +1016,16 @@
   // ------------------------------------------------------------------ laço de desenho
   const tela = $('#tela'), ctx = tela.getContext('2d'), palco = $('#palco');
   const mqCelular = window.matchMedia('(max-width: 760px)');
+  const visaoDiagonal = () => (cfg.escritorio.visao || 'diagonal') === 'diagonal';
   function aplicarLayout() {
-    const nome = mqCelular.matches ? 'alto' : 'largo';
+    const iso = visaoDiagonal();
+    const nome = iso || !mqCelular.matches ? 'largo' : 'alto'; // na diagonal o prédio é o mesmo no PC e no celular (com câmera)
     const antes = KM.LAYOUT && KM.LAYOUT.nome;
-    if (!KM.definirLayout(nome, cfg)) return;
+    if (!KM.definirLayout(nome, cfg, iso)) return;
     tela.width = KM.W; tela.height = KM.H;
     palco.style.aspectRatio = `${KM.W} / ${KM.H}`;
-    palco.style.width = nome === 'largo' ? `min(100%, calc((100vh - 170px) * ${(KM.W / KM.H).toFixed(4)}))` : '100%';
+    palco.style.width = !mqCelular.matches ? `min(100%, calc((100vh - 170px) * ${(KM.W / KM.H).toFixed(4)}))` : '100%';
+    palco.classList.toggle('iso', iso);
     if (antes !== nome) { // trocou PC ↔ celular: todo mundo volta para a mesa (se só a Execução cresceu, ninguém se mexe)
       if (estado.luzJogos && KM.jogos) KM.jogos.apagar();
       for (const p of Object.values(estado.pessoas)) {
@@ -1038,11 +1041,36 @@
     const ABRIR_SALA = { reuniao: () => KM.reuniao.abrir(), meta: () => KM.meta.abrir(), execucao: () => KM.execucao.abrir(), fiscal: () => KM.setores.abrir('fiscal', 'ver'), folha: () => KM.setores.abrir('folha', 'ver') };
     for (const s of Object.values(KM.LAYOUT.salas)) {
       const clicavel = !!ABRIR_SALA[s.id];
-      const r = el('div', { class: 'rotulo-sala' + (s.id === 'jogos' ? ' jogos' : '') + (clicavel ? ' clicavel' : '') + (s.id === 'diretoria' ? ' ceo' : ''), style: `left:${((s.x + s.w / 2) / KM.W * 100).toFixed(2)}%;top:${((s.y + 2) / KM.H * 100).toFixed(2)}%` }, s.nome + (ICONE_SALA[s.id] || ''));
+      const r = el('div', { class: 'rotulo-sala' + (s.id === 'jogos' ? ' jogos' : '') + (clicavel ? ' clicavel' : '') + (s.id === 'diretoria' ? ' ceo' : '') }, s.nome + (ICONE_SALA[s.id] || ''));
+      r._sala = s;
       if (clicavel) r.addEventListener('click', e => { e.stopPropagation(); ABRIR_SALA[s.id](); });
       palco.append(r);
     }
+    posicionarRotulos(true);
+  }
+  // nomes das salas e botão do carro acompanham a câmera (na diagonal)
+  let camAntes = '';
+  function posicionarRotulos(forcar) {
+    const k = KM.isoAtivo && KM.isoAtivo() ? JSON.stringify(KM.camera.estado()) + KM.W : 'cima' + KM.W;
+    if (!forcar && k === camAntes) return;
+    camAntes = k;
+    for (const r of $$('.rotulo-sala')) {
+      if (!r._sala) continue;
+      const [x, y] = KM.rotuloPos(r._sala);
+      r.style.left = (x / KM.W * 100).toFixed(2) + '%'; r.style.top = (y / KM.H * 100).toFixed(2) + '%';
+      r.style.display = x < 0 || y < 0 || x > KM.W || y > KM.H ? 'none' : '';
+    }
     if (KM.clientesFora) KM.clientesFora.posicionarBotao();
+  }
+  function trocarVisao(v) {
+    cfg.escritorio.visao = v || (visaoDiagonal() ? 'cima' : 'diagonal');
+    salvar(); aplicarLayout(); posicionarRotulos(true); atualizarBotoesCam();
+    toast(visaoDiagonal() ? '🧭 Visão diagonal: arraste para andar pelo escritório e use + / − para o zoom' : '🧭 Visão de cima');
+  }
+  function atualizarBotoesCam() {
+    const b = $('#camBts'); if (!b) return;
+    b.querySelectorAll('.so-iso').forEach(x => { x.hidden = !visaoDiagonal(); });
+    const v = $('#btVisao'); if (v) v.textContent = visaoDiagonal() ? '⬛ De cima' : '🔷 Diagonal';
   }
   mqCelular.addEventListener ? mqCelular.addEventListener('change', aplicarLayout) : mqCelular.addListener(aplicarLayout);
   let ultimo = performance.now(), proxPiscar = 2, previewT = 0;
@@ -1056,6 +1084,7 @@
     KM.atualizarEfeitos(dt, t);
     KM.desenhar(ctx, cfg, estado, t);
     KM.desenharEfeitos(ctx, t);
+    if (KM.isoAtivo && KM.isoAtivo()) posicionarRotulos();
 
     // tremor da tela
     const tr = KM.fx.tremor;
@@ -1111,10 +1140,31 @@
       cfg = clone(PADRAO); cfg.checklist = lista; sincronizarPessoas(); mudou(); montarCampos(); preencherCampos(); animarCaixa();
     });
     const pontoLogico = e => { const r = tela.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * KM.W, (e.clientY - r.top) / r.height * KM.H]; };
+    // câmera da visão diagonal: arrastar (mouse ou dedo), pinça e rodinha para o zoom
+    const toques = new Map(); let arrastou = false, distPinca = 0;
+    tela.addEventListener('pointerdown', e => { if (!visaoDiagonal()) return; toques.set(e.pointerId, [e.clientX, e.clientY]); arrastou = false; distPinca = 0; });
+    tela.addEventListener('pointermove', e => {
+      if (!visaoDiagonal() || !toques.has(e.pointerId)) return;
+      const [ax, ay] = toques.get(e.pointerId), rr = tela.getBoundingClientRect(), esc = KM.W / rr.width;
+      if (toques.size >= 2) {
+        toques.set(e.pointerId, [e.clientX, e.clientY]);
+        const [p1, p2] = [...toques.values()], d = Math.hypot(p1[0] - p2[0], p1[1] - p2[1]);
+        if (distPinca) KM.camera.zoom(d / distPinca); distPinca = d; arrastou = true; return;
+      }
+      if (!arrastou && Math.hypot(e.clientX - ax, e.clientY - ay) < 6) return;
+      if (!arrastou) { arrastou = true; try { tela.setPointerCapture(e.pointerId); } catch (x) { /* ok */ } }
+      KM.camera.mover((e.clientX - ax) * esc, (e.clientY - ay) * esc);
+      toques.set(e.pointerId, [e.clientX, e.clientY]);
+    });
+    const soltar = e => { toques.delete(e.pointerId); if (toques.size < 2) distPinca = 0; };
+    tela.addEventListener('pointerup', soltar); tela.addEventListener('pointercancel', soltar);
+    tela.style.touchAction = 'none';
+    tela.addEventListener('wheel', e => { if (!visaoDiagonal()) return; e.preventDefault(); const [px, py] = pontoLogico(e); KM.camera.zoom(e.deltaY < 0 ? 1.12 : 1 / 1.12, px, py); }, { passive: false });
     tela.addEventListener('click', e => {
       ativo();
-      const [x, y] = pontoLogico(e);
-      const id = KM.pessoaEm(estado, x, y);
+      if (arrastou) { arrastou = false; return; } // foi um arrasto da câmera, não um toque
+      const [tx, ty] = pontoLogico(e), [cx, cy] = KM.telaParaCena(tx, ty), [x, y] = KM.telaParaMundo(tx, ty);
+      const id = KM.pessoaEm(estado, cx, cy);
       if (id) return selecionar(estado.selecionado === id ? null : id);
       if (KM.jogos.cliqueArea(x, y)) return;
       const sala = KM.salaEm(x, y);
@@ -1125,9 +1175,9 @@
       if (estado.selecionado) selecionar(null); // tocar no vazio esconde o nome
     });
     tela.addEventListener('mousemove', e => {
-      const [x, y] = pontoLogico(e);
+      const [tx, ty] = pontoLogico(e), [cx, cy] = KM.telaParaCena(tx, ty), [x, y] = KM.telaParaMundo(tx, ty);
       const sala = KM.salaEm(x, y);
-      tela.style.cursor = KM.pessoaEm(estado, x, y) || KM.jogos.sobre(x, y) || ['reuniao', 'meta', 'execucao', 'fiscal', 'folha'].includes(sala) ? 'pointer' : 'default';
+      tela.style.cursor = toques.size && visaoDiagonal() ? 'grabbing' : KM.pessoaEm(estado, cx, cy) || KM.jogos.sobre(x, y) || ['reuniao', 'meta', 'execucao', 'fiscal', 'folha'].includes(sala) ? 'pointer' : 'default';
     });
     document.addEventListener('keydown', ativo);
     window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (ABAS.includes(h)) irPara(h); });
@@ -1266,6 +1316,12 @@
       if (document.visibilityState === 'hidden' && timerSalvar && online) salvar(true); // não perde mudanças ao sair do app
     });
     $('#btGithub').addEventListener('click', abrirConexao);
+    const cam = el('div', { id: 'camBts', class: 'cam-bts' },
+      el('button', { class: 'so-iso', title: 'Aproximar', onclick: e => { e.stopPropagation(); KM.camera.zoom(1.25); } }, '＋'),
+      el('button', { class: 'so-iso', title: 'Afastar', onclick: e => { e.stopPropagation(); KM.camera.zoom(0.8); } }, '－'),
+      el('button', { class: 'so-iso', title: 'Ver o escritório inteiro', onclick: e => { e.stopPropagation(); KM.camera.ajustar(); } }, '⤢'),
+      el('button', { id: 'btVisao', title: 'Trocar a visão (diagonal ou de cima)', onclick: e => { e.stopPropagation(); trocarVisao(); } }, ''));
+    palco.append(cam); atualizarBotoesCam();
     $('#dlgGithub [data-fechar]').addEventListener('click', () => $('#dlgGithub').close());
     const h = location.hash.slice(1);
     if (ABAS.includes(h) && h !== 'escritorio') irPara(h);
