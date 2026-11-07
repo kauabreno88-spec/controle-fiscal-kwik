@@ -22,10 +22,10 @@
   const PADRAO = {
     versao: 4,
     escritorio: {
-      nome: 'Mini Escritório', parede: '#EBDCCB', rodape: '#6B4A35', piso: 'madeira', corPiso: '#B98A62',
-      tapete: true, corTapete: '#F5C27E', padraoTapete: 'losango', mesa: '#9C5B3A', cadeira: '#2A2F33', estante: '#2b2f33', ceu: 'auto',
-      modeloParede: 'lisa', modeloMesa: 'classica', modeloCadeira: 'escritorio', modeloPlanta: 'costela', corVaso: '#b5532f',
-      modeloSofa: 'reto', corSofa: '#3f7fc1', modeloEstante: 'livros', modeloQuadro: 'paisagem', corMoldura: '#1c1612',
+      nome: 'Mini Escritório', parede: '#2f3550', rodape: '#1b1e33', piso: 'porcelanato', corPiso: '#d9dbd5',
+      tapete: true, corTapete: '#c98a4e', padraoTapete: 'losango', mesa: '#eef0f2', cadeira: '#5c6370', estante: '#a0612f', ceu: 'auto',
+      modeloParede: 'janelas', modeloMesa: 'moderna', modeloCadeira: 'escritorio', modeloPlanta: 'costela', corVaso: '#b5532f',
+      modeloSofa: 'futon', corSofa: '#2f62a8', modeloEstante: 'livros', modeloQuadro: 'paisagem', corMoldura: '#1c1612',
       itens: { planta: true, estante: true, janela: true, relogio: true, tv: true, grafico: true, logo: true, quadros: true, cofre: true, lixeira: true },
     },
     funcionarios: [{
@@ -145,7 +145,9 @@
     opcoes: { comemorar: true, todosJuntos: true, soneca: true, som: true, fotos: true, rotinas: true },
   };
   const TEMAS = {
-    'KWIK Clássico': { parede: '#EBDCCB', rodape: '#6B4A35', piso: 'madeira', corPiso: '#B98A62', corTapete: '#F5C27E', padraoTapete: 'losango', mesa: '#9C5B3A', cadeira: '#2A2F33', estante: '#2b2f33' },
+    'KWIK Moderno': { parede: '#2f3550', rodape: '#1b1e33', piso: 'porcelanato', corPiso: '#d9dbd5', corTapete: '#c98a4e', padraoTapete: 'losango', mesa: '#eef0f2', cadeira: '#5c6370', estante: '#a0612f',
+      modeloParede: 'janelas', modeloMesa: 'moderna', modeloCadeira: 'escritorio', modeloSofa: 'futon', corSofa: '#2f62a8', modeloEstante: 'livros', modeloPlanta: 'costela', corVaso: '#b5532f', ceu: 'auto' },
+    'KWIK Clássico': { parede: '#EBDCCB', rodape: '#6B4A35', piso: 'madeira', corPiso: '#B98A62', corTapete: '#F5C27E', padraoTapete: 'losango', mesa: '#9C5B3A', cadeira: '#2A2F33', estante: '#2b2f33', modeloParede: 'lisa', modeloMesa: 'classica', modeloSofa: 'reto', corSofa: '#3f7fc1' },
     'KWIK Verde': { parede: '#DDF3E3', rodape: '#1E8A45', piso: 'piso', corPiso: '#E4EAE5', corTapete: '#28BE52', padraoTapete: 'kwik', mesa: '#F2F2EE', cadeira: '#111A19', estante: '#111A19', modeloMesa: 'moderna', modeloCadeira: 'escritorio', corSofa: '#28BE52', modeloParede: 'lisa' },
     'Grafite Noturno': { parede: '#2B3433', rodape: '#111A19', piso: 'cimento', corPiso: '#7a7f87', corTapete: '#28BE52', padraoTapete: 'kwik', mesa: '#1f2524', cadeira: '#28BE52', estante: '#151a19', ceu: 'noite', modeloMesa: 'moderna', modeloCadeira: 'gamer', corSofa: '#111A19', modeloParede: 'tijolo' },
     'Minimalista': { parede: '#F4F4F2', rodape: '#cfcfc9', piso: 'taco', corPiso: '#D8C3A5', corTapete: '#e9e4d8', padraoTapete: 'redondo', mesa: '#e8e2d6', cadeira: '#3b3b3b', estante: '#e8e2d6', modeloMesa: 'vidro', modeloCadeira: 'madeira', corSofa: '#e9e4d8', modeloParede: 'lisa', modeloPlanta: 'cacto' },
@@ -709,9 +711,9 @@
   const CALCAS = ['#2F3A4A', '#3b5b8a', '#111A19', '#6b4a2a', '#d8c3a5', '#ffffff', '#7a7f87', '#28BE52'];
   const SAPATOS = ['#1A1A1A', '#5A3A22', '#ffffff', '#28BE52', '#c9453a', '#3f7fc1'];
   const CORDOES = ['#E8613C', '#28BE52', '#111A19', '#3f7fc1', '#c9453a', '#E64980'];
-  const PAREDES = ['#EBDCCB', '#DDF3E3', '#F4F4F2', '#2B3433', '#FFE3CC', '#D6E6F5', '#E9D8F2', '#FFF3C4'];
+  const PAREDES = ['#2f3550', '#EBDCCB', '#DDF3E3', '#F4F4F2', '#2B3433', '#FFE3CC', '#D6E6F5', '#E9D8F2', '#FFF3C4'];
   const RODAPES = ['#6B4A35', '#1E8A45', '#111A19', '#cfcfc9', '#8f3f22', '#ffffff'];
-  const PISOS = ['#B98A62', '#8B5E3C', '#D8C3A5', '#E4EAE5', '#5a4636', '#9aa3a1', '#c9ced4', '#6c7a89'];
+  const PISOS = ['#d9dbd5', '#B98A62', '#8B5E3C', '#D8C3A5', '#E4EAE5', '#5a4636', '#9aa3a1', '#c9ced4', '#6c7a89'];
   const MOVEIS = ['#9C5B3A', '#6B4226', '#e8e2d6', '#F2F2EE', '#1f2524', '#28BE52', '#3f7fc1', '#c9453a'];
   const TAPETES = ['#F5C27E', '#28BE52', '#c9453a', '#3f7fc1', '#e9e4d8', '#7B4FBF', '#111A19', '#ff8c5a'];
   const VASOS = ['#b5532f', '#f1f3f5', '#111A19', '#28BE52', '#e2b33c', '#3f7fc1'];
@@ -757,8 +759,8 @@
     { id: 'altura', ic: '📏', nome: 'Altura', modelos: { op: { normal: 'Normal', baixo: 'Baixinho' }, ...mA('altura', 'normal') } },
   ];
   const OBJ_ESC = [
-    { id: 'parede', ic: '🧱', nome: 'Parede', modelos: { op: { lisa: 'Lisa', listrada: 'Listrada', tijolo: 'Tijolinho', madeira: 'Madeira' }, ...mE('modeloParede', 'lisa') }, cores: [{ op: PAREDES, ...cE('parede') }, { nome: 'Rodapé', op: RODAPES, ...cE('rodape') }] },
-    { id: 'piso', ic: '🟫', nome: 'Piso', modelos: { op: { madeira: 'Madeira', taco: 'Taco', piso: 'Porcelanato', carpete: 'Carpete', cimento: 'Cimento' }, ...mE('piso', 'madeira') }, cores: [{ op: PISOS, ...cE('corPiso') }] },
+    { id: 'parede', ic: '🧱', nome: 'Parede', modelos: { op: { janelas: 'Janelões (cidade)', lisa: 'Lisa', listrada: 'Listrada', tijolo: 'Tijolinho', madeira: 'Madeira' }, ...mE('modeloParede', 'janelas') }, cores: [{ op: PAREDES, ...cE('parede') }, { nome: 'Rodapé', op: RODAPES, ...cE('rodape') }] },
+    { id: 'piso', ic: '🟫', nome: 'Piso', modelos: { op: { porcelanato: 'Porcelanato claro', madeira: 'Madeira', taco: 'Taco', piso: 'Piso xadrez', carpete: 'Carpete', cimento: 'Cimento' }, ...mE('piso', 'porcelanato') }, cores: [{ op: PISOS, ...cE('corPiso') }] },
     { id: 'mesa', ic: '🗄️', nome: 'Mesa', modelos: { op: { classica: 'Com gaveteiro', moderna: 'Moderna', vidro: 'Vidro' }, ...mE('modeloMesa', 'classica') }, cores: [{ op: MOVEIS, ...cE('mesa') }] },
     { id: 'cadeira', ic: '🪑', nome: 'Cadeira', modelos: { op: { escritorio: 'Escritório', gamer: 'Gamer', madeira: 'Madeira' }, ...mE('modeloCadeira', 'escritorio') }, cores: [{ op: ROUPAS, ...cE('cadeira') }] },
     { id: 'tapete', ic: '🟩', nome: 'Tapete', modelos: { op: { '': 'Sem tapete', losango: 'Losango', kwik: 'Logo KWIK', listras: 'Listras', redondo: 'Redondo' }, ler: (e = escAtual()) => (e.tapete ? e.padraoTapete || 'losango' : ''), por: (v, e = escAtual()) => { e.tapete = !!v; if (v) e.padraoTapete = v; } },
@@ -1189,6 +1191,10 @@
       const CARGOS = { f1: 'CEO · Fundador da KWIK', clara: 'Assistente do CEO', maycon: 'Chefe da Controladoria', enzo: 'Chefe do Marketing', lena: 'Chefe do Comercial', bia: 'Chefe do Relacionamento com o Cliente' };
       for (const f of cfg.funcionarios) if (CARGOS[f.id]) f.cargo = CARGOS[f.id];
       cfg.versao = 6; migrou = true;
+    }
+    if ((cfg.versao || 1) < 7) { // versão 7: visual novo (cidade ao entardecer, janelões, porcelanato, luminárias); o antigo fica em Visual → "KWIK Clássico"
+      Object.assign(cfg.escritorio, TEMAS['KWIK Moderno']);
+      cfg.versao = 7; migrou = true;
     }
     sincronizarPessoas();
     estado.relatorios = (j && j.relatorios) || [];
