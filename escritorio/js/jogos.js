@@ -1,5 +1,6 @@
 /* KWIK Mini Escritório · Sala de Jogos (um dos cômodos do prédio) + mini jogo "Gatinhos em Casa".
-   A sala começa apagada; ao tocar nela a luz acende e quem está livre vai jogar sinuca, pingue-pongue ou cartas.
+   A sala fica sempre acesa. Quem está livre às vezes vai jogar sozinho (sinuca, cartas, PS5…); tocando na sala ou no
+   botão 🎮 Jogar, a equipe toda que estiver livre vai junto. No fliperama fica o mini jogo.
    Os móveis são desenhados em cena.js; aqui ficam a luz, o letreiro, as bolinhas e quem vai jogar.
    O mini jogo "Gatinhos em Casa" (caminhas, cestas, cercas, níveis difíceis) fica em js/gatinhos.js. */
 (function () {
@@ -15,7 +16,7 @@
 
   function desenharFundo(ctx, cfg, estado, t) {
     const s = sala(); if (!s) return;
-    luzK += ((estado.luzJogos ? 1 : 0) - luzK) * 0.15;
+    luzK = 1; // sempre acesa
     bola += 0.08;
     const on = luzK > 0.5;
     const neon = KM.LAYOUT.decor.find(d => d.tipo === 'neon');
@@ -46,13 +47,7 @@
       r(ctx, x, pg.Y - pg.h + (pg.d >> 1) - 1 - z, 2, 2, '#ffffff');
     }
     const W = s.w, H = s.h;
-    if (luzK < 0.99) { ctx.fillStyle = `rgba(8,6,22,${0.72 * (1 - luzK)})`; ctx.fillRect(s.x, s.y, W, H); }
-    if (on) { ctx.fillStyle = 'rgba(255,224,102,0.06)'; ctx.fillRect(s.fx + 40, s.fy + 20, 60, 44); ctx.fillRect(s.fx + 84, s.fy + 54, 44, 36); }
-    if (!estado.luzJogos && luzK < 0.1) {
-      const cx = s.fx + 68, cy = s.fy + 68, pisca = Math.floor(t * 2) % 2;
-      r(ctx, cx - 3, cy - 14, 7, 7, pisca ? '#ffe066' : '#8a7a3a'); r(ctx, cx - 2, cy - 7, 5, 2, '#adb5bd');
-      KM.texto(ctx, 'TOQUE AQUI', cx - 19, cy, pisca ? '#ff8ae6' : '#b37bd1');
-    }
+    if (on && W && H) { ctx.fillStyle = 'rgba(255,224,102,0.05)'; ctx.fillRect(s.fx + 36, s.fy + 40, 54, 40); ctx.fillStyle = 'rgba(77,171,247,0.07)'; ctx.fillRect(s.fx + 86, s.fy + 4, 44, 40); }
   }
 
   function naArea(x, y) { const s = sala(); return !!s && x >= s.x && x <= s.x + s.w && y >= s.y && y <= s.y + s.h; }
@@ -64,10 +59,12 @@
   };
 
   // ------------------------------------------------------------------ luz + funcionários entrando
-  const FALAS = { sinuca: ['Bola sete na caçapa! 🎱', 'Essa foi de efeito 😎'], sinuca2: ['Minha vez! 🎱', 'Errei de propósito 😅'], pingA: ['Ponto meu! 🏓', 'Saque!'], pingB: ['Devolve essa! 🏓', 'Quase! 😅'], cartas: ['Mais duas cartas pra você! 😂', 'Bati! 🃏'] };
+  const FALAS = { sinuca: ['Bola sete na caçapa! 🎱', 'Essa foi de efeito 😎'], sinuca2: ['Minha vez! 🎱', 'Errei de propósito 😅'], pingA: ['Ponto meu! 🏓', 'Saque!'], pingB: ['Devolve essa! 🏓', 'Quase! 😅'], cartas: ['Mais duas cartas pra você! 😂', 'Bati! 🃏'],
+    ps5a: ['Gol!! ⚽🎮', 'Ultrapassei! 🏎️'], ps5b: ['Revanche! 🎮', 'Esse PS5 é top 😎'], pebolimA: ['Gol de placa! ⚽', 'Segura essa!'], pebolimB: ['Defendi! 🧤', 'Roubado! 😂'] };
+  const lugaresLivres = () => { const ocup = new Set(Object.values(A().estado.pessoas).map(p => p.lugarJogo).filter(Boolean)); return Object.keys(KM.LAYOUT.pontos.jogos || {}).filter(l => !ocup.has(l)); };
 
   function escolherLugares(ps) {
-    const out = new Map(), ordem = ['pingA', 'pingB', 'cartas', 'sinuca2'];
+    const out = new Map(), pts = KM.LAYOUT.pontos.jogos || {}, ordem = ['ps5a', 'ps5b', 'pingA', 'pingB', 'cartas', 'sinuca2', 'pebolimA', 'pebolimB'].filter(l => pts[l]);
     const leo = ps.find(p => p.funcao === 'noticias');
     if (leo) out.set(leo, 'sinuca');
     const outros = ps.filter(p => p !== leo);
@@ -76,20 +73,22 @@
     return out;
   }
 
-  async function brincar(p, lugar) {
+  async function brincar(p, lugar, ate) {
     const L = KM.LAYOUT.pontos.jogos[lugar], m = KM.mov;
     p.acao = 'rotina'; p.lugarJogo = lugar;
     try {
       await m.irAte(p, L.X, L.Y);
       if (!p.pararRotina) {
         p.dir = L.dir; p.prop = L.prop || null; p.jogando = true; p.est = {};
+        if (L.sentado) { p.modo = 'sentado-mesa'; p.X = L.X; p.Y = L.Y; } // no sofá, de frente para a TV
         let n = 0;
-        while (!p.pararRotina) {
+        while (!p.pararRotina && (!ate || performance.now() < ate)) {
           n++;
-          if (lugar.startsWith('ping')) p.est = { bracos: n % 2 ? 'aceno' : 'baixo', aceno: n % 2, boca: 'sorriso' };
+          if (lugar.startsWith('ps5')) p.est = { bracos: 'frente', boca: n % 9 === 0 ? 'o' : 'sorriso' };
+          else if (lugar.startsWith('ping') || lugar.startsWith('pebolim')) p.est = { bracos: n % 2 ? 'aceno' : 'baixo', aceno: n % 2, boca: 'sorriso' };
           else if (lugar.startsWith('sinuca')) p.est = { dy: n % 4 === 0 ? 1 : 0, boca: n % 6 === 0 ? 'o' : 'sorriso' };
           else p.est = { boca: n % 5 === 0 ? 'sorriso' : 'normal', olhos: n % 7 === 0 ? 'feliz' : undefined };
-          if (Math.random() < 0.06) m.fala(p, FALAS[lugar][Math.floor(Math.random() * 2)], 2000);
+          if (Math.random() < 0.06 && FALAS[lugar]) m.fala(p, FALAS[lugar][Math.floor(Math.random() * 2)], 2000);
           await KM.esperar(520);
         }
       }
@@ -129,16 +128,16 @@
   }
   function atualizarBotao() {
     const b = $('#btSalaJogos'); if (!b) return;
-    b.innerHTML = A().estado.luzJogos ? '🌙<small>Apagar</small>' : '💡<small>Jogos</small>';
+    b.innerHTML = A().estado.luzJogos ? '⏹<small>Parar</small>' : '🎮<small>Jogar</small>';
   }
   // Clique na cena: devolve true se foi na sala de jogos.
   function cliqueArea(x, y) {
     if (!naArea(x, y)) return false;
     const est = A().estado;
-    if (!est.luzJogos) { acender(); return true; }
     const alvo = alvoEm(x, y);
-    if (alvo === 'fliperama') abrir();
-    else if (alvo) A().toast('🕹️ Os mini jogos ficam no fliperama (no canto da sala). A sinuca e as cartas chegam numa próxima atualização!');
+    if (alvo === 'fliperama') { abrir(); return true; }
+    if (!est.luzJogos) { acender(); return true; }
+    if (alvo) A().toast('🕹️ O mini jogo fica no fliperama (no canto da sala). Toque nele para jogar!');
     return true;
   }
   function renderPainel() {
@@ -147,6 +146,15 @@
     $('#casaEstrelas').textContent = Object.values(g.estrelas || {}).reduce((s, v) => s + v, 0);
   }
 
+
+  // Um funcionário livre vai jogar um pouco (de preferência PS5, cartas ou sinuca) e depois volta para a mesa.
+  function jogarUm(p, ms = 18000 + Math.random() * 14000) {
+    const livres = lugaresLivres(); if (!livres.length) return false;
+    const pref = livres.filter(l => l.startsWith('ps5') || l === 'cartas' || l === 'sinuca');
+    const base = pref.length && Math.random() < 0.75 ? pref : livres;
+    brincar(p, base[Math.floor(Math.random() * base.length)], performance.now() + ms);
+    return true;
+  }
 
   // ------------------------------------------------------------------ mini jogo (js/gatinhos.js)
   const CORES = ['#ff5a5f', '#ffc61a', '#3d9bff', '#3ccf6e', '#a66cff'];
@@ -162,6 +170,6 @@
     },
     desenharFundo, desenharFrente, cliqueArea, acender, apagar, abrir, fecharJogo, renderPainel,
     sobre: (x, y) => naArea(x, y) || !!alvoEm(x, y),
-    entrar: acender, sair: apagar,
+    entrar: acender, sair: apagar, jogarUm,
   };
 })();

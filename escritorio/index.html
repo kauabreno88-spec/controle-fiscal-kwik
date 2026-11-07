@@ -650,8 +650,28 @@ dialog.setor-dlg { max-width: 860px; }
 dialog.rua-dlg { max-width: 1120px; width: calc(100% - 20px); max-height: 94vh; }
 .rua-bts { display: flex; gap: 8px; align-items: center; }
 .rua-bts label { cursor: pointer; background: #fff; color: var(--tinta); }
-.rua-cena { overflow-x: auto; background: #5c9a45; }
-.rua-cena canvas { display: block; height: clamp(230px, 44vh, 430px); image-rendering: pixelated; cursor: pointer; }
+.rua-cena { overflow: auto; max-height: 50vh; background: #5c9a45; }
+.rua-cena canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; cursor: pointer; }
+.rua-dentro { margin: 10px 0; display: flex; justify-content: center; background: #2b3a33; border-radius: 14px; padding: 8px; }
+.rua-dentro canvas { width: min(100%, 560px); height: auto; image-rendering: pixelated; border-radius: 8px; }
+.rua-indo { color: #fff; font-weight: 800; padding: 30px 10px; }
+.rua-pers { margin-top: 14px; border-top: 2px solid var(--linha); padding-top: 10px; }
+.rua-pers h3 { margin: 0 0 8px; }
+.rua-pers-linha { display: flex; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--linha); }
+.rua-pers-av { width: 45px; height: 69px; image-rendering: pixelated; background: var(--nevoa); border-radius: 10px; flex: none; }
+.rua-pers-campos { flex: 1; display: grid; gap: 6px; min-width: 0; }
+.rua-pers-nome { display: flex; gap: 8px; align-items: center; } .rua-pers-nome input { width: 150px; padding: 5px 8px; border-radius: 8px; border: 2px solid var(--linha); font-weight: 800; } .rua-pers-nome small { color: var(--cinza); font-weight: 700; }
+.rua-peles { display: flex; gap: 4px; flex-wrap: wrap; } .rua-peles .pele { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px var(--linha); padding: 0; } .rua-peles .pele.on { box-shadow: 0 0 0 2px var(--verde); }
+.rua-pers-sel { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; } .rua-pers-sel select { padding: 4px 6px; border-radius: 8px; border: 2px solid var(--linha); font-weight: 700; } .rua-pers-sel input[type=color] { width: 34px; height: 28px; border: 0; padding: 0; background: none; }
+/* Dona Iva: pedido descrito */
+dialog.iva-dlg { max-width: 680px; }
+.iva-dlg textarea { width: 100%; border: 2px solid var(--linha); border-radius: 12px; padding: 10px; font: inherit; font-size: 14px; resize: vertical; }
+.iva-entendi { margin-top: 14px; background: #f8f0fc; border-radius: 14px; padding: 12px; } .iva-entendi h3 { margin: 0 0 4px; color: #5f3dc4; }
+.iva-grade { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 0.7fr) minmax(0, 1.3fr); gap: 8px; } .iva-grade label { display: flex; flex-direction: column; gap: 3px; font-size: 11.5px; font-weight: 800; color: var(--cinza); } .iva-grade select, .iva-grade input { padding: 7px 8px; border-radius: 10px; border: 2px solid var(--linha); font: inherit; font-size: 13px; font-weight: 600; min-width: 0; width: 100%; }
+.iva-chks { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; } .iva-chk { display: inline-flex; gap: 5px; align-items: center; font-size: 12.5px; font-weight: 700; }
+.iva-pedido { background: var(--nevoa); border-radius: 12px; padding: 10px 12px; margin-bottom: 12px; } .iva-pedido p { margin: 4px 0 0; white-space: pre-wrap; }
+.iva-preco { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 8px; margin-bottom: 8px; } .iva-preco div { background: #f3f0ff; border-radius: 14px; padding: 12px; } .iva-preco small { display: block; font-size: 11.5px; font-weight: 700; color: var(--cinza); } .iva-preco b { display: block; font-size: 26px; font-weight: 900; color: #5f3dc4; } .iva-preco b.cinza { font-size: 18px; color: var(--tinta); } .iva-preco span { font-weight: 800; color: var(--verde-esc); font-size: 13px; }
+.iva-msg { white-space: pre-wrap; background: #ece5dd; border-radius: 12px; padding: 10px 12px; font: inherit; font-size: 13.5px; }
 .rua-dica { font-size: 12px; font-weight: 800; color: var(--cinza); padding: 8px 20px 0; }
 .rua-info { padding-top: 10px; }
 .rua-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; }
@@ -674,7 +694,9 @@ dialog.rua-dlg { max-width: 1120px; width: calc(100% - 20px); max-height: 94vh; 
   .setor-tiles { grid-template-columns: 1fr 1fr; }
   .se-grade { grid-template-columns: 1fr 1fr; }
   .bt-rua { font-size: 8.5px; padding: 2px 6px; }
-  .rua-cena canvas { height: 38vh; }
+  .rua-cena { max-height: 44vh; }
+  .iva-grade, .iva-preco { grid-template-columns: 1fr; }
+  .rua-pers-nome input { width: 110px; }
   .rua-bts .bt { font-size: 11px; padding: 5px 8px; }
   dialog.rua-dlg .dlg-topo h2 { font-size: 14px; }
 }
@@ -982,7 +1004,7 @@ dialog.rua-dlg { max-width: 1120px; width: calc(100% - 20px); max-height: 94vh; 
             <button id="atMeta">🎯 Sala META<small>Clientes, valores e meta</small></button>
             <button id="atFiscal">🧾 Setor Fiscal<small>Impostos e guias dos clientes</small></button>
             <button id="atFolha">👥 Setor de Folha<small>Funcionários e fechamento do mês</small></button>
-            <button id="atClientes">🚗 Clientes fora do prédio<small>Visitar os clientes ativos</small></button>
+            <button id="atClientes">🚗 Cliente<small>Visitar os clientes ativos na cidade</small></button>
           </div>
         </div>
       </div>
@@ -1049,30 +1071,31 @@ dialog.rua-dlg { max-width: 1120px; width: calc(100% - 20px); max-height: 94vh; 
   <div class="dlg-corpo" id="ghCorpo"></div>
 </dialog>
 
-<script src="js/cena.js?v=11"></script>
-<script src="js/boneco.js?v=11"></script>
-<script src="js/nuvem.js?v=11"></script>
-<script src="js/efeitos.js?v=11"></script>
-<script src="js/clara.js?v=11"></script>
-<script src="js/maycon.js?v=11"></script>
-<script src="js/filmes.js?v=11"></script>
-<script src="js/gatinhos.js?v=11"></script>
-<script src="js/jogos.js?v=11"></script>
-<script src="js/marketing.js?v=11"></script>
-<script src="js/enzo.js?v=11"></script>
-<script src="js/relacionamento.js?v=11"></script>
-<script src="js/rotinas.js?v=11"></script>
-<script src="js/limpeza.js?v=11"></script>
-<script src="js/refeitorio.js?v=11"></script>
-<script src="js/reuniao.js?v=11"></script>
-<script src="js/meta.js?v=11"></script>
-<script src="js/pesquisa.js?v=11"></script>
-<script src="js/familia.js?v=11"></script>
-<script src="js/execucao.js?v=11"></script>
-<script src="js/financas.js?v=11"></script>
-<script src="js/precificacao.js?v=11"></script>
-<script src="js/setores.js?v=11"></script>
-<script src="js/clientes.js?v=11"></script>
-<script src="js/app.js?v=11"></script>
+<script src="js/cena.js?v=12"></script>
+<script src="js/boneco.js?v=12"></script>
+<script src="js/nuvem.js?v=12"></script>
+<script src="js/efeitos.js?v=12"></script>
+<script src="js/clara.js?v=12"></script>
+<script src="js/maycon.js?v=12"></script>
+<script src="js/filmes.js?v=12"></script>
+<script src="js/gatinhos.js?v=12"></script>
+<script src="js/jogos.js?v=12"></script>
+<script src="js/marketing.js?v=12"></script>
+<script src="js/enzo.js?v=12"></script>
+<script src="js/relacionamento.js?v=12"></script>
+<script src="js/rotinas.js?v=12"></script>
+<script src="js/limpeza.js?v=12"></script>
+<script src="js/refeitorio.js?v=12"></script>
+<script src="js/reuniao.js?v=12"></script>
+<script src="js/meta.js?v=12"></script>
+<script src="js/pesquisa.js?v=12"></script>
+<script src="js/familia.js?v=12"></script>
+<script src="js/execucao.js?v=12"></script>
+<script src="js/financas.js?v=12"></script>
+<script src="js/precificacao.js?v=12"></script>
+<script src="js/setores.js?v=12"></script>
+<script src="js/clientes.js?v=12"></script>
+<script src="js/recepcao.js?v=12"></script>
+<script src="js/app.js?v=12"></script>
 </body>
 </html>

@@ -1030,8 +1030,9 @@
       }
     }
     if (KM.execucao) KM.execucao.layoutMudou();
+    if (KM.recepcao) KM.recepcao.layoutMudou();
     for (const r of $$('.rotulo-sala')) r.remove();
-    const ICONE_SALA = { reuniao: ' 🗓️', meta: ' 🎯', refeitorio: ' 🍽️', execucao: ' ⚙️', financeiro: ' 📈', precificacao: ' 🧮', diretoria: ' 👑', fiscal: ' 🧾', folha: ' 👥' };
+    const ICONE_SALA = { apresentacao: ' 📊', recepcao: ' 🛎️', jogos: ' 🎮', reuniao: ' 🗓️', meta: ' 🎯', refeitorio: ' 🍽️', execucao: ' ⚙️', financeiro: ' 📈', precificacao: ' 🧮', diretoria: ' 👑', fiscal: ' 🧾', folha: ' 👥' };
     const ABRIR_SALA = { reuniao: () => KM.reuniao.abrir(), meta: () => KM.meta.abrir(), execucao: () => KM.execucao.abrir(), fiscal: () => KM.setores.abrir('fiscal', 'ver'), folha: () => KM.setores.abrir('folha', 'ver') };
     for (const s of Object.values(KM.LAYOUT.salas)) {
       const clicavel = !!ABRIR_SALA[s.id];

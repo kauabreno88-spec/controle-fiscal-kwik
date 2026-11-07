@@ -50,8 +50,7 @@
   }
   function passear(p) {
     return comLock(p, async () => {
-      const est = A().estado;
-      const pontos = (KM.LAYOUT.pontos.fotos || []).filter(q => q[2] !== 'jogos' || est.luzJogos);
+      const pontos = KM.LAYOUT.pontos.fotos || [];
       const [x, y] = sorteio(pontos);
       await KM.mov.irAte(p, x, y, 34);
       if (parar(p)) return;
@@ -69,7 +68,7 @@
       await KM.esperar(1400);
       A().estado.cafeCopa = false; p.dir = 'fe';
       p.est = { bracos: 'cafe', olhos: 'fechados' }; KM.tocar('gole');
-      KM.mov.fala(p, sorteio(['Café passado na hora ☕', 'Agora sim! ☕', 'Combustível de contador ☕']), 2000);
+      KM.mov.fala(p, sorteio(['Café passado na hora ☕', 'Agora sim! ☕', 'Combustível de contador ☕', 'O cafezinho da recepção é o melhor ☕']), 2000);
       await KM.esperar(1600);
     });
   }
@@ -112,7 +111,8 @@
           const outros = Object.values(A().estado.pessoas).filter(q => q !== p && q.visivel !== false && q.modo === 'sentado' && !q.dormindo && KM.LAYOUT.assentos[q.funcao]);
           if (outros.length) conversar(p, KM.familia ? KM.familia.parceiroPreferido(p.id, outros) : sorteio(outros)); else passear(p);
         }
-        else if (x < 0.82) passear(p);
+        else if (x < 0.78) passear(p);
+        else if (x < 0.9 && KM.jogos && KM.jogos.jogarUm) { if (!KM.jogos.jogarUm(p)) cafe(p); } // vai jogar um pouco na sala de jogos
         else cafe(p);
       } catch (e) { /* segue a vida */ }
     }

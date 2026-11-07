@@ -1,4 +1,4 @@
-/* KWIK Mini Escritório · "Clientes fora do prédio".
+/* KWIK Mini Escritório · botão "Cliente" (cidade dos clientes).
    O botão fica na calçada, ao lado do carro da KWIK. O Kauã sai do prédio, entra no carro e vai até a rua dos
    clientes ativos: cada empresa tem um prédio de acordo com a atividade (a Moraes é um mini consultório
    odontológico, a Fertnutri uma clínica de nutrição, a Vanice uma clínica de estética…). Tocando num prédio, o
@@ -105,7 +105,7 @@
   function aparencia(seed, roupa) {
     const h = hashId(seed), [cabelo, corCabelo] = CABELOS[h % CABELOS.length];
     return {
-      pele: PELES[(h >> 3) % PELES.length], cabelo, corCabelo, estiloCamisa: roupa.estilo || 'casual', corCamisa: roupa.cor || '#74c0fc', corGravata: roupa.gravata || '#28BE52',
+      pele: PELES[(h >>> 3) % PELES.length], cabelo, corCabelo, estiloCamisa: roupa.estilo || 'casual', corCamisa: roupa.cor || '#74c0fc', corGravata: roupa.gravata || '#28BE52',
       calca: roupa.calca || '#2F3A4A', sapato: '#ffffff', oculos: h % 5 === 2, fone: false, bone: false, barba: false, corBone: '#28BE52', cracha: !!roupa.cracha, corCordao: roupa.cor || '#28BE52', chapeu: '',
       baixo: 'calca', calcado: 'tenis', altura: 'normal', cachecol: false, corCachecol: '#c9453a', olhos: 'normal', sobrancelha: 'normal', boca: 'sorriso',
       sardas: false, bochechas: h % 3 === 0, pinta: false, estampa: 'lisa', corEstampa: '#ffffff', relogio: false, corRelogio: '#212529', colar: h % 4 === 1, corColar: '#e2b33c',
@@ -123,7 +123,7 @@
     if (espelho) { g.save(); g.translate(ox + 30, oy); g.scale(-1, 1); g.drawImage(s, 0, 0); g.restore(); } else g.drawImage(s, ox, oy);
   }
   function balao(g, s, x, y) {
-    const w = larg(s) + 6, bx = Math.round(Math.max(2, Math.min(cena.W - w - 2, x - w / 2))), by = Math.round(y - 12);
+    const w = larg(s) + 6, bx = Math.round(Math.max(2, Math.min(g.canvas.width - w - 2, x - w / 2))), by = Math.round(Math.max(1, y - 12));
     r(g, bx, by, w, 9, CONTORNO); r(g, bx + 1, by + 1, w - 2, 7, '#ffffff'); r(g, Math.round(x) - 1, by + 9, 3, 2, CONTORNO); r(g, Math.round(x), by + 8, 1, 2, '#ffffff');
     tx(g, s, bx + 3, by + 2, CONTORNO);
   }
@@ -164,7 +164,7 @@
     const pal = $('#palco'), L = KM.LAYOUT; if (!pal || !L) return;
     let b = $('#btRua');
     if (!b) {
-      b = A().el('button', { id: 'btRua', class: 'bt-rua', title: 'Clientes fora do prédio: entrar no carro e visitar os clientes ativos', onclick: e => { e.stopPropagation(); sair(); } }, '🚗 Clientes fora do prédio');
+      b = A().el('button', { id: 'btRua', class: 'bt-rua', title: 'Cliente: entrar no carro e visitar os clientes ativos na cidade', onclick: e => { e.stopPropagation(); sair(); } }, '🚗 Cliente');
       pal.append(b);
     }
     const v = vaga();
@@ -186,13 +186,13 @@
       p.acao = 'clientes';
       A().falar(p.id, 'Vou visitar os clientes! 🚗', 2600);
       const c0 = L.corredores[0], v = vaga();
-      await KM.mov.irAte(p, L.predio.x + 10, c0.y + 22, 60);
-      await KM.mov.andarAte(p, 10, c0.y + 22, 60);
-      await KM.mov.andarAte(p, 10, L.rua + 18, 60);
-      await KM.mov.andarAte(p, v.x + 8, L.rua + 20, 60);
+      await KM.mov.irAte(p, L.predio.x + 10, c0.y + 22, 150);
+      await KM.mov.andarAte(p, 10, c0.y + 22, 150);
+      await KM.mov.andarAte(p, 10, L.rua + 18, 150);
+      await KM.mov.andarAte(p, v.x + 8, L.rua + 20, 150);
       p.visivel = false; ofc.kauaDentro = true; KM.tocar('moto');
       await KM.esperar(350);
-      await dirigirOfc(KM.W + 40, 90);
+      await dirigirOfc(KM.W + 40, 170);
     } catch (e) { /* segue */ }
     abrirRua();
   }
@@ -202,15 +202,15 @@
     try {
       ofc.x = KM.W + 40; KM.tocar('moto');
       const v = vaga();
-      await dirigirOfc(v.x, 90);
+      await dirigirOfc(v.x, 170);
       ofc.dir = 1;
       if (p) {
         const c0 = L.corredores[0];
         Object.assign(p, { X: v.x + 8, Y: L.rua + 20, visivel: true, modo: 'em-pe', est: {}, dir: 'ce' });
         A().falar(p.id, 'Voltei! Os clientes mandaram lembranças 💚', 3000);
-        await KM.mov.andarAte(p, 10, L.rua + 18, 60);
-        await KM.mov.andarAte(p, 10, c0.y + 22, 60);
-        await KM.mov.andarAte(p, L.predio.x + 10, c0.y + 22, 60);
+        await KM.mov.andarAte(p, 10, L.rua + 18, 150);
+        await KM.mov.andarAte(p, 10, c0.y + 22, 150);
+        await KM.mov.andarAte(p, L.predio.x + 10, c0.y + 22, 150);
         await KM.voltarSentar(p);
       }
     } catch (e) { /* segue */ }
@@ -218,23 +218,26 @@
     ofc.viagem = false; ofc.kauaDentro = false;
   }
 
-  // ------------------------------------------------------------------ a rua dos clientes
-  const LOTE = 172, H = 196, Y_PLACA = 4, Y_TOPO = 22, Y_CHAO = 44, Y_FRENTE = 122, Y_CALC = 128, Y_RUA = 142, FAIXA_CIMA = 145;
-  const cena = { W: 600, lotes: [], carroX: -40, carroDir: 1, andando: false, kaua: null, sel: null, falas: [], raf: 0, cancelar: 0 };
+  // ------------------------------------------------------------------ a cidade dos clientes
+  // Interior de cada prédio (visto por dentro, ao visitar): 172 x 132.
+  const LOTE = 172, Y_PLACA = 4, Y_TOPO = 22, Y_CHAO = 44, Y_FRENTE = 122, H_DENTRO = 132;
+  // Cidade (vista de longe): prédios pequenos em quarteirões, ruas na frente de cada fileira e uma avenida à esquerda.
+  const LW = 64, RH = 72, MX = 32, MY = 14, AV = 15; // largura do lote, altura da fileira, margem, topo, centro da avenida
+  const cena = { W: 300, H: 200, cols: 3, lotes: [], hq: null, carro: { x: 0, y: 0, dir: 1 }, andando: false, kaua: null, sel: null, dentro: null, raf: 0, cancelar: 0 };
   function montar() {
     if ($('#dlgRua')) return;
     const d = document.createElement('dialog');
     d.id = 'dlgRua'; d.className = 'rua-dlg';
-    d.innerHTML = `<div class="dlg-topo"><h2>🚗 Clientes fora do prédio</h2><div class="rua-bts"><label class="bt peq" title="Escolha os arquivos .pfx: só a validade e o CNPJ são lidos, sem senha">📜 Ler certificados<input type="file" id="ruaCert" accept=".pfx,.p12" multiple hidden></label><button class="bt peq prim" id="ruaVoltar">🏢 Voltar ao escritório</button></div></div>
-      <div class="rua-cena" id="ruaCena"><canvas id="ruaTela" width="600" height="${H}"></canvas></div>
-      <div class="rua-dica" id="ruaDica">Toque num prédio para o ${'Kauã'} ir até o cliente.</div>
+    d.innerHTML = `<div class="dlg-topo"><h2>🚗 Clientes</h2><div class="rua-bts"><label class="bt peq" title="Escolha os arquivos .pfx: só a validade e o CNPJ são lidos, sem senha">📜 Certificados<input type="file" id="ruaCert" accept=".pfx,.p12" multiple hidden></label><button class="bt peq prim" id="ruaVoltar">🏢 Voltar</button></div></div>
+      <div class="rua-cena" id="ruaCena"><canvas id="ruaTela" width="300" height="200"></canvas></div>
+      <div class="rua-dica" id="ruaDica">Toque num prédio para ir até o cliente.</div>
       <div class="dlg-corpo rua-info" id="ruaInfo"></div>`;
     document.body.append(d);
     $('#ruaVoltar').addEventListener('click', () => d.close());
-    d.addEventListener('close', () => { cancelAnimationFrame(cena.raf); cena.raf = 0; voltar(); });
+    d.addEventListener('close', () => { cancelAnimationFrame(cena.raf); cena.raf = 0; cena.cancelar++; voltar(); });
     $('#ruaTela').addEventListener('click', e => {
-      const cv = e.currentTarget, x = e.offsetX / cv.clientWidth * cena.W;
-      const i = cena.lotes.findIndex(l => x >= l.x && x < l.x + LOTE);
+      const cv = e.currentTarget, x = e.offsetX / cv.clientWidth * cena.W, y = e.offsetY / cv.clientHeight * cena.H;
+      const i = cena.lotes.findIndex(l => x >= l.x && x < l.x + LW && y >= l.y - 4 && y < l.y + 50);
       if (i >= 0) irAoCliente(i);
     });
     $('#ruaCert').addEventListener('change', e => lerCertificados([...e.target.files]).finally(() => { e.target.value = ''; }));
@@ -247,28 +250,32 @@
     $('#ruaInfo').innerHTML = '<p class="vazio">Carregando os clientes…</p>';
     await carregarDados();
     montarCena();
-    cena.carroX = -40; cena.carroDir = 1; cena.kaua = null; cena.sel = null; cena.falas = [];
+    cena.kaua = null; cena.sel = null; cena.dentro = null;
+    Object.assign(cena.carro, { x: cena.hq.porta - 14, y: cena.hq.rua - 7, dir: 1 });
     const dica = $('#ruaDica');
     if (!cena.lotes.length) {
       dica.textContent = 'Nenhum cliente ativo encontrado.';
       $('#ruaInfo').innerHTML = '';
       $('#ruaInfo').append(A().el('p', { class: 'vazio' }, 'Conecte o KWIK Fiscal e o KWIK Folha (abra o setor Fiscal ou Folha) ou cadastre clientes ativos em Configurações → Clientes ativos.'));
     } else {
-      dica.textContent = `${cena.lotes.length} cliente${cena.lotes.length > 1 ? 's' : ''} ativo${cena.lotes.length > 1 ? 's' : ''} · toque num prédio para ir até lá`;
+      dica.textContent = `${cena.lotes.length} cliente${cena.lotes.length > 1 ? 's' : ''} ativo${cena.lotes.length > 1 ? 's' : ''} na cidade · toque num prédio para visitar e ver por dentro`;
       renderResumoRua();
     }
     if (!cena.raf) cena.raf = requestAnimationFrame(quadro);
-    const id = ++cena.cancelar;
-    await dirigir(id, Math.min(60, cena.W / 2 - 14));
   }
-  function montarCena() {
+  function montarCena(manterW) {
     const cs = lista(), cv = $('#ruaTela'), box = $('#ruaCena');
-    // a rua ocupa a largura toda da janela; os prédios ficam centralizados (com rolagem se forem muitos)
-    const minW = box && cv.clientHeight ? Math.ceil(box.clientWidth * H / cv.clientHeight) : 520;
-    cena.W = Math.max(minW, 120 + cs.length * LOTE);
-    const x0 = Math.round(Math.max(64, (cena.W - cs.length * LOTE) / 2));
-    cena.lotes = cs.map((c, i) => ({ c, x: x0 + i * LOTE, pessoas: povoar(c) }));
-    cv.width = cena.W; cv.height = H;
+    if (!manterW) {
+      const esc = window.matchMedia('(max-width: 700px)').matches ? 1.5 : 2.4;
+      cena.W = Math.max(MX + 2 * LW + 8, Math.round(((box && box.clientWidth) || 600) / esc));
+    }
+    cena.cols = Math.max(2, Math.floor((cena.W - MX - 4) / LW));
+    const vagas = cs.length + 1, linhas = Math.ceil(vagas / cena.cols);
+    cena.H = MY + linhas * RH + 6;
+    const lote = i => { const row = Math.floor(i / cena.cols), col = i % cena.cols, x = MX + col * LW, y = MY + row * RH; return { x, y, porta: x + LW / 2, rua: y + 54 }; };
+    cena.hq = lote(0);
+    cena.lotes = cs.map((c, i) => ({ c, ...lote(i + 1), pessoas: povoar(c) }));
+    cv.width = cena.W; cv.height = cena.H;
   }
   // quem aparece dentro de cada prédio (dono, equipe da folha e um cliente sendo atendido)
   function povoar(c) {
@@ -283,15 +290,48 @@
       academia: { dono: [60, 100, 'pe', true], paciente: [110, 88, 'pe'], equipe: [[136, 104, 'pe', false]] },
       escritorio: { dono: [96, 84, 'sentado', false], paciente: [96, 110, 'costas'], equipe: [[30, 108, 'balcao', true], [140, 96, 'pe', false]] },
     }[c.modelo];
-    l.push({ papel: 'dono', nome: c.dono || 'Dono(a)', ap: aparencia(c.chave + 'dono', roupa), pos: P.dono });
-    (c.equipe || []).slice(0, P.equipe.length).forEach((q, i) => l.push({ papel: 'equipe', nome: q.nome.split(' ')[0], cargo: q.cargo, ap: aparencia(q.nome, /recep/i.test(q.cargo) ? { estilo: 'casual', cor: '#ffffff', cracha: true, calca: '#2b3a55' } : roupa), pos: P.equipe[i] }));
-    l.push({ papel: 'cliente', ap: aparencia(c.chave + 'cli', { estilo: 'camiseta', cor: ['#ffd43b', '#4dabf7', '#ff8787', '#63e6be'][hashId(c.chave) % 4], calca: '#3b5b8a' }), pos: P.paciente });
+    l.push({ papel: 'dono', chave: 'dono', nome: c.dono || 'Dono(a)', cargo: 'Dono(a)', ap: aparencia(c.chave + 'dono', roupa), pos: P.dono });
+    (c.equipe || []).slice(0, P.equipe.length).forEach((q, i) => l.push({ papel: 'equipe', chave: 'eq:' + q.nome, nome: q.nome.split(' ')[0], cargo: q.cargo, ap: aparencia(q.nome, /recep/i.test(q.cargo) ? { estilo: 'casual', cor: '#ffffff', cracha: true, calca: '#2b3a55' } : roupa), pos: P.equipe[i] }));
+    l.push({ papel: 'cliente', chave: 'cliente', nome: 'Cliente', cargo: 'Cliente sendo atendido', ap: aparencia(c.chave + 'cli', { estilo: 'camiseta', cor: ['#ffd43b', '#4dabf7', '#ff8787', '#63e6be'][hashId(c.chave) % 4], calca: '#3b5b8a' }), pos: P.paciente });
+    // o que você personalizou (nome, pele, cabelo, roupa…) por cima do visual automático
+    const vis = (c.info && c.info.visual) || {};
+    for (const q of l) { const v = vis[q.chave]; if (!v) continue; const { nome, ...ap } = v; Object.assign(q.ap, ap); if (nome) q.nome = nome; }
     return l;
+  }
+  const OPC_PELE = ['#FFDBAC', '#F5D0B5', '#F1C9A5', '#E8B48F', '#E0AC82', '#C68642', '#A0673C', '#8D5524', '#5C3A21'];
+  const OPC_CABELO = [['curto', 'Curto'], ['longo', 'Longo'], ['coque', 'Coque'], ['cacheado', 'Cacheado'], ['topete', 'Topete'], ['moicano', 'Moicano'], ['careca', 'Careca']];
+  const OPC_ROUPA = [['jaqueta', 'Jaleco / jaqueta'], ['social', 'Camisa social'], ['casual', 'Casual'], ['camiseta', 'Camiseta'], ['kwik', 'Uniforme']];
+  // Personalizar as pessoas do prédio do cliente (fica salvo em cfg.clientesInfo[cliente].visual)
+  function blocoPersonalizar(c, lote) {
+    const { el } = A(), box = el('div', { class: 'rua-pers' }, el('h3', {}, '🎨 Personalizar as pessoas deste prédio'));
+    const salvarV = (q, campo, valor) => {
+      const inf = infos(); inf[c.chave] = inf[c.chave] || {}; const vis = inf[c.chave].visual = inf[c.chave].visual || {};
+      vis[q.chave] = { ...(vis[q.chave] || {}), [campo]: valor };
+      c.info = inf[c.chave];
+      if (campo === 'nome') q.nome = valor; else q.ap[campo] = valor;
+      A().salvar(); desenharMini(q);
+    };
+    const mini = new Map();
+    const desenharMini = q => { const cv = mini.get(q); if (!cv) return; const g = cv.getContext('2d'); g.clearRect(0, 0, cv.width, cv.height); g.imageSmoothingEnabled = false; g.drawImage(KM.sprite(q.ap, { vista: 'frente', boca: 'sorriso' }), 0, 0); };
+    for (const q of lote.pessoas) {
+      const cv = el('canvas', { width: 30, height: 46, class: 'rua-pers-av' }); mini.set(q, cv);
+      const sel = (opts, campo) => el('select', { onchange: e => salvarV(q, campo, e.target.value) }, opts.map(([v, t]) => el('option', { value: v, selected: q.ap[campo] === v }, t)));
+      const cor = campo => el('input', { type: 'color', value: q.ap[campo], title: 'Cor', oninput: e => salvarV(q, campo, e.target.value) });
+      const peles = el('div', { class: 'rua-peles' }, OPC_PELE.map(p => el('button', { type: 'button', class: 'pele' + (q.ap.pele === p ? ' on' : ''), style: `background:${p}`, title: 'Tom de pele', onclick: e => { salvarV(q, 'pele', p); e.currentTarget.parentNode.querySelectorAll('.pele').forEach(b => b.classList.toggle('on', b === e.currentTarget)); } })));
+      box.append(el('div', { class: 'rua-pers-linha' }, cv,
+        el('div', { class: 'rua-pers-campos' },
+          el('div', { class: 'rua-pers-nome' }, el('input', { type: 'text', value: q.nome, maxlength: 20, oninput: e => salvarV(q, 'nome', e.target.value.trim()) }), el('small', {}, q.cargo || '')),
+          peles,
+          el('div', { class: 'rua-pers-sel' }, sel(OPC_CABELO, 'cabelo'), cor('corCabelo'), sel(OPC_ROUPA, 'estiloCamisa'), cor('corCamisa'),
+            el('label', { class: 'iva-chk' }, el('input', { type: 'checkbox', checked: !!q.ap.oculos, onchange: e => salvarV(q, 'oculos', e.target.checked) }), 'Óculos')))));
+      desenharMini(q);
+    }
+    return box;
   }
 
   // ------------------------------------------------------------------ desenho
-  function predio(g, lote, t) {
-    const c = lote.c, M = MODELOS[c.modelo] || MODELOS.escritorio, bx = lote.x + 8, bw = LOTE - 16, sel = cena.sel === lote;
+  function predio(g, lote, t, ox = 0) {
+    const c = lote.c, M = MODELOS[c.modelo] || MODELOS.escritorio, bx = ox + 8, bw = LOTE - 16, sel = false;
     // sombra e paredes
     r(g, bx + 3, Y_TOPO + 3, bw, Y_FRENTE - Y_TOPO + 6, 'rgba(0,0,0,0.2)');
     r(g, bx - 3, Y_TOPO, bw + 6, 4, '#3d4852'); r(g, bx - 3, Y_TOPO, bw + 6, 1, '#5b6a76');
@@ -409,81 +449,138 @@
     else pessoa(g, q.ap, est, x, y, dir);
     if (q.papel === 'dono' && cena.sel === lote && q.fala && performance.now() < q.falaAte) balao(g, q.fala, x, y - (est.pose === 'sentado' ? 38 : 46));
   }
-  function desenharRua(g, t) {
-    const per = KM.periodo(A().cfg());
-    r(g, 0, 0, cena.W, H, per === 'noite' ? '#355a2b' : '#5c9a45');
-    for (let i = 0; i < cena.W / 6; i++) { const x = (i * 37) % cena.W, y = (i * 53) % (Y_CALC - 4); r(g, x, y, 1, 1, i % 3 ? '#68a84f' : '#528c3e'); }
-    r(g, 0, Y_CALC, cena.W, Y_RUA - Y_CALC, '#cdbfa9'); for (let x = 0; x < cena.W; x += 10) r(g, x, Y_CALC, 1, Y_RUA - Y_CALC, '#b8a990');
-    r(g, 0, Y_RUA - 2, cena.W, 2, '#8a8f94'); r(g, 0, Y_RUA, cena.W, 38, '#4a4f56');
-    for (let x = 4; x < cena.W; x += 20) r(g, x, Y_RUA + 18, 10, 2, '#e9e4d8');
-    r(g, 0, Y_RUA + 38, cena.W, H - Y_RUA - 38, '#cdbfa9');
-    // placa da rua
-    const xp = cena.lotes.length ? cena.lotes[0].x - 58 : 6;
-    r(g, xp + 24, Y_CALC - 20, 2, 22, '#343a40'); r(g, xp, Y_CALC - 30, 50, 11, CONTORNO); r(g, xp + 1, Y_CALC - 29, 48, 9, '#1E8A45'); tx(g, 'RUA KWIK', xp + 3, Y_CALC - 27, '#ffffff');
-    for (const l of cena.lotes) predio(g, l, t);
-    // árvores entre os prédios
-    for (const l of cena.lotes) { const x = l.x + LOTE - 2; r(g, x - 1, Y_CALC - 6, 3, 8, '#6b4a2a'); r(g, x - 6, Y_CALC - 18, 13, 12, '#2f7a3d'); r(g, x - 4, Y_CALC - 17, 6, 4, '#4a9e4f'); }
-    // Kauã andando entre o carro e a porta
-    const kq = cena.kaua;
-    if (kq && kq.vis) pessoa(g, KM.aparenciaDe(A().cfg(), 'f1'), { vista: kq.costas ? 'costas' : 'frente', passo: kq.andando ? [1, 0, 2, 0][Math.floor(t * 8) % 4] : 0, ...(kq.est || {}) }, kq.x, kq.y, kq.dir > 0);
-    carroKwik(g, cena.carroX, FAIXA_CIMA, cena.carroDir, t, cena.andando);
-    if (per === 'noite') { g.fillStyle = 'rgba(16,24,60,0.26)'; g.fillRect(0, 0, cena.W, H); }
+  // prédio pequeno visto da cidade (48 x 40): telhado, fachada com toldo, porta, janelas e letreiro com o ícone
+  function predioMini(g, l, t, hq) {
+    const x = l.x + 8, y = l.y, w = LW - 16, M = hq ? { fachada: '#f1fbf4', placa: VERDE_ESC, borda: VERDE } : (MODELOS[l.c.modelo] || MODELOS.escritorio);
+    const sel = !hq && cena.sel === l;
+    r(g, x + 3, y + 4, w, 38, 'rgba(0,0,0,0.22)');
+    // telhado (visto de cima) e fachada
+    r(g, x - 1, y, w + 2, 12, CONTORNO); r(g, x, y + 1, w, 10, tom(M.placa, 0.85)); r(g, x, y + 1, w, 2, tom(M.placa, 1.2));
+    for (let k = x + 4; k < x + w - 2; k += 8) r(g, k, y + 4, 4, 4, tom(M.placa, 0.7));
+    r(g, x - 1, y + 11, w + 2, 30, CONTORNO); r(g, x, y + 12, w, 28, M.fachada); r(g, x, y + 12, w, 1, '#ffffff');
+    if (hq) { KM.simboloPixel(g, x + 4, y + 2, 0.66, '#ffffff', VERDE); tx(g, 'KWIK', x + 16, y + 4, '#ffffff'); }
+    // toldo listrado
+    for (let k = 0; k < w; k += 4) r(g, x + k, y + 13, 4, 4, (k / 4) % 2 ? '#ffffff' : M.borda);
+    // janelas e porta
+    const jan = c => { r(g, x + 4, y + 21, 10, 8, CONTORNO); r(g, x + 5, y + 22, 8, 6, c); r(g, x + w - 14, y + 21, 10, 8, CONTORNO); r(g, x + w - 13, y + 22, 8, 6, c); };
+    jan(hq ? '#a5d8ff' : '#d0ebff');
+    r(g, x + w / 2 - 5, y + 25, 10, 15, CONTORNO); r(g, x + w / 2 - 4, y + 26, 8, 14, hq ? VERDE_ESC : tom(M.placa, 0.9)); r(g, x + w / 2 + 2, y + 33, 1, 2, '#ffd43b');
+    // letreiro com ícone
+    r(g, x + w / 2 - 7, y + 17, 14, 11, CONTORNO); r(g, x + w / 2 - 6, y + 18, 12, 9, hq ? VERDE : M.placa);
+    if (!hq) icone(g, l.c.modelo, x + w / 2 - 4, y + 18);
+    // calçada e nome
+    r(g, l.x, y + 40, LW, 6, '#cdbfa9'); r(g, l.x, y + 45, LW, 1, '#b8a990');
+    const nome = (hq ? 'KWIK' : l.c.nomeCurto).toUpperCase().slice(0, 15), lw = larg(nome);
+    r(g, l.x + LW / 2 - lw / 2 - 2, y + 40, lw + 4, 7, sel ? VERDE : 'rgba(17,26,25,0.85)'); tx(g, nome, l.x + LW / 2 - lw / 2, y + 41, sel ? '#111A19' : '#ffffff');
+    if (sel) { g.fillStyle = `rgba(40,190,82,${0.35 + 0.3 * Math.sin(t * 5)})`; g.fillRect(x - 3, y - 2, w + 6, 2); g.fillRect(x - 3, y - 2, 2, 42); g.fillRect(x + w + 1, y - 2, 2, 42); }
+    if (!hq) { const R = resumoCliente(l.c); if (R.fiscal && R.fiscal.qVencido) { const k = Math.floor(t * 2) % 2; r(g, x + w - 6, y - 4, 9, 9, CONTORNO); r(g, x + w - 5, y - 3, 7, 7, k ? '#ff6b6b' : '#e03131'); tx(g, '!', x + w - 3, y - 2, '#ffffff'); } }
+  }
+  function kauaMini(g, k, t) {
+    const ap = KM.aparenciaDe(A().cfg(), 'f1'), x = Math.round(k.x), y = Math.round(k.y), p = k.andando ? Math.floor(t * 8) % 2 : 0;
+    r(g, x - 3, y - 1, 7, 2, 'rgba(0,0,0,0.25)');
+    r(g, x - 2, y - 4, 2, 3 + p, ap.calca); r(g, x + 1, y - 4, 2, 4 - p, ap.calca);
+    r(g, x - 3, y - 9, 7, 6, CONTORNO); r(g, x - 2, y - 8, 5, 5, ap.corCamisa);
+    r(g, x - 3, y - 14, 7, 6, CONTORNO); r(g, x - 2, y - 13, 5, 4, ap.pele); r(g, x - 2, y - 13, 5, 2, ap.corCabelo);
+    if (k.aceno && Math.floor(t * 5) % 2) r(g, x + 3, y - 13, 2, 3, ap.pele);
+  }
+  function desenharCidade(g, t) {
+    const per = KM.periodo(A().cfg()), W = cena.W, H = cena.H;
+    r(g, 0, 0, W, H, per === 'noite' ? '#355a2b' : '#5c9a45');
+    for (let i = 0; i < W * H / 90; i++) { const x = (i * 37) % W, y = (i * 53 + (i >> 3)) % H; r(g, x, y, 1, 1, i % 3 ? '#68a84f' : '#528c3e'); }
+    // avenida (esquerda) e ruas na frente de cada fileira
+    r(g, AV - 11, 0, 22, H, '#4a4f56'); for (let y = 2; y < H; y += 14) r(g, AV - 1, y, 2, 7, '#e9e4d8');
+    const linhas = Math.ceil((cena.lotes.length + 1) / cena.cols);
+    for (let i = 0; i < linhas; i++) {
+      const ry = MY + i * RH + 46;
+      r(g, AV - 11, ry, W - AV + 11, 16, '#4a4f56'); for (let x = AV + 14; x < W; x += 16) r(g, x, ry + 7, 8, 2, '#e9e4d8');
+      r(g, AV + 11, ry - 1, W, 1, '#8a8f94'); r(g, AV + 11, ry + 16, W, 1, '#8a8f94');
+    }
+    r(g, AV + 13, 2, 34, 9, CONTORNO); r(g, AV + 14, 3, 32, 7, VERDE_ESC); tx(g, 'AV KWIK', AV + 16, 4, '#ffffff');
+    // árvores no gramado entre os prédios
+    for (let i = 0; i < linhas; i++) for (let c = 0; c < cena.cols; c++) {
+      const x = MX + c * LW + LW - 4, y = MY + i * RH + 30;
+      r(g, x - 1, y + 6, 2, 4, '#6b4a2a'); r(g, x - 4, y - 2, 8, 8, '#2f7a3d'); r(g, x - 3, y - 1, 3, 3, '#4a9e4f');
+    }
+    // lotes vagos: espaço para os próximos clientes
+    for (let k = cena.lotes.length + 1; k < linhas * cena.cols; k++) {
+      const x = MX + (k % cena.cols) * LW + 10, y = MY + Math.floor(k / cena.cols) * RH + 12;
+      for (let u = 0; u < 44; u += 4) { r(g, x + u, y, 2, 1, '#e9e4d8'); r(g, x + u, y + 27, 2, 1, '#e9e4d8'); }
+      for (let v = 0; v < 28; v += 4) { r(g, x, y + v, 1, 2, '#e9e4d8'); r(g, x + 43, y + v, 1, 2, '#e9e4d8'); }
+      r(g, x + 20, y + 14, 2, 12, '#6b4a2a'); r(g, x + 8, y + 6, 28, 10, CONTORNO); r(g, x + 9, y + 7, 26, 8, '#fff3bf'); tx(g, 'VAGO', x + 14, y + 9, '#9c5700');
+    }
+    predioMini(g, cena.hq, t, true);
+    for (const l of cena.lotes) predioMini(g, l, t);
+    if (cena.kaua && cena.kaua.vis) kauaMini(g, cena.kaua, t);
+    carroKwik(g, cena.carro.x, cena.carro.y, cena.carro.dir, t, cena.andando);
+    if (per === 'noite') { g.fillStyle = 'rgba(16,24,60,0.26)'; g.fillRect(0, 0, W, H); }
+  }
+  // por dentro do prédio visitado (com o Kauã lá dentro)
+  function desenharDentro(t) {
+    const cv = $('#ruaDentroTela'); if (!cv || !cena.dentro) return;
+    const g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
+    r(g, 0, 0, cv.width, cv.height, '#5c9a45');
+    predio(g, cena.dentro, t, 0);
+    if (cena.kaua && !cena.kaua.vis) pessoa(g, KM.aparenciaDe(A().cfg(), 'f1'), { vista: 'frente', ...(cena.kaua.aceno ? { bracos: 'aceno', aceno: Math.floor(t * 5) % 2, boca: 'sorriso' } : {}) }, 8 + 77, Y_FRENTE - 4, false);
   }
   function quadro(agora) {
     const d = $('#dlgRua'); if (!d || !d.open) { cena.raf = 0; return; }
     const g = $('#ruaTela').getContext('2d'); g.imageSmoothingEnabled = false;
-    desenharRua(g, agora / 1000);
+    desenharCidade(g, agora / 1000);
+    desenharDentro(agora / 1000);
     cena.raf = requestAnimationFrame(quadro);
   }
-  // animações simples da rua (independentes do escritório)
+  // animações da cidade (independentes do escritório)
   const passo = fn => new Promise(res => { let ant = performance.now(); const f = agora => { const dt = Math.min(0.05, (agora - ant) / 1000); ant = agora; if (fn(dt)) res(); else requestAnimationFrame(f); }; requestAnimationFrame(f); });
-  async function dirigir(id, ate) {
+  async function reta(id, x, y, vel = 150) {
+    const c = cena.carro;
+    await passo(dt => { if (id !== cena.cancelar) return true; const dx = x - c.x, dy = y - c.y, dist = Math.hypot(dx, dy); if (dist < 1) { c.x = x; c.y = y; return true; } if (Math.abs(dx) > 0.5) c.dir = Math.sign(dx); const s = Math.min(dist, vel * dt); c.x += dx / dist * s; c.y += dy / dist * s; return false; });
+  }
+  async function dirigir(id, l) { // pela rua da fileira; se for outra fileira, passa pela avenida
+    const alvoX = l.porta - 14, alvoY = l.rua - 7, c = cena.carro;
     cena.andando = true;
-    await passo(dt => { if (id !== cena.cancelar) return true; const dx = ate - cena.carroX; if (Math.abs(dx) < 1) { cena.carroX = ate; return true; } cena.carroDir = Math.sign(dx); cena.carroX += Math.sign(dx) * Math.min(Math.abs(dx), 110 * dt); return false; });
+    if (Math.abs(c.y - alvoY) > 1) { await reta(id, AV - 14, c.y); await reta(id, AV - 14, alvoY); }
+    await reta(id, alvoX, alvoY);
     cena.andando = false;
-    rolarPara(cena.carroX + 14);
+    rolarPara(c.x + 14, c.y);
   }
   async function andarK(id, x, y) {
     const k = cena.kaua; k.andando = true;
-    await passo(dt => { if (id !== cena.cancelar) return true; const dx = x - k.x, dy = y - k.y, dist = Math.hypot(dx, dy); if (dist < 1) { k.x = x; k.y = y; return true; } const s = Math.min(dist, 55 * dt); k.x += dx / dist * s; k.y += dy / dist * s; if (Math.abs(dx) > 0.3) k.dir = Math.sign(dx); k.costas = dy < -Math.abs(dx) * 0.6; return false; });
-    k.andando = false; k.costas = false;
+    await passo(dt => { if (id !== cena.cancelar) return true; const dx = x - k.x, dy = y - k.y, dist = Math.hypot(dx, dy); if (dist < 1) { k.x = x; k.y = y; return true; } const s = Math.min(dist, 45 * dt); k.x += dx / dist * s; k.y += dy / dist * s; return false; });
+    k.andando = false;
   }
-  function rolarPara(x) {
+  function rolarPara(x, y) {
     const box = $('#ruaCena'), cv = $('#ruaTela'); if (!box || !cv.clientWidth) return;
-    const px = x / cena.W * cv.clientWidth;
-    if (px < box.scrollLeft + 40 || px > box.scrollLeft + box.clientWidth - 40) box.scrollTo({ left: Math.max(0, px - box.clientWidth / 2), behavior: 'smooth' });
+    const py = y / cena.H * cv.clientHeight;
+    if (py < box.scrollTop + 30 || py > box.scrollTop + box.clientHeight - 30) box.scrollTo({ top: Math.max(0, py - box.clientHeight / 2), behavior: 'smooth' });
   }
   async function irAoCliente(i) {
     const lote = cena.lotes[i]; if (!lote) return;
     const id = ++cena.cancelar;
     KM.tocar('clique');
-    renderInfo(lote.c);
-    if (cena.sel === lote && cena.kaua && !cena.kaua.vis) return;
-    const porta = lote.x + 8 + 77;
+    if (cena.sel === lote && cena.dentro === lote) return renderInfo(lote.c);
     // se o Kauã estava num cliente, sai e volta para o carro
-    if (cena.kaua && cena.sel) {
-      const k = cena.kaua; k.vis = true;
-      await andarK(id, k.x, Y_CALC + 4); await andarK(id, cena.carroX + 14, FAIXA_CIMA + 6);
+    if (cena.kaua) {
+      const k = cena.kaua; k.vis = true; k.aceno = false; cena.dentro = null;
+      await andarK(id, k.x, cena.carro.y + 6);
       if (id !== cena.cancelar) return;
     }
-    cena.kaua = null; cena.sel = lote;
+    cena.kaua = null; cena.sel = lote; cena.dentro = null;
+    renderInfo(lote.c, true);
     KM.tocar('moto');
-    await dirigir(id, porta - 14);
+    await dirigir(id, lote);
     if (id !== cena.cancelar) return;
-    cena.kaua = { x: cena.carroX + 14, y: FAIXA_CIMA + 6, vis: true, dir: 1 };
-    await andarK(id, porta, Y_CALC + 6);
-    await andarK(id, porta, Y_FRENTE + 4);
+    cena.kaua = { x: lote.porta, y: lote.rua - 2, vis: true };
+    await andarK(id, lote.porta, lote.y + 40);
     if (id !== cena.cancelar) return;
-    await andarK(id, porta, Y_FRENTE - 6);
     KM.tocar('campainha');
+    cena.kaua.vis = false; cena.dentro = lote;
     const dono = lote.pessoas.find(q => q.papel === 'dono');
     const eu = KM.nomeDe ? KM.nomeDe('noticias') : 'Kauã';
     if (dono) { dono.aceno = performance.now() + 2600; dono.fala = `OI, ${eu}!`; dono.falaAte = performance.now() + 3200; }
-    cena.kaua.est = { bracos: 'aceno', aceno: 1, boca: 'sorriso' };
-    await KM.esperar(1400);
-    if (cena.kaua) cena.kaua.est = {};
+    cena.kaua.aceno = true;
+    renderInfo(lote.c);
+    setTimeout(() => { if (cena.kaua) cena.kaua.aceno = false; }, 1800);
   }
-
   // ------------------------------------------------------------------ cartão do cliente
   function resumoCliente(c) {
     const out = {};
@@ -503,18 +600,25 @@
     box.append(g);
   }
   function diasAte(s) { return Math.round((new Date(s + 'T12:00:00') - new Date(new Date().toDateString())) / 86400000); }
-  function renderInfo(c) {
+  function renderInfo(c, indo) {
     const { el } = A(), box = $('#ruaInfo'); box.innerHTML = '';
     const M = MODELOS[c.modelo] || MODELOS.escritorio, R = resumoCliente(c), cert = c.info.cert;
-    const sel = el('select', { onchange: e => { infos()[c.chave] = { ...(infos()[c.chave] || {}), modelo: e.target.value }; A().salvar(); montarCena(); const i = cena.lotes.findIndex(l => l.c.chave === c.chave); cena.sel = cena.lotes[i] || null; cena.kaua = null; renderInfo(cena.lotes[i].c); } },
-      Object.entries(MODELOS).map(([k, m]) => el('option', { value: k, selected: k === c.modelo }, `${m.ic} ${m.nome}`)));
+    const lote = cena.lotes.find(l => l.c.chave === c.chave);
+    const sel = el('select', { onchange: e => {
+      infos()[c.chave] = { ...(infos()[c.chave] || {}), modelo: e.target.value }; A().salvar();
+      const estavaDentro = cena.dentro && cena.dentro.c.chave === c.chave;
+      montarCena(true); const nl = cena.lotes.find(l => l.c.chave === c.chave);
+      cena.sel = nl || null; if (estavaDentro) cena.dentro = nl; renderInfo(nl.c);
+    } }, Object.entries(MODELOS).map(([k, m]) => el('option', { value: k, selected: k === c.modelo }, `${m.ic} ${m.nome}`)));
     box.append(el('div', { class: 'rua-cab' }, el('div', {}, el('h3', {}, `${M.ic} ${c.nome}`), el('small', {}, [c.razao && c.razao !== c.nome ? c.razao : null, c.cnpj ? 'CNPJ ' + c.cnpj : null, c.regime].filter(Boolean).join(' · '))),
       el('label', { class: 'rua-modelo' }, 'Prédio: ', sel)));
+    // por dentro do prédio
+    box.append(el('div', { class: 'rua-dentro' }, indo ? el('div', { class: 'rua-indo' }, `🚗 Indo até ${c.nome}…`) : el('canvas', { id: 'ruaDentroTela', width: LOTE, height: H_DENTRO })));
     const linhas = el('div', { class: 'rua-blocos' });
     // certificado
     let txtCert, clsCert = '';
     if (cert && cert.validade) { const d = diasAte(cert.validade); txtCert = `Certificado digital A1 válido até ${fmtD(cert.validade)} (${d >= 0 ? 'faltam ' + d + ' dias' : 'VENCIDO'})${cert.titular ? ' · titular ' + cert.titular : ''}`; clsCert = d < 0 ? 'mal' : d <= 30 ? 'atencao' : 'bem'; }
-    else txtCert = 'Validade do certificado ainda não lida. Toque em 📜 Ler certificados (lá em cima) e escolha o .pfx desta empresa.';
+    else txtCert = 'Validade do certificado ainda não lida. Toque em 📜 Certificados (lá em cima) e escolha o .pfx desta empresa.';
     linhas.append(el('div', { class: 'rua-bloco ' + clsCert }, el('b', {}, '📜 Certificado'), el('p', {}, txtCert)));
     // fiscal
     if (R.fiscal) {
@@ -540,6 +644,7 @@
       el('div', { class: 'rua-links' }, PORTAIS.map(([t, u]) => el('a', { class: 'bt peq', href: u, target: '_blank', rel: 'noopener' }, t)),
         c.cnpj ? el('button', { class: 'bt peq', onclick: () => navigator.clipboard.writeText(S().digitos(c.cnpj)).then(() => A().toast('📋 CNPJ copiado: ' + c.cnpj)).catch(() => A().toast(c.cnpj)) }, '📋 Copiar CNPJ') : null),
       el('small', {}, 'O login é feito por você, no próprio portal, escolhendo o certificado instalado neste computador (ou a procuração da KWIK). O Mini Escritório não guarda certificado nem senha e não entra nos portais sozinho.')));
+    if (lote && !indo) box.append(blocoPersonalizar(c, lote));
   }
 
   // ------------------------------------------------------------------ leitura do certificado (.pfx) sem senha
@@ -591,12 +696,12 @@
       } catch (e) { msgs.push(`❌ ${f.name}: ${e.message}`); }
     }
     A().salvar(true);
-    montarCena();
-    if (cena.sel) { const i = cena.lotes.findIndex(l => l.c.chave === cena.sel.c.chave); cena.sel = cena.lotes[i] || null; }
+    montarCena(true);
+    if (cena.sel) { const ch = cena.sel.c.chave, dentro = cena.dentro; cena.sel = cena.lotes.find(l => l.c.chave === ch) || null; if (dentro) cena.dentro = cena.sel; }
     if (cena.sel) renderInfo(cena.sel.c); else renderResumoRua();
     A().toast(msgs.join('\n'), { ms: 12000 });
   }
 
   function iniciar() { posicionarBotao(); }
-  KM.clientesFora = { iniciar, posicionarBotao, sair, abrir: abrirRua, lista, detectar, lerCertificado, MODELOS };
+  KM.clientesFora = { iniciar, posicionarBotao, sair, abrir: abrirRua, lista, detectar, lerCertificado, MODELOS, _ir: irAoCliente, _cena: cena };
 })();
