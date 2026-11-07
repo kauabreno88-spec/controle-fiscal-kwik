@@ -109,8 +109,27 @@
         olhos: 'normal', sobrancelha: 'normal', boca: 'sorriso', sardas: false, bochechas: true, pinta: false, estampa: 'lisa', corEstampa: '#ffffff', relogio: false, corRelogio: '#212529', colar: true, corColar: '#f1f3f5', brinco: true, corBrinco: '#e2b33c', corFone: '#28BE52', corOculos: '#8a5a2b',
       },
       xp: 0, tarefas: 0, ganhos: 0,
+    }, {
+      id: 'bruno', nome: 'Bruno', cargo: 'Fiscal · Impostos e guias', funcao: 'fiscal',
+      aparencia: {
+        pele: '#F1C9A5', cabelo: 'topete', corCabelo: '#3B2416', estiloCamisa: 'social', corCamisa: '#ffffff', corGravata: '#1971c2',
+        calca: '#2b3a55', sapato: '#2b1d12', oculos: true, fone: false, bone: false, barba: false, corBone: '#28BE52',
+        cracha: true, corCordao: '#1971c2', chapeu: '', baixo: 'calca', calcado: 'sapato', altura: 'normal', cachecol: false, corCachecol: '#c9453a',
+        olhos: 'normal', sobrancelha: 'normal', boca: 'normal', sardas: false, bochechas: false, pinta: false, estampa: 'lisa', corEstampa: '#ffffff', relogio: true, corRelogio: '#212529', colar: false, corColar: '#e2b33c', brinco: false, corBrinco: '#e2b33c', corFone: '#28BE52', corOculos: '#1b1b1b',
+      },
+      xp: 0, tarefas: 0, ganhos: 0,
+    }, {
+      id: 'carla', nome: 'Carla', cargo: 'Folha e Departamento Pessoal', funcao: 'folha',
+      aparencia: {
+        pele: '#C68642', cabelo: 'longo', corCabelo: '#1C1C1C', estiloCamisa: 'casual', corCamisa: '#ffa94d', corGravata: '#28BE52',
+        calca: '#3b4a6b', sapato: '#7a3b2a', oculos: false, fone: true, bone: false, barba: false, corBone: '#28BE52',
+        cracha: true, corCordao: '#e8590c', chapeu: '', baixo: 'calca', calcado: 'sapato', altura: 'normal', cachecol: false, corCachecol: '#c9453a',
+        olhos: 'normal', sobrancelha: 'normal', boca: 'sorriso', sardas: false, bochechas: true, pinta: false, estampa: 'lisa', corEstampa: '#ffffff', relogio: false, corRelogio: '#212529', colar: false, corColar: '#e2b33c', brinco: true, corBrinco: '#e2b33c', corFone: '#e8590c', corOculos: '#1b1b1b',
+      },
+      xp: 0, tarefas: 0, ganhos: 0,
     }],
     clientes: [],
+    clientesInfo: {},
     execucao: [],
     financas: { ticker: [], ultimo: null, aporte: 500 },
     precificacao: { ultimo: null },
@@ -177,7 +196,7 @@
   KM.estado = estado;
   const func = id => cfg.funcionarios.find(f => f.id === (id || estado.selecionado || estado.principal)) || cfg.funcionarios[0];
   const pessoaDe = id => estado.pessoas[id || estado.selecionado || estado.principal];
-  const ROTULO_TRABALHO = { noticias: '📰 Buscar notícias', checklist: '📋 Abrir prancheta', prospeccao: '📞 Buscar clientes', video: '🎬 Criar conteúdo', contato: '💬 Preparar contatos', relacionamento: '💚 Falar com clientes', limpeza: '🧹 Faxina geral', financas: '📈 Analisar investimentos', precificacao: '🧮 Precificar serviços' };
+  const ROTULO_TRABALHO = { noticias: '📰 Buscar notícias', checklist: '📋 Abrir prancheta', prospeccao: '📞 Buscar clientes', video: '🎬 Criar conteúdo', contato: '💬 Preparar contatos', relacionamento: '💚 Falar com clientes', limpeza: '🧹 Faxina geral', financas: '📈 Analisar investimentos', precificacao: '🧮 Precificar serviços', fiscal: '🧾 Conferir impostos', folha: '👥 Conferir a folha' };
   // Primeiro nome de quem cuida de uma função (os textos do app usam o nome que você coloca em Visual).
   KM.nomeDe = funcao => { const f = cfg.funcionarios.find(x => x.funcao === funcao); return f ? (f.nome || '').trim().split(' ')[0] : ''; };
 
@@ -317,6 +336,8 @@
     limpeza: 'Opa! Eu sou {n}. Deixo tudo limpinho e funcionando 🧹',
     financas: 'Olá! Eu sou {n}, do Financeiro. Analiso a bolsa e a renda fixa 📈',
     precificacao: 'Oi, meu bem! Eu sou {n}, da Precificação. Cuido dos preços 🧮',
+    fiscal: 'Oi! Eu sou {n}, do Fiscal. Cuido dos impostos e das guias dos clientes 🧾',
+    folha: 'Oi! Eu sou {n}, da Folha. Cuido dos funcionários dos clientes 👥',
   };
   function selecionar(id) {
     estado.selecionado = id;
@@ -395,6 +416,7 @@
     if (f.funcao === 'limpeza') return KM.limpeza.trabalhar(f, p);
     if (f.funcao === 'financas') return KM.financas.trabalhar(f, p);
     if (f.funcao === 'precificacao') return KM.precificacao.trabalhar(f, p);
+    if (f.funcao === 'fiscal' || f.funcao === 'folha') return KM.setores.trabalhar(f.funcao, f, p);
     return trabalharNoticias(f, p);
   }
 
@@ -539,6 +561,8 @@
     : r.tipo === 'relacionamento' ? `💚 ${r.titulo || 'Relacionamento'}`
     : r.tipo === 'financas' ? `📈 ${r.titulo || 'Investimentos'}${r.aporte ? ` · ${brlCurto(r.aporte)}/mês` : ''}`
     : r.tipo === 'precificacao' ? `🧮 ${r.titulo || 'Precificação'}`
+    : r.tipo === 'fiscal' ? `🧾 ${r.titulo || 'Fiscal'}`
+    : r.tipo === 'folha' ? `👥 ${r.titulo || 'Folha'}`
     : r.tipo === 'contatos' ? `💬 Contatos em ${r.cidade || '—'}${r.uf ? '-' + r.uf : ''}` : `📰 Notícias de ${fmtDia(r.diaData)}`;
   const resumoRel = r => r.tipo === 'prospeccao' ? `🏥 ${r.qtdClinicas || 0} clínicas · ☎️ ${r.qtdComTelefone || 0} com telefone`
     : r.tipo === 'video' ? '🎞️ Vídeo com música + legenda para o Instagram'
@@ -546,6 +570,8 @@
     : r.tipo === 'relacionamento' ? '💬 Pronto para enviar aos clientes'
     : r.tipo === 'financas' ? '🏆 Ranking do dia + simulação de quanto você vai ganhar'
     : r.tipo === 'precificacao' ? '💜 Preços sugeridos com base no mercado de São Luís'
+    : r.tipo === 'fiscal' ? `🔴 ${r.qVencido || 0} vencida(s) · 🟡 ${(r.prox || []).length} vencem em 5 dias`
+    : r.tipo === 'folha' ? `✅ ${r.fechadas || 0}/${(r.empresas || []).length} folhas fechadas · 👥 ${r.ativos || 0} pessoas`
     : r.tipo === 'contatos' ? `💬 ${r.qtdContatos || 0} mensagens de primeiro contato` : `⭐ ${r.qtdPrincipais} principais · 📅 ${r.qtdDia} do dia`;
   function renderListaRel() {
     const box = $('#listaRel'); box.innerHTML = '';
@@ -604,6 +630,7 @@
     if (r.tipo === 'relacionamento') return KM.relacionamento.renderRel(r, box);
     if (r.tipo === 'financas') return KM.financas.renderRel(r, box);
     if (r.tipo === 'precificacao') return KM.precificacao.renderRel(r, box);
+    if (r.tipo === 'fiscal' || r.tipo === 'folha') return KM.setores.renderRel(r, box);
     const rel = el('div', { class: 'rel' });
     const chips = el('div', { class: 'chips' }, (r.fontes || []).map(f => el('span', { class: 'chip ' + (f.ok ? 'ok' : 'erro') }, `${f.ok ? '✓' : '✗'} ${f.nome}${f.ok ? ` · ${f.itens} lidas` : ' · falhou'}`)));
     rel.append(el('div', { class: 'rel-cab' },
@@ -1004,14 +1031,15 @@
     }
     if (KM.execucao) KM.execucao.layoutMudou();
     for (const r of $$('.rotulo-sala')) r.remove();
-    const ICONE_SALA = { reuniao: ' 🗓️', meta: ' 🎯', refeitorio: ' 🍽️', execucao: ' ⚙️', financeiro: ' 📈', precificacao: ' 🧮', diretoria: ' 👑' };
-    const ABRIR_SALA = { reuniao: () => KM.reuniao.abrir(), meta: () => KM.meta.abrir(), execucao: () => KM.execucao.abrir() };
+    const ICONE_SALA = { reuniao: ' 🗓️', meta: ' 🎯', refeitorio: ' 🍽️', execucao: ' ⚙️', financeiro: ' 📈', precificacao: ' 🧮', diretoria: ' 👑', fiscal: ' 🧾', folha: ' 👥' };
+    const ABRIR_SALA = { reuniao: () => KM.reuniao.abrir(), meta: () => KM.meta.abrir(), execucao: () => KM.execucao.abrir(), fiscal: () => KM.setores.abrir('fiscal', 'ver'), folha: () => KM.setores.abrir('folha', 'ver') };
     for (const s of Object.values(KM.LAYOUT.salas)) {
       const clicavel = !!ABRIR_SALA[s.id];
       const r = el('div', { class: 'rotulo-sala' + (s.id === 'jogos' ? ' jogos' : '') + (clicavel ? ' clicavel' : '') + (s.id === 'diretoria' ? ' ceo' : ''), style: `left:${((s.x + s.w / 2) / KM.W * 100).toFixed(2)}%;top:${((s.y + 2) / KM.H * 100).toFixed(2)}%` }, s.nome + (ICONE_SALA[s.id] || ''));
       if (clicavel) r.addEventListener('click', e => { e.stopPropagation(); ABRIR_SALA[s.id](); });
       palco.append(r);
     }
+    if (KM.clientesFora) KM.clientesFora.posicionarBotao();
   }
   mqCelular.addEventListener ? mqCelular.addEventListener('change', aplicarLayout) : mqCelular.addListener(aplicarLayout);
   let ultimo = performance.now(), proxPiscar = 2, previewT = 0;
@@ -1090,12 +1118,13 @@
       if (sala === 'reuniao' && KM.reuniao) return KM.reuniao.abrir();
       if (sala === 'meta' && KM.meta) return KM.meta.abrir();
       if (sala === 'execucao' && KM.execucao) return KM.execucao.abrir();
+      if ((sala === 'fiscal' || sala === 'folha') && KM.setores) return KM.setores.abrir(sala, 'ver');
       if (estado.selecionado) selecionar(null); // tocar no vazio esconde o nome
     });
     tela.addEventListener('mousemove', e => {
       const [x, y] = pontoLogico(e);
       const sala = KM.salaEm(x, y);
-      tela.style.cursor = KM.pessoaEm(estado, x, y) || KM.jogos.sobre(x, y) || ['reuniao', 'meta', 'execucao'].includes(sala) ? 'pointer' : 'default';
+      tela.style.cursor = KM.pessoaEm(estado, x, y) || KM.jogos.sobre(x, y) || ['reuniao', 'meta', 'execucao', 'fiscal', 'folha'].includes(sala) ? 'pointer' : 'default';
     });
     document.addEventListener('keydown', ativo);
     window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (ABAS.includes(h)) irPara(h); });
@@ -1236,6 +1265,12 @@
     requestAnimationFrame(quadro);
     KM.clara.iniciar(); KM.maycon.iniciar(); KM.jogos.iniciar(); KM.rotinas.iniciar();
     KM.limpeza.iniciar(); KM.refeitorio.iniciar(); KM.reuniao.iniciar(); KM.pesquisa.iniciar(); KM.execucao.iniciar();
+    KM.setores.iniciar(); KM.clientesFora.iniciar();
+    $('#btFiscal').addEventListener('click', () => { ativo(); KM.setores.abrir('fiscal', 'ver'); });
+    $('#btFolha').addEventListener('click', () => { ativo(); KM.setores.abrir('folha', 'ver'); });
+    $('#atFiscal').addEventListener('click', () => KM.setores.abrir('fiscal', 'ver'));
+    $('#atFolha').addEventListener('click', () => KM.setores.abrir('folha', 'ver'));
+    $('#atClientes').addEventListener('click', () => { irPara('escritorio'); KM.clientesFora.sair(); });
     $('#btPuxarFiscal').addEventListener('click', puxarFiscal);
     $('#btNovoCliente').addEventListener('click', () => { cfg.clientes = cfg.clientes || []; cfg.clientes.push({ nome: '', telefone: '', valor: 0, status: 'ativo' }); renderClientes(); const ins = $$('#clientesBox .cliente-linha > input[type=text]'); ins.at(-1) && ins.at(-1).focus(); });
     $('#btAbrirMeta').addEventListener('click', () => KM.meta.abrir());
@@ -1249,7 +1284,7 @@
     const hh = new Date().getHours(), sauda = hh < 12 ? 'Bom dia' : hh < 18 ? 'Boa tarde' : 'Boa noite';
     const APRESENTA = { noticias: `${sauda}! Clique em um de nós para mandar trabalhar 👋`, checklist: 'Oi! Eu cuido da sua prancheta de tarefas 📋', prospeccao: 'E eu acho clientes novos! 📞📸',
       video: 'Eu transformo as notícias em vídeo! 🎬', contato: 'E eu chamo os clientes no WhatsApp 💬', relacionamento: 'E eu cuido de quem já é cliente 💚', limpeza: 'E eu deixo tudo brilhando! 🧹✨',
-      financas: 'Eu fico de olho na bolsa 📈', precificacao: 'E eu cuido dos preços, meus netos 🧮💜' };
+      financas: 'Eu fico de olho na bolsa 📈', precificacao: 'E eu cuido dos preços, meus netos 🧮💜', fiscal: 'E eu não deixo guia vencer! 🧾', folha: 'E eu fecho a folha de todo mundo 👥' };
     APRESENTA.noticias = `${sauda}, família KWIK! Bora trabalhar 👑`;
     cfg.funcionarios.forEach((f, i) => setTimeout(() => falar(f.id, APRESENTA[f.funcao] || 'Oi! 👋', 3400), 700 + i * 1500));
   }

@@ -30,16 +30,18 @@
     'lena>rodrigo': ['cunhado'], 'rodrigo>lena': ['cunhada'], 'lena>iva': ['sogra', 'Dona Iva'], 'iva>lena': ['minha nora'],
     'clara>iva': ['vó', 'Dona Iva'], 'iva>clara': ['minha netinha', 'Clarinha'],
   };
-  const PAPEL = { f1: 'CEO', clara: 'assistente', maycon: 'controladoria', lena: 'comercial', enzo: 'marketing', bia: 'relacionamento', rodrigo: 'financeiro', iva: 'precificacao', zeca: 'limpeza' };
+  const PAPEL = { f1: 'CEO', clara: 'assistente', maycon: 'controladoria', lena: 'comercial', enzo: 'marketing', bia: 'relacionamento', rodrigo: 'financeiro', iva: 'precificacao', zeca: 'limpeza', bruno: 'fiscal', carla: 'folha' };
   function vocativo(a, b) {
     if (b === 'zeca') return 'Seu Zeca';
     if (a === 'zeca') return ({ f1: 'Seu Kauã', iva: 'Dona Iva', lena: 'Dona Lena', clara: 'Dona Clara', maycon: 'Seu Maycon', rodrigo: 'Seu Rodrigo' })[b] || nome(b);
     const v = VOC[`${a}>${b}`];
     return v ? sorteio(v) : nome(b);
   }
-  const ehFamilia = (a, b) => a !== 'zeca' && b !== 'zeca';
+  const COLEGAS = new Set(['bruno', 'carla']); // Fiscal e Folha: colegas de trabalho, não são da família
+  const ehFamilia = (a, b) => a !== 'zeca' && b !== 'zeca' && !COLEGAS.has(a) && !COLEGAS.has(b);
   const tipo = (a, b) => {
     const k = [a, b].sort().join('|');
+    if (a !== 'zeca' && b !== 'zeca' && (COLEGAS.has(a) || COLEGAS.has(b))) return 'colegas';
     return ({ 'clara|f1': 'namorados', 'f1|maycon': 'paiFilho', 'enzo|maycon': 'paiFilho', 'f1|lena': 'maeFilho', 'enzo|lena': 'maeFilho', 'enzo|f1': 'irmaos',
       'bia|f1': 'cunhados', 'f1|rodrigo': 'tioSobrinho', 'enzo|rodrigo': 'tioSobrinho', 'f1|iva': 'avoNeto', 'enzo|iva': 'avoNeto', 'lena|maycon': 'casados',
       'maycon|rodrigo': 'irmaosVelhos', 'iva|maycon': 'maeFilhoVelho', 'iva|rodrigo': 'maeFilhoVelho', 'bia|clara': 'irmaosClara', 'clara|lena': 'sograNora',
@@ -70,6 +72,9 @@
       novo: [['{v}, a pesquisa de satisfação veio ótima! 💚', 'Que orgulho, {r}!'], ['{v}, almoço juntos? 🍝', 'Bora, {r}!']] },
     sograNora: { velho: [['{v}, você cuida tão bem dele 💚', 'Ah, {r}, ele merece 🥰'], ['{v}, vem almoçar com a gente domingo 🍝', 'Vou sim, {r}! 💚']],
       novo: [['{v}, o almoço de domingo tá de pé? 🍝', 'Claro, {r}! Você é da família 💚'], ['{v}, o {ceo} mandou um beijo 😘', 'Esse menino… 🥰']] },
+    colegas: [['{v}, a DCTFWeb já foi? 📑', 'Transmitida, {r}! ✅'], ['{v}, me passa os prazos do mês? 📅', 'Tá no quadro da sala, {r}!'],
+      ['{v}, o cliente mandou as notas? 🧾', 'Mandou sim, {r}, já lancei 👍'], ['{v}, bora um café? ☕', 'Bora, {r}! Depois do eSocial 😅'],
+      ['{v}, tem guia vencendo essa semana?', 'Já avisei os clientes, {r} 📲']],
     familia: [['{v}, bora um café? ☕', 'Bora, {r}!'], ['{v}, que dia corrido!', 'Mas rendeu bastante, {r} 💪'], ['Viu a notícia de hoje, {v}?', 'Vi! Já foi pro Marketing 🎬']],
     zeca: [['Bom dia, {v}! ☀️', 'Bom dia, {r}! Tudo limpinho pra vocês 🧹'], ['{v}, o senhor é demais! ✨', 'Obrigado, {r}! É um prazer 😊'],
       ['Com licença, {v}, vou passar um pano aqui 🧽', 'Fique à vontade, {r}!']],
@@ -80,6 +85,7 @@
     enzo: ['{v}, como tá o Marketing? 🎬', 'Engajamento lá em cima, {r}! 🔥'], bia: ['{v}, como estão os clientes? 💚', 'Satisfeitos, {r}! Média lá em cima 📊'],
     rodrigo: ['{v}, e os investimentos? 📈', 'Carteira de dividendos rendendo, {r} 💰'], iva: ['{v}, e os preços? 🧮', 'Tudo calculadinho, {r}! 💜'],
     clara: ['{v}, o que tem na agenda hoje? 📋', 'Tudo organizado, {r}! 🥰'],
+    bruno: ['{v}, como estão os impostos? 🧾', 'Tudo no prazo, {r}! ✅'], carla: ['{v}, e a folha do mês? 👥', 'Fechando, {r}! eSocial em dia ✅'],
   };
 
   // geração: quem é mais velho (para escolher as falas certas)
