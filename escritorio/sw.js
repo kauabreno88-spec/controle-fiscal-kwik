@@ -1,6 +1,6 @@
 /* KWIK Mini Escritório — deixa o app abrir sem internet.
    Arquivos do app: rede primeiro (pega atualizações), cache se estiver offline. A API do GitHub nunca passa pelo cache. */
-const CACHE = 'kwik-mini-v10';
+const CACHE = 'kwik-mini-v11';
 const APP = ['./', './index.html', './manifest.webmanifest', './js/cena.js', './js/boneco.js', './js/efeitos.js', './js/nuvem.js', './js/clara.js', './js/maycon.js', './js/filmes.js', './js/gatinhos.js', './js/jogos.js', './js/marketing.js', './js/enzo.js', './js/relacionamento.js', './js/rotinas.js',
   './js/limpeza.js', './js/refeitorio.js', './js/reuniao.js', './js/meta.js', './js/pesquisa.js', './js/familia.js', './js/execucao.js', './js/financas.js', './js/precificacao.js', './js/setores.js', './js/clientes.js', './js/app.js', './pesquisa.html',
   './assets/kwik-simbolo.svg', './assets/kwik-simbolo.png', './assets/icone-192.png', './assets/icone-512.png', './assets/apple-touch-icon.png',
@@ -17,7 +17,9 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== location.origin) return;
-  e.respondWith(fetch(req).then(r => {
+  // sempre confere com o servidor (o GitHub Pages manda guardar por 10 min, o que misturava versões novas e antigas)
+  const rede = req.mode === 'navigate' ? fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' }) : fetch(req, { cache: 'no-cache' });
+  e.respondWith(rede.then(r => {
     if (r.ok) { const copia = r.clone(); caches.open(CACHE).then(c => c.put(req, copia)); }
     return r;
   }).catch(() => caches.match(req, { ignoreSearch: true }).then(r => r || caches.match('./index.html'))));
