@@ -127,7 +127,17 @@
         olhos: 'normal', sobrancelha: 'normal', boca: 'sorriso', sardas: false, bochechas: true, pinta: false, estampa: 'lisa', corEstampa: '#ffffff', relogio: false, corRelogio: '#212529', colar: false, corColar: '#e2b33c', brinco: true, corBrinco: '#e2b33c', corFone: '#e8590c', corOculos: '#1b1b1b',
       },
       xp: 0, tarefas: 0, ganhos: 0,
+    }, {
+      id: 'rita', nome: 'Rita', cargo: 'Chefe do RH', funcao: 'rh',
+      aparencia: {
+        pele: '#A0673C', cabelo: 'cacheado', corCabelo: '#1C1C1C', estiloCamisa: 'social', corCamisa: '#7048e8', corGravata: '#28BE52',
+        calca: '#111A19', sapato: '#2b1d12', oculos: 'redondo', fone: false, bone: false, barba: false, corBone: '#28BE52',
+        cracha: true, corCordao: '#7048e8', chapeu: '', baixo: 'saia', calcado: 'sapato', altura: 'normal', cachecol: false, corCachecol: '#c9453a',
+        olhos: 'normal', sobrancelha: 'normal', boca: 'sorriso', sardas: false, bochechas: false, pinta: false, estampa: 'lisa', corEstampa: '#ffffff', relogio: true, corRelogio: '#e2b33c', colar: true, corColar: '#e2b33c', brinco: true, corBrinco: '#e2b33c', corFone: '#28BE52', corOculos: '#8a5a2b',
+      },
+      xp: 0, tarefas: 0, ganhos: 0,
     }],
+    tarefas: [],
     clientes: [],
     clientesInfo: {},
     execucao: [],
@@ -198,7 +208,8 @@
   KM.estado = estado;
   const func = id => cfg.funcionarios.find(f => f.id === (id || estado.selecionado || estado.principal)) || cfg.funcionarios[0];
   const pessoaDe = id => estado.pessoas[id || estado.selecionado || estado.principal];
-  const ROTULO_TRABALHO = { noticias: '📰 Buscar notícias', checklist: '📋 Abrir prancheta', prospeccao: '📞 Buscar clientes', video: '🎬 Criar conteúdo', contato: '💬 Preparar contatos', relacionamento: '💚 Falar com clientes', limpeza: '🧹 Faxina geral', financas: '📈 Analisar investimentos', precificacao: '🧮 Precificar serviços', fiscal: '🧾 Conferir impostos', folha: '👥 Conferir a folha' };
+  const ROTULO_TRABALHO = { noticias: '📰 Buscar notícias', checklist: '📋 Abrir prancheta', prospeccao: '📞 Buscar clientes', video: '🎬 Criar conteúdo', contato: '💬 Preparar contatos', relacionamento: '💚 Falar com clientes', limpeza: '🧹 Faxina geral', financas: '📈 Analisar investimentos', precificacao: '🧮 Precificar serviços', fiscal: '🧾 Conferir impostos', folha: '👥 Conferir a folha', rh: '🤝 Abrir o RH' };
+  const rotuloTrabalho = f => ROTULO_TRABALHO[f.funcao] || (f.contratado ? '📋 Pedir tarefa ao chefe' : '▶ Trabalhar');
   // Primeiro nome de quem cuida de uma função (os textos do app usam o nome que você coloca em Visual).
   KM.nomeDe = funcao => { const f = cfg.funcionarios.find(x => x.funcao === funcao); return f ? (f.nome || '').trim().split(' ')[0] : ''; };
 
@@ -235,6 +246,7 @@
     if (typeof txt !== 'string') { ms = txt || ms; txt = id; id = estado.selecionado || estado.principal; } // chamada antiga: (texto, ms)
     const d = doms[id]; if (!d) return;
     d.balao.textContent = txt; d.balao.classList.add('on');
+    registrar(id, '💬', txt);
     clearTimeout(d.timer); d.timer = setTimeout(() => d.balao.classList.remove('on'), ms);
   };
   const falar = (id, txt, ms) => KM.onFala(id, txt, ms);
@@ -288,7 +300,7 @@
     $('#latTarefas').textContent = f.tarefas;
     $('#latGanhos').textContent = brlCurto(f.ganhos);
     desenharAvatar($('#avatarLateral'), { boca: 'sorriso' }, 2, f.id);
-    $('#nomeEscritorio').textContent = cfg.escritorio.nome || 'Mini Escritório';
+    $('#nomeEscritorio').textContent = cfg.escritorio.nome && cfg.escritorio.nome !== 'Mini Escritório' ? cfg.escritorio.nome : 'Escritório';
     $('#tituloPalco').innerHTML = '';
     $('#tituloPalco').append(document.createTextNode((cfg.escritorio.nome || 'Mini Escritório') + ' '), el('span', {}, 'KWIK'));
   }
@@ -297,7 +309,7 @@
     const tb = $('#btTrabalhar'), f = func(), p = pessoaDe();
     const ocupadoTrab = p && p.trabalhando && f.funcao !== 'checklist';
     tb.disabled = !!ocupadoTrab;
-    tb.textContent = ocupadoTrab ? '⏳ Trabalhando…' : estado.selecionado ? (ROTULO_TRABALHO[f.funcao] || '▶ Trabalhar') : '▶ Trabalhar';
+    tb.textContent = ocupadoTrab ? '⏳ Trabalhando…' : estado.selecionado ? rotuloTrabalho(f) : '▶ Trabalhar';
     tb.classList.toggle('pronto', !!estado.selecionado && !ocupadoTrab);
     const trab = Object.values(estado.pessoas).filter(q => q.trabalhando);
     const pill = $('#statusPill');
@@ -321,7 +333,7 @@
         class: 'membro' + (estado.selecionado === f.id ? ' sel' : ''), onclick: () => {
           selecionar(f.id); $('#dlgEquipe').close();
         },
-      }, cv, el('b', {}, f.nome), el('span', {}, f.cargo), el('span', {}, `Nv. ${n.i + 1} · ${n.nome} · ${f.tarefas} tarefa(s)`), el('small', { class: 'funcao' }, ROTULO_TRABALHO[f.funcao] || ''));
+      }, cv, el('b', {}, f.nome), el('span', {}, f.cargo), el('span', {}, `Nv. ${n.i + 1} · ${n.nome} · ${f.tarefas} tarefa(s)`), el('small', { class: 'funcao' }, rotuloTrabalho(f)));
       box.append(card);
       desenharAvatar(cv, { bracos: 'aceno', boca: 'sorriso' }, 0, f.id);
     }
@@ -340,6 +352,7 @@
     precificacao: 'Oi, meu bem! Eu sou {n}, da Precificação. Cuido dos preços 🧮',
     fiscal: 'Oi! Eu sou {n}, do Fiscal. Cuido dos impostos e das guias dos clientes 🧾',
     folha: 'Oi! Eu sou {n}, da Folha. Cuido dos funcionários dos clientes 👥',
+    rh: 'Oi! Eu sou {n}, do RH. Quer contratar alguém? 🤝',
   };
   function selecionar(id) {
     estado.selecionado = id;
@@ -348,10 +361,96 @@
     KM.tocar('clique');
     if (id) {
       const f = func(id);
-      falar(id, (OLA[f.funcao] || 'Oi! Sou {n}.').replace('{n}', f.nome.split(' ')[0]), 2800);
-      toast(`${f.nome} selecionado. Agora aperte ${ROTULO_TRABALHO[f.funcao] || '▶ Trabalhar'}.`);
+      const ola = OLA[f.funcao] || (f.contratado ? `Oi! Eu sou {n}, do ${KM.rh ? (KM.rh.SETOR[f.setor] || {}).nome : 'time'}. Prazer! 😊` : 'Oi! Sou {n}.');
+      falar(id, ola.replace('{n}', f.nome.split(' ')[0]), 2800);
     }
     atualizarFuncionario(); atualizarBotoes();
+    if (id) abrirFicha(id); else fecharFicha();
+  }
+
+  // ------------------------------------------------------------------ ficha do funcionário (painel ao tocar em alguém)
+  // últimas ações de cada um (o que fez, falou, entregou), com horário
+  const acoes = {};
+  function registrar(id, ic, txt) {
+    if (!id || !txt) return;
+    const l = acoes[id] = acoes[id] || [];
+    if (l[0] && l[0].txt === txt) return;
+    l.unshift({ t: new Date(), ic, txt }); if (l.length > 25) l.length = 25;
+    if (fichaId === id) renderFicha();
+  }
+  const SALA_STATUS = { refeitorio: '🍽️ No refeitório', jogos: '🎮 Na sala de jogos', reuniao: '🗓️ Na sala de reunião', recepcao: '☕ Na recepção', apresentacao: '📊 Na apresentação', zeladoria: '🧹 Na zeladoria', rh: '🤝 No RH', meta: '🎯 Na sala da META' };
+  function statusAgora(p) {
+    if (!p) return ['', 'Fora'];
+    const f = func(p.id);
+    if (p.visivel === false && p.acao === 'clientes') return ['🚗', 'Visitando clientes'];
+    if (p.visivel === false && p.acao === 'ipog') return ['🎓', 'No IPOG'];
+    if (p.trabalhando) return ['⚙️', 'Trabalhando: ' + rotuloTrabalho(f).replace(/^\S+\s/, '')];
+    if (p.tarefaRH) return ['📝', 'Fazendo: ' + p.tarefaRH.titulo];
+    if (p.dormindo || p.acao === 'soneca') return ['😴', 'Cochilando'];
+    if (p.acao === 'chegando') return ['👋', 'Chegando no primeiro dia'];
+    if (p.modo === 'sentado' && !p.foraDaMesa) return ['💻', 'Na mesa'];
+    const s = KM.salaEm(p.X, p.Y), a = KM.LAYOUT.assentos[p.funcao];
+    if (s && SALA_STATUS[s] && (!a || a.sala !== s)) return [SALA_STATUS[s].split(' ')[0], SALA_STATUS[s].replace(/^\S+\s/, '')];
+    return ['🚶', 'Andando pelo escritório'];
+  }
+  // a cada meio segundo: muda o status → vira uma linha nas últimas ações; atualiza os números do topo
+  let statusAntes = {};
+  function vigiarStatus() {
+    let trab = 0, cafe = 0;
+    for (const p of Object.values(estado.pessoas)) {
+      const [ic, txt] = statusAgora(p);
+      if (statusAntes[p.id] !== txt) { statusAntes[p.id] = txt; if (txt !== 'Na mesa' || acoes[p.id]) registrar(p.id, ic, txt); }
+      if (p.trabalhando || p.tarefaRH) trab++;
+      const s = KM.salaEm(p.X, p.Y);
+      if (!p.trabalhando && (s === 'refeitorio' || s === 'jogos' || (s === 'recepcao' && estado.cafeRecepcao)) && (KM.LAYOUT.assentos[p.funcao] || {}).sala !== s) cafe++;
+    }
+    const n = (id, v) => { const e = $(id); if (e) e.textContent = v; };
+    n('#nTrab', trab); n('#nCafe', cafe); n('#nVoce', KM.tarefasPendentes ? KM.tarefasPendentes() : 0);
+    $('#chipTrab') && $('#chipTrab').classList.toggle('vivo', trab > 0);
+    $('#chipVoce') && $('#chipVoce').classList.toggle('alerta', !!(KM.tarefasPendentes && KM.tarefasPendentes()));
+    if (fichaId) renderFichaAgora();
+  }
+  let fichaId = null;
+  const horaDe = d => d.toTimeString().slice(0, 5);
+  const haQuanto = d => { const s = Math.round((Date.now() - d) / 1000); return s < 45 ? 'agora mesmo' : s < 3600 ? `há ${Math.round(s / 60)} min` : `às ${horaDe(d)}`; };
+  function abrirFicha(id) { fichaId = id; renderFicha(); $('#ficha').hidden = false; setTimeout(() => $('#ficha').classList.add('on'), 20); }
+  function fecharFicha() { fichaId = null; const f = $('#ficha'); if (f) { f.classList.remove('on'); f.hidden = true; } }
+  function renderFicha() {
+    const box = $('#ficha'); if (!box || !fichaId) return;
+    const f = func(fichaId), p = estado.pessoas[fichaId]; if (!f) return fecharFicha();
+    const n = nivelDe(f.xp || 0), setor = KM.rh ? KM.rh.setorDe(f) : null, S = setor && KM.rh.SETOR[setor], ri = KM.rh ? KM.rh.repInfo(f) : { v: 50, nome: '', estrelas: '' };
+    const nomeSetor = S ? S.nome : setor === 'diretoria' ? 'Diretoria' : setor === 'zeladoria' ? 'Zeladoria' : 'KWIK';
+    const tarefasDele = (cfg.tarefas || []).filter(t => t.de === f.id), aprov = tarefasDele.filter(t => t.status === 'aprovada').length;
+    const cv = el('canvas', { width: 30, height: 46 });
+    box.innerHTML = '';
+    box.append(
+      el('div', { class: 'ficha-cab' }, el('small', {}, `${f.contratado ? 'CONTRATADO' : f.funcao === 'noticias' ? 'CEO' : 'FUNCIONÁRIO'} · ${nomeSetor.toUpperCase()}`), el('button', { class: 'ficha-x', title: 'Fechar', onclick: () => selecionar(null) }, '×')),
+      el('div', { class: 'ficha-av' }, cv),
+      el('h2', {}, f.nome), el('p', { class: 'ficha-cargo' }, f.cargo),
+      el('div', { class: 'ficha-tags' }, el('span', { class: 'tag' }, `📁 ${nomeSetor}`), el('span', { class: 'tag' }, `Nv. ${n.i + 1} · ${n.nome}`)),
+      el('div', { class: 'ficha-status', id: 'fichaStatus' }),
+      el('div', { class: 'ficha-rep' }, el('div', { class: 'ficha-rep-l' }, el('span', {}, 'Reputação'), el('b', {}, `${ri.estrelas} ${ri.v}`)), el('div', { class: 'barra' }, el('i', { style: `width:${ri.v}%` })), el('small', {}, ri.nome)),
+      el('div', { class: 'ficha-nums' }, el('div', {}, el('small', {}, 'Tarefas'), el('b', {}, String(f.tarefas || 0))), el('div', {}, el('small', {}, 'Aprovadas'), el('b', {}, String(aprov))), el('div', {}, el('small', {}, 'Ganhou'), el('b', {}, brlCurto(f.ganhos)))),
+      el('h4', {}, 'AGORA'), el('div', { class: 'ficha-agora', id: 'fichaAgora' }),
+      el('div', { class: 'ficha-bts' },
+        el('button', { class: 'bt prim', onclick: () => { trabalhar(); } }, rotuloTrabalho(f)),
+        KM.rh && setor && KM.rh.SETOR[setor] ? el('button', { class: 'bt', onclick: () => { const t = KM.rh.designar(setor, f); if (t) toast(`📋 Tarefa passada para ${f.nome.split(' ')[0]}`); } }, '📋 Dar tarefa') : null),
+      el('h4', {}, 'ÚLTIMAS AÇÕES'), el('ul', { class: 'ficha-log', id: 'fichaLog' }));
+    desenharAvatar(cv, { boca: 'sorriso', bracos: 'aceno' }, 0, f.id);
+    renderFichaAgora(true);
+  }
+  function renderFichaAgora(tudo) {
+    const f = func(fichaId), p = estado.pessoas[fichaId], st = $('#fichaStatus'), ag = $('#fichaAgora'), lg = $('#fichaLog'); if (!st || !f) return;
+    const [ic, txt] = statusAgora(p), l = acoes[fichaId] || [];
+    const ocupado = p && (p.trabalhando || p.tarefaRH);
+    const k = txt + '|' + (l[0] ? l[0].t.getTime() : 0) + '|' + Math.floor(Date.now() / 30000);
+    if (!tudo && st._k === k) return;
+    st._k = k;
+    st.innerHTML = ''; st.append(el('i', { class: ocupado ? 'vivo' : '' }), el('b', {}, ocupado ? 'Trabalhando' : txt === 'Na mesa' ? 'Livre' : txt.split(':')[0]), el('span', {}, ` · ${l[0] ? haQuanto(l[0].t) : 'agora mesmo'}`));
+    ag.innerHTML = ''; ag.append(el('span', { class: 'ic' }, ic), el('span', {}, txt));
+    lg.innerHTML = '';
+    if (!l.length) lg.append(el('li', { class: 'vazio' }, 'Ainda nada hoje. As ações aparecem aqui conforme a pessoa trabalha, anda e entrega.'));
+    for (const a of l.slice(0, 12)) lg.append(el('li', {}, el('time', {}, horaDe(a.t)), el('span', { class: 'ic' }, a.ic), el('span', {}, a.txt)));
   }
 
   // ------------------------------------------------------------------ trabalhar
@@ -410,6 +509,9 @@
       return abrirEquipe();
     }
     const f = func(), p = pessoaDe();
+    if (f.funcao === 'rh') return KM.rh.abrir();
+    if (f.contratado) return KM.rh.trabalhar(f, p);
+    registrar(f.id, '▶️', 'Você mandou: ' + rotuloTrabalho(f).replace(/^\S+\s/, ''));
     if (f.funcao === 'checklist') return KM.clara.trabalhar(f, p);
     if (f.funcao === 'prospeccao') return KM.maycon.trabalhar(f, p);
     if (f.funcao === 'video') return KM.marketing.trabalharVideo(f, p);
@@ -910,7 +1012,7 @@
         el('div', { class: 'xp' }, el('div', { style: `width:${n.pct}%` })),
         el('div', { class: 'm2-nums' }, el('span', {}, `✅ ${f.tarefas} tarefas`), el('span', {}, `💰 ${brlCurto(f.ganhos)}`)),
         el('div', { class: 'm2-bts' },
-          el('button', { class: 'bt prim peq', onclick: () => { irPara('escritorio'); selecionar(f.id); trabalhar(); } }, ROTULO_TRABALHO[f.funcao] || '▶ Trabalhar'),
+          el('button', { class: 'bt prim peq', onclick: () => { irPara('escritorio'); selecionar(f.id); trabalhar(); } }, rotuloTrabalho(f)),
           el('button', { class: 'bt peq', onclick: () => { irPara('escritorio'); selecionar(f.id); window.scrollTo({ top: 0, behavior: 'smooth' }); } }, '📍 Ver'))));
       desenharAvatar(cv, { bracos: 'aceno', boca: 'sorriso' }, 0, f.id);
     }
@@ -1003,8 +1105,10 @@
     if (aba === 'relatorios') renderListaRel();
     if (aba === 'equipe') renderEquipe();
     if (aba === 'config') renderClientes();
+    if (aba === 'tarefas' && KM.rh) KM.rh.render();
+    if (aba !== 'escritorio') fecharFicha();
   }
-  const ABAS = ['escritorio', 'equipe', 'relatorios', 'personalizar', 'config'];
+  const ABAS = ['escritorio', 'equipe', 'tarefas', 'relatorios', 'personalizar', 'config'];
 
   // ------------------------------------------------------------------ inatividade (soneca)
   let ultimaAtividade = performance.now();
@@ -1033,12 +1137,15 @@
         if (p.acao === 'rotina' || p.acao === 'soneca') KM.pararRotina(p);
         Object.assign(p, { modo: 'sentado', X: a.X, Y: a.Y, dir: a.dir, Z: 0, foraDaMesa: false });
       }
+    } else for (const p of Object.values(estado.pessoas)) { // as salas mudaram (contratação): quem está sentado na própria mesa acompanha a mesa
+      const a = KM.LAYOUT.assentos[p.funcao];
+      if (a && p.modo === 'sentado' && !p.acao && !p.lugarJogo && !p.foraDaMesa) Object.assign(p, { X: a.X, Y: a.Y, dir: a.dir });
     }
     if (KM.execucao) KM.execucao.layoutMudou();
     if (KM.recepcao) KM.recepcao.layoutMudou();
     for (const r of $$('.rotulo-sala')) r.remove();
-    const ICONE_SALA = { apresentacao: ' 📊', recepcao: ' 🛎️', jogos: ' 🎮', reuniao: ' 🗓️', meta: ' 🎯', refeitorio: ' 🍽️', execucao: ' ⚙️', financeiro: ' 📈', precificacao: ' 🧮', diretoria: ' 👑', fiscal: ' 🧾', folha: ' 👥' };
-    const ABRIR_SALA = { reuniao: () => KM.reuniao.abrir(), meta: () => KM.meta.abrir(), execucao: () => KM.execucao.abrir(), fiscal: () => KM.setores.abrir('fiscal', 'ver'), folha: () => KM.setores.abrir('folha', 'ver') };
+    const ICONE_SALA = { apresentacao: ' 📊', recepcao: ' 🛎️', jogos: ' 🎮', reuniao: ' 🗓️', meta: ' 🎯', refeitorio: ' 🍽️', execucao: ' ⚙️', financeiro: ' 📈', precificacao: ' 🧮', diretoria: ' 👑', fiscal: ' 🧾', folha: ' 👥', rh: ' 🤝', zeladoria: ' 🧹' };
+    const ABRIR_SALA = { reuniao: () => KM.reuniao.abrir(), meta: () => KM.meta.abrir(), execucao: () => KM.execucao.abrir(), fiscal: () => KM.setores.abrir('fiscal', 'ver'), folha: () => KM.setores.abrir('folha', 'ver'), rh: () => KM.rh.abrir() };
     for (const s of Object.values(KM.LAYOUT.salas)) {
       const clicavel = !!ABRIR_SALA[s.id];
       const r = el('div', { class: 'rotulo-sala' + (s.id === 'jogos' ? ' jogos' : '') + (clicavel ? ' clicavel' : '') + (s.id === 'diretoria' ? ' ceo' : '') }, s.nome + (ICONE_SALA[s.id] || ''));
@@ -1172,12 +1279,13 @@
       if (sala === 'meta' && KM.meta) return KM.meta.abrir();
       if (sala === 'execucao' && KM.execucao) return KM.execucao.abrir();
       if ((sala === 'fiscal' || sala === 'folha') && KM.setores) return KM.setores.abrir(sala, 'ver');
+      if (sala === 'rh' && KM.rh) return KM.rh.abrir();
       if (estado.selecionado) selecionar(null); // tocar no vazio esconde o nome
     });
     tela.addEventListener('mousemove', e => {
       const [tx, ty] = pontoLogico(e), [cx, cy] = KM.telaParaCena(tx, ty), [x, y] = KM.telaParaMundo(tx, ty);
       const sala = KM.salaEm(x, y);
-      tela.style.cursor = toques.size && visaoDiagonal() ? 'grabbing' : KM.pessoaEm(estado, cx, cy) || KM.jogos.sobre(x, y) || ['reuniao', 'meta', 'execucao', 'fiscal', 'folha'].includes(sala) ? 'pointer' : 'default';
+      tela.style.cursor = toques.size && visaoDiagonal() ? 'grabbing' : KM.pessoaEm(estado, cx, cy) || KM.jogos.sobre(x, y) || ['reuniao', 'meta', 'execucao', 'fiscal', 'folha', 'rh'].includes(sala) ? 'pointer' : 'default';
     });
     document.addEventListener('keydown', ativo);
     window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (ABAS.includes(h)) irPara(h); });
@@ -1234,7 +1342,7 @@
     if ((cfg.versao || 1) < 5 || cfg.funcionarios.length < PADRAO.funcionarios.length) { // versão 3: Clara e Maycon; versão 4: Enzo e Lena (Marketing)
       for (const pf of PADRAO.funcionarios) if (!cfg.funcionarios.some(f => f.id === pf.id)) { cfg.funcionarios.push(clone(pf)); migrou = true; }
       if ((cfg.versao || 1) < 5) migrou = true;
-      cfg.versao = 5;
+      cfg.versao = Math.max(cfg.versao || 1, 5);
     }
     for (const f of cfg.funcionarios) if (!f.funcao) f.funcao = (PADRAO.funcionarios.find(x => x.id === f.id) || { funcao: 'noticias' }).funcao;
     if ((cfg.versao || 1) < 6) { // versão 6: família KWIK — Kauã CEO, chefes de setor, Rodrigo (Financeiro) e Dona Iva (Precificação)
@@ -1246,6 +1354,13 @@
       Object.assign(cfg.escritorio, TEMAS['KWIK Moderno']);
       cfg.versao = 7; migrou = true;
     }
+    if ((cfg.versao || 1) < 8) { // versão 8: RH (Rita), contratações, tarefas e reputação
+      for (const pf of PADRAO.funcionarios) if (!cfg.funcionarios.some(f => f.id === pf.id)) cfg.funcionarios.push(clone(pf));
+      cfg.tarefas = cfg.tarefas || [];
+      cfg.versao = 8; migrou = true;
+    }
+    // quem foi contratado não herda nada de quem estava na mesma posição da lista padrão
+    for (const f of cfg.funcionarios) if (f.contratado && !f.funcao.startsWith('h_')) f.funcao = 'h_' + f.id;
     sincronizarPessoas();
     estado.relatorios = (j && j.relatorios) || [];
     estado.caixa = cfg.economia.caixa; caixaMostrado = cfg.economia.caixa;
@@ -1328,9 +1443,24 @@
     requestAnimationFrame(quadro);
     KM.clara.iniciar(); KM.maycon.iniciar(); KM.jogos.iniciar(); KM.rotinas.iniciar();
     KM.limpeza.iniciar(); KM.refeitorio.iniciar(); KM.reuniao.iniciar(); KM.pesquisa.iniciar(); KM.execucao.iniciar();
-    KM.setores.iniciar(); KM.clientesFora.iniciar();
+    KM.setores.iniciar(); KM.clientesFora.iniciar(); KM.rh.iniciar(); if (KM.ipog) KM.ipog.iniciar();
     $('#btFiscal').addEventListener('click', () => { ativo(); KM.setores.abrir('fiscal', 'ver'); });
     $('#btFolha').addEventListener('click', () => { ativo(); KM.setores.abrir('folha', 'ver'); });
+    $('#btRH').addEventListener('click', () => { ativo(); KM.rh.abrir(); });
+    $('#btTarefasAtalho').addEventListener('click', () => { ativo(); irPara('tarefas'); });
+    // topo: números ao vivo e botões redondos
+    $('#chipVoce').addEventListener('click', () => irPara('tarefas'));
+    $('#chipTrab').addEventListener('click', () => { irPara('escritorio'); const p = Object.values(estado.pessoas).find(q => q.trabalhando || q.tarefaRH); if (p) selecionar(p.id); });
+    $('#chipCafe').addEventListener('click', () => { irPara('escritorio'); toast('☕ Quem está no refeitório, no cafezinho ou na sala de jogos aparece aqui.'); });
+    $('#btPersonalizar').addEventListener('click', () => irPara('personalizar'));
+    $('#btRelTopo').addEventListener('click', () => irPara('relatorios'));
+    $('#btCeu').addEventListener('click', () => {
+      const ord = ['auto', 'dia', 'tarde', 'noite'], i = ord.indexOf(cfg.escritorio.ceu || 'auto');
+      cfg.escritorio.ceu = ord[(i + 1) % ord.length]; mudou();
+      toast({ auto: '🕒 Céu acompanha o relógio', dia: '☀️ Dia', tarde: '🌇 Fim de tarde', noite: '🌙 Noite' }[cfg.escritorio.ceu]);
+    });
+    $('#btTelaCheia').addEventListener('click', () => { if (document.fullscreenElement) document.exitFullscreen(); else (document.documentElement.requestFullscreen || (() => {})).call(document.documentElement); });
+    setInterval(vigiarStatus, 500);
     $('#atFiscal').addEventListener('click', () => KM.setores.abrir('fiscal', 'ver'));
     $('#atFolha').addEventListener('click', () => KM.setores.abrir('folha', 'ver'));
     $('#atClientes').addEventListener('click', () => { irPara('escritorio'); KM.clientesFora.sair(); });
@@ -1347,7 +1477,7 @@
     const hh = new Date().getHours(), sauda = hh < 12 ? 'Bom dia' : hh < 18 ? 'Boa tarde' : 'Boa noite';
     const APRESENTA = { noticias: `${sauda}! Clique em um de nós para mandar trabalhar 👋`, checklist: 'Oi! Eu cuido da sua prancheta de tarefas 📋', prospeccao: 'E eu acho clientes novos! 📞📸',
       video: 'Eu transformo as notícias em vídeo! 🎬', contato: 'E eu chamo os clientes no WhatsApp 💬', relacionamento: 'E eu cuido de quem já é cliente 💚', limpeza: 'E eu deixo tudo brilhando! 🧹✨',
-      financas: 'Eu fico de olho na bolsa 📈', precificacao: 'E eu cuido dos preços, meus netos 🧮💜', fiscal: 'E eu não deixo guia vencer! 🧾', folha: 'E eu fecho a folha de todo mundo 👥' };
+      financas: 'Eu fico de olho na bolsa 📈', precificacao: 'E eu cuido dos preços, meus netos 🧮💜', fiscal: 'E eu não deixo guia vencer! 🧾', folha: 'E eu fecho a folha de todo mundo 👥', rh: 'E eu contrato gente boa para os setores 🤝' };
     APRESENTA.noticias = `${sauda}, família KWIK! Bora trabalhar 👑`;
     cfg.funcionarios.forEach((f, i) => setTimeout(() => falar(f.id, APRESENTA[f.funcao] || 'Oi! 👋', 3400), 700 + i * 1500));
   }
@@ -1357,7 +1487,7 @@
     el, toast, salvar, mudou, cfg: () => cfg, estado, func, pessoaDe, pagar, concluir, falar, irPara, brl, fmtData,
     BK: () => BK, online: () => online, abrirConexao, carregarRelatorios, abrirRelatorio, animarCaixa, atualizarBotoes, atualizarFuncionario,
     iniciarPainelTarefa, callbacksTarefa, esperarLivre, apagarRel: r => apagarRel(r), desenharAvatar, obterRelatorio, escolher, perguntar,
-    todosComemoram, renderClientes, aplicarLayout: () => aplicarLayout(),
+    todosComemoram, renderClientes, aplicarLayout: () => aplicarLayout(), sincronizar: () => sincronizarPessoas(), registrar, atualizarFicha: () => renderFicha(), selecionar,
   };
   iniciar();
 })();

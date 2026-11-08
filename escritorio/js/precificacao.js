@@ -181,7 +181,8 @@
     return `Olá! Tudo bem? 😊\nAqui é da KWIK Contabilidade. Para ${c.servico}${c.qtd > 1 ? ` (${c.qtd} ${qual})` : ''}, o valor fica em ${brl0(c.final)}${parc}.` +
       (ent.sit === 'desempregado' || ent.sit === 'baixa' ? '\nSabemos que o momento pede cuidado, por isso fizemos um valor especial pra você. 💚' : '') + '\nQualquer dúvida é só chamar!';
   }
-  function pedirDescricao(eu) {
+  let presetTexto = null; // texto já escrito (ex.: vindo do IPOG: "quanto cobrar por este serviço?")
+  function pedirDescricao(eu, texto) {
     return new Promise(res => {
       const { el } = A();
       let d = document.getElementById('dlgIva');
@@ -189,6 +190,7 @@
       d.innerHTML = '';
       let valor = null;
       const ta = el('textarea', { rows: 5, placeholder: 'Ex.: Declaração de imposto de renda de uma cliente que está desempregada, com 2 anos sem declarar e um filho dependente. Ela foi indicação da Lena e precisa até sexta.' });
+      if (texto) ta.value = texto;
       const etapa2 = el('div', { class: 'iva-entendi', hidden: true });
       const botao = el('button', { class: 'bt prim', type: 'button' }, '💜 Dona Iva, entenda o caso');
       const corpo = el('div', { class: 'dlg-corpo' },
@@ -225,11 +227,12 @@
     const eu = f.nome.split(' ')[0];
     const opcoes = [{ v: 'tudo', ic: '📋', nome: 'Tabela completa', desc: 'Todos os serviços dos cartazes, com mercado de São Luís e sugestão' },
       { v: 'pedido', ic: '✍️', nome: 'Descrever o que quero precificar', desc: 'Você conta o caso e a situação do cliente; ela entende e dá o preço' }];
-    const grupo = await A().escolher(`🧮 O que ${eu} vai precificar?`, opcoes);
+    const preset = presetTexto; presetTexto = null;
+    const grupo = preset ? 'pedido' : await A().escolher(`🧮 O que ${eu} vai precificar?`, opcoes);
     if (!grupo) return;
     let pedido = null, conta = null;
     if (grupo === 'pedido') {
-      pedido = await pedirDescricao(eu); if (!pedido) return;
+      pedido = await pedirDescricao(eu, preset); if (!pedido) return;
       conta = calcular(pedido.ent); if (!conta) return A().toast('Não consegui achar esse serviço na tabela 😅');
     }
     if (!(await A().esperarLivre(p, 1500))) return A().toast(`Espere ${eu} terminar o que está fazendo 😉`);
@@ -335,5 +338,13 @@
     document.body.append(a); a.click(); a.remove();
   }
 
-  KM.precificacao = { trabalhar, renderRel, GRUPOS, sugerir, entender, calcular, mensagemCliente, _pedir: pedirDescricao };
+  // abre a Dona Iva já com o texto do pedido escrito
+  function pedirCom(texto) {
+    const c = A().cfg(), f = c.funcionarios.find(x => x.funcao === 'precificacao'); if (!f) return;
+    const p = A().estado.pessoas[f.id]; if (!p) return;
+    presetTexto = texto;
+    A().irPara('escritorio'); A().selecionar(f.id);
+    trabalhar(f, p);
+  }
+  KM.precificacao = { trabalhar, renderRel, GRUPOS, sugerir, entender, calcular, mensagemCliente, pedirCom, _pedir: pedirDescricao };
 })();

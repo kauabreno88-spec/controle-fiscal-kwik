@@ -162,9 +162,11 @@
   }
   function posicionarBotao() {
     const pal = $('#palco'), L = KM.LAYOUT; if (!pal || !L) return;
-    let b = $('#btRua');
+    let b = $('#btsRua');
     if (!b) {
-      b = A().el('button', { id: 'btRua', class: 'bt-rua', title: 'Cliente: entrar no carro e visitar os clientes ativos na cidade', onclick: e => { e.stopPropagation(); sair(); } }, '🚗 Cliente');
+      b = A().el('div', { id: 'btsRua', class: 'bts-rua' },
+        A().el('button', { id: 'btRua', class: 'bt-rua', title: 'Cliente: entrar no carro e visitar os clientes ativos na cidade', onclick: e => { e.stopPropagation(); sair(); } }, '🚗 Cliente'),
+        A().el('button', { id: 'btIpog', class: 'bt-rua ipog', title: 'IPOG: ir de carro até o prédio do IPOG e ver os módulos da pós', onclick: e => { e.stopPropagation(); if (KM.ipog) KM.ipog.ir(); } }, '🎓 IPOG'));
       pal.append(b);
     }
     const v = vaga(), [bx, by] = KM.paraTela(...KM.prj(v.x + 32, L.rua + 17));
@@ -172,19 +174,20 @@
     b.style.top = (by / KM.H * 100).toFixed(2) + '%';
   }
 
-  // Kauã sai do prédio, entra no carro e vai embora
-  async function sair() {
+  // Kauã sai do prédio, entra no carro e vai embora (destino: cidade dos clientes ou outro, ex.: IPOG)
+  async function sair(destino) {
+    const abrir = (destino && destino.abrir) || abrirRua;
     const est = A().estado, p = est.pessoas.f1, L = KM.LAYOUT;
-    if (ofc.viagem) return abrirRua();
-    if (!p) return abrirRua();
+    if (ofc.viagem) return abrir();
+    if (!p) return abrir();
     if (p.trabalhando) return A().toast(`Espere ${KM.nomeDe ? KM.nomeDe('noticias') : 'o Kauã'} terminar o trabalho 😉`);
     ofc.viagem = true;
     KM.tocar('clique');
-    carregarDados();
+    if (!destino) carregarDados();
     try {
       if (p.acao === 'rotina' || p.acao === 'soneca') await KM.pararRotina(p);
-      p.acao = 'clientes';
-      A().falar(p.id, 'Vou visitar os clientes! 🚗', 2600);
+      p.acao = (destino && destino.acao) || 'clientes';
+      A().falar(p.id, (destino && destino.fala) || 'Vou visitar os clientes! 🚗', 2600);
       const c0 = L.corredores[0], v = vaga();
       await KM.mov.irAte(p, L.predio.x + 10, c0.y + 22, 150);
       await KM.mov.andarAte(p, 10, c0.y + 22, 150);
@@ -192,22 +195,22 @@
       await KM.mov.andarAte(p, v.x + 8, L.rua + 20, 150);
       p.visivel = false; ofc.kauaDentro = true; KM.tocar('moto');
       await KM.esperar(350);
-      await dirigirOfc(KM.W + 40, 170);
+      await dirigirOfc((KM.LAYOUT ? KM.LAYOUT.W : KM.W) + 40, 170);
     } catch (e) { /* segue */ }
-    abrirRua();
+    abrir();
   }
-  async function voltar() {
+  async function voltar(fala) {
     const est = A().estado, p = est.pessoas.f1, L = KM.LAYOUT;
     if (!ofc.viagem) return;
     try {
-      ofc.x = KM.W + 40; KM.tocar('moto');
+      ofc.x = (KM.LAYOUT ? KM.LAYOUT.W : KM.W) + 40; KM.tocar('moto');
       const v = vaga();
       await dirigirOfc(v.x, 170);
       ofc.dir = 1;
       if (p) {
         const c0 = L.corredores[0];
         Object.assign(p, { X: v.x + 8, Y: L.rua + 20, visivel: true, modo: 'em-pe', est: {}, dir: 'ce' });
-        A().falar(p.id, 'Voltei! Os clientes mandaram lembranças 💚', 3000);
+        A().falar(p.id, typeof fala === 'string' ? fala : 'Voltei! Os clientes mandaram lembranças 💚', 3000);
         await KM.mov.andarAte(p, 10, L.rua + 18, 150);
         await KM.mov.andarAte(p, 10, c0.y + 22, 150);
         await KM.mov.andarAte(p, L.predio.x + 10, c0.y + 22, 150);
@@ -703,5 +706,5 @@
   }
 
   function iniciar() { posicionarBotao(); }
-  KM.clientesFora = { iniciar, posicionarBotao, sair, abrir: abrirRua, lista, detectar, lerCertificado, MODELOS, _ir: irAoCliente, _cena: cena };
+  KM.clientesFora = { iniciar, posicionarBotao, sair, voltar, abrir: abrirRua, lista, detectar, lerCertificado, MODELOS, _ir: irAoCliente, _cena: cena };
 })();

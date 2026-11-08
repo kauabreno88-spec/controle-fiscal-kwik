@@ -87,11 +87,17 @@
   KM.periodo = periodo;
 
   // ------------------------------------------------------------------ planta do prédio
-  const G = 4, T = 4, RW = 136, RH = 124, NB = 20, CH = 40, TOPO = 34, BAIXO = 48;
+  const G = 4, T = 4, RW = 156, RH = 160, NB = 20, CH = 40, TOPO = 34, BAIXO = 48;
   const PORTA = [8, 32]; // a porta de cada sala fica sempre à esquerda; essa faixa nunca tem móveis
+  // As salas cresceram (eram 136 × 124). Os móveis continuam descritos na medida antiga e são espalhados na largura nova;
+  // a faixa de baixo de cada setor fica para as mesas de quem o RH contratar.
+  const RW0 = 136, KX = (RW - 34) / (RW0 - 34);
+  const mx = rx => { const col = Math.floor(rx / (RW + T)), l = rx - col * (RW + T); return col * (RW + T) + (l < 34 ? l : Math.round(34 + (l - 34) * KX)); };
   const NOMES = { recepcao: 'Recepção', diretoria: 'Diretoria · CEO', controladoria: 'Controladoria', comercial: 'Comercial', apresentacao: 'Apresentação', jogos: 'Sala de jogos', marketing: 'Marketing',
     relacionamento: 'Relacionamento', reuniao: 'Reunião', meta: 'META', refeitorio: 'Refeitório', financeiro: 'Financeiro', precificacao: 'Precificação', execucao: 'Execução',
-    fiscal: 'Fiscal', folha: 'Folha' };
+    fiscal: 'Fiscal', folha: 'Folha', rh: 'RH', zeladoria: 'Zeladoria' };
+  // setores que podem contratar (sala → função do chefe)
+  KM.SETORES = { controladoria: 'prospeccao', comercial: 'contato', marketing: 'video', relacionamento: 'relacionamento', financeiro: 'financas', precificacao: 'precificacao', fiscal: 'fiscal', folha: 'folha', rh: 'rh' };
   KM.P = (X, Y, Z = 0) => [X, Y - Z];
   KM.chaoEm = (x, y) => [x, y];
   let L = null;
@@ -99,12 +105,14 @@
   // Sala de Execução: cresce para o lado (até 2 vagas) e depois para baixo (mais fileiras de mesas).
   // Cada vaga de sala tem 2 mesas por fileira; a altura normal cabe 2 fileiras.
   const EXEC_POR_FILEIRA = 2, FILEIRA = 48;
-  function tamanhoExecucao(n) {
-    const span = n > 2 * EXEC_POR_FILEIRA ? 2 : 1;
+  function tamanhoExecucao(n, max = 2) {
+    const span = n > 2 * EXEC_POR_FILEIRA && max > 1 ? 2 : 1;
     const fileiras = Math.max(2, Math.ceil(n / (span * EXEC_POR_FILEIRA)));
     return { span, fileiras, extraH: (fileiras - 2) * FILEIRA, vagas: span * EXEC_POR_FILEIRA * fileiras };
   }
-  KM.tamanhoExecucao = tamanhoExecucao;
+  KM.tamanhoExecucao = (n, max) => tamanhoExecucao(n, max != null ? max : L && L.nome === 'largo' ? 1 : 2);
+  const contratadosDe = cfg => ((cfg && cfg.funcionarios) || []).filter(f => f.contratado && f.setor);
+  const chaveContratados = cfg => contratadosDe(cfg).map(f => f.id + ':' + f.setor).join(',');
   const ativasExecucao = cfg => (cfg && cfg.execucao || []).filter(a => !a.fim).length;
   function plantaDe(nome, ex) {
     if (nome === 'largo') return {
@@ -112,22 +120,22 @@
       linhas: [
         [['recepcao', 1], ['diretoria', 1], ['controladoria', 1], ['fiscal', 1], ['folha', 1], ['comercial', 1]],
         [['relacionamento', 1], ['marketing', 1], ['financeiro', 1], ['precificacao', 1], ['meta', 1], ['reuniao', 1]],
-        [['apresentacao', 1], ['refeitorio', 1], ['jogos', 4 - ex.span], ['execucao', ex.span]],
+        [['apresentacao', 1], ['refeitorio', 1], ['rh', 1], ['zeladoria', 0.5], ['jogos', 1.5], ['execucao', 1]],
       ],
     };
     const base = [[['recepcao', 1], ['diretoria', 1]], [['controladoria', 1], ['comercial', 1]], [['fiscal', 1], ['folha', 1]], [['relacionamento', 1], ['marketing', 1]],
-      [['financeiro', 1], ['precificacao', 1]], [['meta', 1], ['reuniao', 1]], [['apresentacao', 1], ['refeitorio', 1]]];
+      [['financeiro', 1], ['precificacao', 1]], [['meta', 1], ['reuniao', 1]], [['apresentacao', 1], ['refeitorio', 1]], [['rh', 1], ['zeladoria', 1]]];
     const fim = ex.span === 1 ? [[['jogos', 1], ['execucao', 1]]] : [[['jogos', 2]], [['execucao', 2]]];
     const linhas = base.concat(fim);
     return { margem: 12, cols: 2, linhas, extra: linhas.map((l, i) => (i === linhas.length - 1 ? ex.extraH : 0)) };
   }
 
   function montarLayout(nome, cfg) {
-    const ex = tamanhoExecucao(ativasExecucao(cfg));
+    const ex = tamanhoExecucao(ativasExecucao(cfg), nome === 'largo' ? 1 : 2);
     const pl = plantaDe(nome, ex), cols = pl.cols, nl = pl.linhas.length;
     const BW = T + cols * (RW + T);
     const W = pl.margem * 2 + BW, bx = pl.margem;
-    const lay = { nome, W, H: 0, salas: {}, corredores: [], moveis: [], decor: [], assentos: {}, pontos: {}, exec: ex };
+    const lay = { nome, W, H: 0, salas: {}, corredores: [], moveis: [], decor: [], assentos: {}, pontos: {}, exec: ex, contratados: chaveContratados(cfg) };
     let y = TOPO;
     pl.linhas.forEach((linha, r) => {
       const h = RH + (pl.extra[r] || 0);
@@ -165,21 +173,23 @@
   function mobiliar(lay, cfg) {
     const e = cfg.escritorio, it = e.itens || {};
     lay.moveis = []; lay.decor = []; lay.assentos = {}; lay.pontos.jogos = {};
+    // rx/ry na medida antiga da sala (136 de largura): mx() espalha na largura nova. extra.cru = já está na medida nova.
     const add = (sala, tipo, rx, ry, w, d, h, extra = {}) => {
       const s = lay.salas[sala];
-      const m = Object.assign({ sala, tipo, X: s.fx + rx, Y: s.fy + ry, w, d, h, bloq: true }, extra);
+      const m = Object.assign({ sala, tipo, X: s.fx + (extra.cru ? rx : mx(rx)), Y: s.fy + ry, w, d, h, bloq: true }, extra);
       lay.moveis.push(m); return m;
     };
     const parede = (sala, tipo, rx, w, extra = {}) => {
       const s = lay.salas[sala];
-      const m = Object.assign({ sala, tipo, X: s.fx + rx, Y: s.y + 4, w, h: NB - 4 }, extra);
+      const m = Object.assign({ sala, tipo, X: s.fx + (extra.cru ? rx : mx(rx)), Y: s.y + 4, w, h: NB - 4 }, extra);
       lay.decor.push(m); return m;
     };
-    const assento = (funcao, sala, cx, w, itens, tela, dir = 'ce') => {
+    const assento = (funcao, sala, cx, w, itens, tela, dir = 'ce', ry = 8, cru = false) => {
       const s = lay.salas[sala];
-      const mesa = add(sala, 'mesa', cx - (w >> 1), 8, w, 12, 10, { itens, funcao, tela });
-      const X = s.fx + cx, Y = s.fy + 27;
-      add(sala, 'cadeira', cx - 7, 19, 14, 9, 0, { ordenar: true, chave: Y + 2, sx: X, sy: Y, funcao });
+      if (!cru) cx = mx(cx);
+      const mesa = add(sala, 'mesa', cx - (w >> 1), ry, w, 12, 10, { itens, funcao, tela, cru: true });
+      const X = s.fx + cx, Y = s.fy + ry + 19;
+      add(sala, 'cadeira', cx - 7, ry + 11, 14, 9, 0, { ordenar: true, chave: Y + 2, sx: X, sy: Y, funcao, cru: true });
       const corr = s.corrBaixo || s.corrCima;
       lay.assentos[funcao] = { X, Y, dir, pe: [X, Y + 13], sala, mesa, tapete: [Math.min(corr.x + corr.w - 20, s.fx + cx + 4), corr.y + 26] };
     };
@@ -199,10 +209,10 @@
     if (it.logo !== false) parede('recepcao', 'logo', 95, 16);
     {
       const s = lay.salas.recepcao;
-      lay.pontos.fila = [46, 60, 74, 88].map(rx => ({ X: s.fx + rx, Y: s.fy + 15, dir: 'fe' }));
-      lay.pontos.recepcionista = { X: s.fx + 108, Y: s.fy + 55, dir: 'fe' };
-      lay.pontos.balcao = { X: s.fx + 100, Y: s.fy + 80 };
-      lay.pontos.cafe = { X: s.fx + 122, Y: s.fy + 22, dir: 'ce' };
+      lay.pontos.fila = [46, 60, 74, 88].map(rx => ({ X: s.fx + mx(rx), Y: s.fy + 15, dir: 'fe' }));
+      lay.pontos.recepcionista = { X: s.fx + mx(108), Y: s.fy + 55, dir: 'fe' };
+      lay.pontos.balcao = { X: s.fx + mx(100), Y: s.fy + 80 };
+      lay.pontos.cafe = { X: s.fx + mx(122), Y: s.fy + 22, dir: 'ce' };
     }
 
     // Diretoria: Kauã (CEO) e Clara (namorada e assistente)
@@ -304,12 +314,12 @@
       for (let f = 0; f < ex.fileiras; f++) for (let k = 0; k < ex.span; k++) for (let j = 0; j < EXEC_POR_FILEIRA; j++) {
         const rx = 40 + k * (RW + T) + j * 46, ry = 22 + f * FILEIRA;
         const mesa = add('execucao', 'mesaExec', rx, ry, 36, 10, 9, { n: lay.pontos.execucao.length + 1 });
-        lay.pontos.execucao.push({ X: s.fx + rx + 18, Y: s.fy + ry + 19, mesa });
+        lay.pontos.execucao.push({ X: s.fx + mx(rx) + 18, Y: s.fy + ry + 19, mesa });
       }
       lay.pontos.execucao.sort((a, b) => a.Y - b.Y || a.X - b.X).forEach((p, i) => { p.mesa.n = i + 1; });
       parede('execucao', 'quadroExec', 40, 62, { din: true });
       if (s.span > 1) parede('execucao', 'logo', RW + T + 46, 16);
-      planta('execucao', s.w - 12, s.h - NB - 16);
+      if (it.planta !== false) add('execucao', 'planta', s.w - 12, s.h - NB - 16, 10, 8, 6, { cru: true });
     }
 
     // Relacionamento: Bia (feedback e contato com os clientes ativos)
@@ -354,11 +364,11 @@
     parede('apresentacao', 'logo', 104, 16);
     {
       const s = lay.salas.apresentacao;
-      lay.pontos.apresentacao = { cadeiras: [60, 79, 98].map(rx => ({ X: s.fx + rx, Y: s.fy + 74, dir: 'ce' })), consultor: { X: s.fx + 112, Y: s.fy + 34, dir: 'fe' } };
+      lay.pontos.apresentacao = { cadeiras: [60, 79, 98].map(rx => ({ X: s.fx + mx(rx), Y: s.fy + 74, dir: 'ce' })), consultor: { X: s.fx + mx(112), Y: s.fy + 34, dir: 'fe' } };
     }
 
     // Sala de jogos (sempre acesa): sinuca, fliperama, cartas e o cantinho do PS5 com sofá; quem está livre às vezes vem jogar
-    const sj = lay.salas.jogos, J = (rx, ry, dir, prop, extra) => Object.assign({ X: sj.fx + rx, Y: sj.fy + ry, dir, prop }, extra || {});
+    const sj = lay.salas.jogos, J = (rx, ry, dir, prop, extra) => Object.assign({ X: sj.fx + (extra && extra.cru ? rx : mx(rx)), Y: sj.fy + ry, dir, prop }, extra || {});
     add('jogos', 'fliperama', 38, 4, 12, 10, 24, { din: true });
     parede('jogos', 'neon', 46, 40, { din: true });
     parede('jogos', 'tvGame', 88, 40, { din: true });
@@ -374,7 +384,17 @@
       sinuca: J(60, 47, 'fe', 'taco'), sinuca2: J(34, 66, 'fd', 'taco'), cartas: J(110, 65, 'fe', 'cartas'),
       ps5a: J(100, 40, 'ce', null, { sentado: true }), ps5b: J(116, 40, 'ce', null, { sentado: true }),
     };
-    if (sj.w > RW + T) { // sala mais larga: pingue-pongue, dardos, pufes e um segundo fliperama
+    if (sj.w > RW + T && sj.w < 2 * RW + T) { // sala e meia (computador): pebolim, dardos e pufes no pedaço a mais
+      const x1 = RW + T, cru = { cru: true };
+      add('jogos', 'pebolim', x1 + 14, 30, 34, 16, 10, { ordenar: true, cru: true });
+      add('jogos', 'pufeKwik', x1 + 10, 96, 14, 12, 7, cru);
+      add('jogos', 'puff', x1 + 30, 100, 14, 12, 7, { cor: '#ffd43b', cru: true });
+      if (it.planta !== false) add('jogos', 'planta', sj.w - 12, 6, 10, 8, 6, cru);
+      parede('jogos', 'dardos', x1 + 12, 12, cru);
+      parede('jogos', 'posterKwik', x1 + 34, 14, cru);
+      pj.pebolimA = J(x1 + 9, 40, 'fd', null, cru); pj.pebolimB = J(x1 + 53, 40, 'fe', null, cru);
+    }
+    if (sj.w >= 2 * RW + T) { // sala mais larga: pingue-pongue, dardos, pufes e um segundo fliperama
       const x1 = RW + T;
       add('jogos', 'pingue', x1 + 26, 46, 40, 22, 9, { ordenar: true });
       add('jogos', 'pufeKwik', x1 + 90, 84, 14, 12, 7);
@@ -404,23 +424,75 @@
     planta('meta', 42, 90);
     parede('meta', 'painelMeta', 40, 46, { din: true });
     if (lay.salas.meta.linha === 0 && it.janela !== false) parede('meta', 'janela', 108, 22, { din: true });
-    lay.pontos.meta = { X: lay.salas.meta.fx + 72, Y: lay.salas.meta.fy + 74 };
+    lay.pontos.meta = { X: lay.salas.meta.fx + mx(72), Y: lay.salas.meta.fy + 74 };
 
-    // Refeitório: mesa grande, buffet, cardápio e o cantinho da limpeza
+    // Refeitório: mesa grande, buffet, cardápio e geladeira
     add('refeitorio', 'buffet', 64, 2, 60, 12, 8, { din: true });
-    add('refeitorio', 'mesaRefeicao', 48, 46, 64, 18, 10, { ordenar: true });
-    for (const rx of [54, 72, 90, 108]) add('refeitorio', 'banco', rx, 66, 10, 6, 5, { bloq: true });
-    add('refeitorio', 'carrinhoLimpeza', 116, 62, 16, 10, 12);
+    add('refeitorio', 'mesaRefeicao', 48, 46, 64, 18, 10, { ordenar: true, cru: true, X: lay.salas.refeitorio.fx + mx(80) - 32 });
+    for (const rx of [60, 80, 100]) add('refeitorio', 'banco', rx - 5, 66, 10, 6, 5, { bloq: true });
+    add('refeitorio', 'frigobar', 122, 60, 10, 8, 14);
+    add('refeitorio', 'bebedouro', 124, 4, 9, 7, 16);
     planta('refeitorio', 40, 90);
+    planta('refeitorio', 124, 96);
     parede('refeitorio', 'cardapio', 40, 22);
     {
-      const s = lay.salas.refeitorio, X = s.fx + 124, Y = s.fy + 81;
-      add('refeitorio', 'cadeira', 117, 73, 14, 9, 0, { ordenar: true, chave: Y + 2, sx: X, sy: Y, funcao: 'limpeza' });
-      const corr = s.corrBaixo || s.corrCima;
-      lay.assentos.limpeza = { X, Y, dir: 'ce', pe: [X - 14, Y + 8], sala: 'refeitorio', tapete: [Math.min(corr.x + corr.w - 20, s.fx + 96), corr.y + 26] };
+      const s = lay.salas.refeitorio;
       // lugares à mesa: em cima (de frente para nós) e embaixo (de costas)
-      lay.pontos.refeicao = [[60, 40, 'fe'], [80, 40, 'fe'], [100, 40, 'fe'], [60, 78, 'ce'], [80, 78, 'ce'], [100, 78, 'ce']].map(([rx, ry, dir]) => ({ X: s.fx + rx, Y: s.fy + ry, dir }));
+      lay.pontos.refeicao = [[60, 40, 'fe'], [80, 40, 'fe'], [100, 40, 'fe'], [60, 78, 'ce'], [80, 78, 'ce'], [100, 78, 'ce']].map(([rx, ry, dir]) => ({ X: s.fx + mx(rx), Y: s.fy + ry, dir }));
       lay.pontos.entrega = [s.porta[0], s.porta[1]];
+    }
+
+    // Zeladoria: a salinha do Seu Zeca, onde ficam as vassouras, os produtos e as ferramentas
+    {
+      // a faixa da porta (x 8–34) fica livre em cima e embaixo; tudo vai do meio para a direita
+      const s = lay.salas.zeladoria, W = s.w, cru = { cru: true }, larga = W > 100, H = s.h - NB;
+      add('zeladoria', 'prateleiraLimpeza', 38, 4, 30, 10, 26, cru);
+      add('zeladoria', 'vassouras', W - 16, 26, 12, 6, 28, cru);
+      add('zeladoria', 'carrinhoLimpeza', W - 22, 84, 16, 10, 12, cru);
+      add('zeladoria', 'tanque', 38, H - 34, 18, 10, 12, cru);
+      add('zeladoria', 'baldeMop', W - 14, H - 34, 10, 8, 14, cru);
+      add('zeladoria', 'ferramentas', 38, H - 14, 16, 9, 8, cru);
+      add('zeladoria', 'escadaFixa', W - 12, H - 12, 8, 6, 26, cru);
+      if (larga) { add('zeladoria', 'prateleiraLimpeza', 72, 4, 30, 10, 26, cru); add('zeladoria', 'arquivo', W - 40, 4, 12, 10, 16, cru); add('zeladoria', 'carrinhoLimpeza', 70, H - 30, 16, 10, 12, cru); }
+      parede('zeladoria', 'quadroEscala', larga ? 108 : 44, 18, cru);
+      // bancadinha com rádio: é a "mesa" do Seu Zeca
+      const cx = larga ? 80 : 52, X = s.fx + cx, Y = s.fy + 66;
+      add('zeladoria', 'bancadaZeca', cx - 13, 46, 26, 10, 10, { cru: true, funcao: 'limpeza' });
+      add('zeladoria', 'cadeira', cx - 7, 58, 14, 9, 0, { ordenar: true, chave: Y + 2, sx: X, sy: Y, funcao: 'limpeza', cru: true });
+      const corr = s.corrBaixo || s.corrCima;
+      lay.assentos.limpeza = { X, Y, dir: 'ce', pe: [X, Y + 13], sala: 'zeladoria', tapete: [Math.min(corr.x + corr.w - 20, s.fx + cx + 4), corr.y + 26] };
+    }
+
+    // RH: a Rita contrata gente nova para os setores; os candidatos esperam nas poltronas
+    assento('rh', 'rh', 62, 40, ['papeis', 'caneca'], 'monitor');
+    add('rh', 'poltrona', 42, 64, 15, 13, 10);
+    add('rh', 'poltrona', 62, 64, 15, 13, 10);
+    add('rh', 'mesinha', 84, 68, 14, 8, 6, { redonda: true });
+    add('rh', 'arquivo', 112, 3, 12, 10, 22);
+    add('rh', 'arquivo', 98, 3, 12, 10, 22);
+    planta('rh', 124, 88);
+    planta('rh', 104, 66);
+    if (e.tapete) add('rh', 'tapete', 38, 56, 66, 30, 0, { bloq: false, redondo: true });
+    parede('rh', 'quadroVagas', 86, 30, { din: true });
+    parede('rh', 'posterKwik', 40, 14);
+    {
+      const s = lay.salas.rh;
+      lay.pontos.rh = { candidato: [{ X: s.fx + mx(49), Y: s.fy + 74, dir: 'fe' }, { X: s.fx + mx(69), Y: s.fy + 74, dir: 'fe' }], frente: { X: s.fx + mx(62), Y: s.fy + 44 } };
+    }
+
+    // Quem o RH contratou: mesas na faixa de baixo do setor (até 3 por setor)
+    lay.pontos.vagas = {};
+    {
+      const porSetor = {};
+      for (const f of contratadosDe(cfg)) if (lay.salas[f.setor]) (porSetor[f.setor] = porSetor[f.setor] || []).push(f);
+      for (const sala of Object.keys(KM.SETORES)) {
+        const s = lay.salas[sala]; if (!s) continue;
+        const H = s.h - NB, ry = H - 36, livres = [];
+        const ocupado = (x, w) => lay.moveis.some(m => m.sala === sala && m.tipo !== 'tapete' && x < m.X + m.w + 3 && x + w > m.X - 3 && s.fy + ry - 2 < m.Y + m.d && s.fy + ry + 30 > m.Y);
+        for (let cx = 52; cx <= s.w - 20 && livres.length < 3; cx += 4) if (!ocupado(s.fx + cx - 15, 30)) { livres.push(cx); cx += 40; }
+        lay.pontos.vagas[sala] = livres.length;
+        (porSetor[sala] || []).slice(0, livres.length).forEach((f, i) => assento(f.funcao, sala, livres[i], 30, ['papeis'], 'monitor', 'ce', ry, true));
+      }
     }
 
     // ar-condicionado (a limpeza faz a manutenção)
@@ -584,7 +656,9 @@
   const moderno = e => e.modeloParede === 'janelas'; // tema "KWIK Moderno": salas de estar em madeira quente, resto em porcelanato
   function pisoDaSala(s, e) {
     const w = s.w || RW, h = (s.h || RH) - NB;
+    if (s.id === 'zeladoria') return texXadrez('#c4cad0', '#b8bfc6', w, h, 8);
     if (moderno(e)) {
+      if (s.id === 'rh') return texTabuas('#b07a4f', w, h);
       if (s.id === 'diretoria') return texTabuas('#b8692f', w, h);
       if (s.id === 'refeitorio' || s.id === 'precificacao') return texTabuas('#a8652f', w, h);
       if (s.id === 'jogos') return texTabuas('#7a4c2c', w, h);
@@ -1090,7 +1164,41 @@
       [['#d6d6d6', 2, '#b197fc'], ['#8a8a8a', 6, '#cfe0f5'], ['#5A3825', 10, '#E9D5B7']].forEach(([cab, x, roupa]) => { r(g, X + x, Y + 5, 3, 3, '#e8b48f'); r(g, X + x, Y + 4, 3, 1, cab); r(g, X + x, Y + 8, 3, 4, roupa); });
       r(g, X + 6, Y + 2, 4, 1, '#ff6b9a');
     },
+    // ----- Zeladoria (Seu Zeca)
+    prateleiraLimpeza(g, m) {
+      const { X, Y, w, d, h } = m; sombra(g, X, Y, w, d); caixa(g, X, Y, w, d, h, '#adb5bd');
+      const f0 = Y + d - h, cores = ['#4dabf7', '#ffd43b', '#ff8787', '#69db7c', '#f8f9fa', '#b197fc'];
+      for (let k = 0; k < 3; k++) {
+        const y0 = f0 + 2 + k * 8; r(g, X + 1, y0 + 6, w - 2, 1, '#868e96');
+        for (let x = X + 2, i = k; x < X + w - 3; i++) { const c = cores[i % cores.length], ww = 3 + (i % 2); r(g, x, y0 + 1 + (i % 3), ww, 5 - (i % 3), c); r(g, x + 1, y0 + (i % 3), ww - 2, 1, tom(c, 0.7)); x += ww + 1; }
+      }
+    },
+    vassouras(g, m) {
+      const { X, Y, w } = m; r(g, X, Y - 20, w, 3, '#5c3d2e'); // suporte na parede
+      [['#8d5a3b', '#ffd43b'], ['#495057', '#e03131'], ['#8d5a3b', '#4dabf7']].forEach(([cabo, cerda], i) => { const x = X + 2 + i * 5; r(g, x, Y - 22, 1, 22, cabo); r(g, x - 2, Y, 5, 4, cerda); r(g, x - 2, Y + 3, 5, 1, tom(cerda, 0.7)); });
+    },
+    tanque(g, m) { const { X, Y, w, d, h } = m; sombra(g, X, Y, w, d); caixa(g, X, Y, w, d, h, '#e9ecef', { frente: '#dee2e6' }); r(g, X + 2, Y - h + 2, w - 4, d - 4, '#a5d8ff'); r(g, X + (w >> 1), Y - h - 4, 2, 5, '#868e96'); },
+    baldeMop(g, m) { const { X, Y, w, d } = m; sombra(g, X, Y, w, d); r(g, X, Y - 6, w, 9, '#fab005'); r(g, X + 1, Y - 6, w - 2, 2, '#4dabf7'); r(g, X + 5, Y - 22, 1, 18, '#8d5a3b'); r(g, X + 3, Y - 5, 5, 3, '#f1f3f5'); },
+    ferramentas(g, m) { const { X, Y, w, d, h } = m; sombra(g, X, Y, w, d); caixa(g, X, Y, w, d, h, '#e03131', { frente: '#c92a2a' }); r(g, X + 4, Y - h - 3, w - 8, 3, '#343a40'); r(g, X + 2, Y + d - h + 3, w - 4, 1, '#ffd43b'); },
+    escadaFixa(g, m) { const { X, Y } = m; r(g, X, Y - 24, 2, 28, '#adb5bd'); r(g, X + 6, Y - 24, 2, 28, '#adb5bd'); for (let k = 0; k < 5; k++) r(g, X + 1, Y - 20 + k * 5, 6, 1, '#868e96'); },
+    bancadaZeca(g, m) {
+      const { X, Y, w, d, h } = m; sombra(g, X, Y, w, d); caixa(g, X, Y, w, d, h, '#8d5a3b');
+      r(g, X + 3, Y - h - 5, 10, 6, '#343a40'); r(g, X + 4, Y - h - 4, 4, 4, '#868e96'); r(g, X + 9, Y - h - 4, 3, 1, '#ffd43b'); r(g, X + 12, Y - h - 8, 1, 4, '#adb5bd'); // rádio
+      r(g, X + w - 8, Y - h + 1, 4, 5, '#ffffff'); r(g, X + w - 8, Y - h + 1, 4, 1, '#6b3a1e'); // café
+    },
+    quadroEscala(g, m) { // escala de limpeza
+      const { X, Y, w } = m; r(g, X, Y + 1, w, 14, CONTORNO); r(g, X + 1, Y + 2, w - 2, 12, '#fff9db');
+      for (let k = 0; k < 4; k++) { r(g, X + 3, Y + 4 + k * 3, w - 9, 1, '#adb5bd'); r(g, X + w - 5, Y + 3 + k * 3, 2, 2, k < 3 ? VERDE : '#e03131'); }
+    },
   };
+  // quadro de vagas do RH: setores com vaga aberta e quantos já entraram
+  function quadroVagas(ctx, d, t) {
+    const { X, Y, w } = d, cfg = KM.config && KM.config(), n = cfg ? cfg.funcionarios.filter(f => f.contratado).length : 0;
+    r(ctx, X, Y + 1, w, 14, CONTORNO); r(ctx, X + 1, Y + 2, w - 2, 12, '#ffffff');
+    texto(ctx, 'VAGAS', X + 3, Y + 3, '#7048e8');
+    for (let k = 0; k < 3; k++) r(ctx, X + 3 + k * 6, Y + 10, 4, 3, k < Math.min(3, n) ? VERDE : Math.floor(t * 2 + k) % 2 ? '#ffd43b' : '#e9ecef');
+    texto(ctx, String(n), X + w - 8, Y + 9, '#1c1612');
+  }
 
   // ------------------------------------------------------------------ desenho dinâmico (telas, relógio, janela…)
   function conteudoTela(ctx, x, y, w, h, modo, t, funcao) {
@@ -1324,6 +1432,7 @@
       else if (d.tipo === 'tvGame') tvGame(ctx, d, estado, t);
       else if (d.tipo === 'quadroFiscal') quadroSetor(ctx, d, t, 'fiscal');
       else if (d.tipo === 'quadroFolha') quadroSetor(ctx, d, t, 'folha');
+      else if (d.tipo === 'quadroVagas') quadroVagas(ctx, d, t);
     }
   }
   function dinMovel(ctx, m, estado, t) {
@@ -1494,8 +1603,8 @@
     iso = !!iso;
     const cel = window.matchMedia('(max-width: 760px)').matches;
     if (L && L.nome === nome && ISO.on === iso && (!iso || ISO.cel === cel)) {
-      const ex = tamanhoExecucao(ativasExecucao(cfg));
-      if (ex.span === L.exec.span && ex.fileiras === L.exec.fileiras) return false;
+      const ex = tamanhoExecucao(ativasExecucao(cfg), nome === 'largo' ? 1 : 2);
+      if (ex.span === L.exec.span && ex.fileiras === L.exec.fileiras && L.contratados === chaveContratados(cfg)) return false;
     }
     const mudouVisao = ISO.on !== iso || ISO.cel !== cel;
     L = KM.LAYOUT = montarLayout(nome, cfg);
@@ -1524,28 +1633,31 @@
   const ISO = { on: false, cel: false, ox: 0, oy: 0, w: 0, h: 0, cam: { x: 0, y: 0, z: 1 }, chao: null, paredes: null, sprites: new Map(), ceu: null, per: '', camPronta: false };
   const WALLH = 30, BAIXA = 6, PADI = 30;
   KM.isoAtivo = () => ISO.on;
-  const prj = (X, Y, Z = 0) => [X - Y + ISO.ox, (X + Y) / 2 - Z + ISO.oy];
+  // com o 3D carregado (cena3d.js), a projeção, a câmera e os cliques passam a ser os do 3D
+  const T3 = () => ISO.on && KM.tresD && KM.tresD.ok;
+  const prj = (X, Y, Z = 0) => (T3() ? KM.tresD.prj(X, Y, Z) : [X - Y + ISO.ox, (X + Y) / 2 - Z + ISO.oy]);
   KM.prj = (X, Y, Z = 0) => (ISO.on ? prj(X, Y, Z) : [X, Y - Z]);
   KM.paraTela = (x, y) => (ISO.on ? [(x - ISO.cam.x) * ISO.cam.z + KM.W / 2, (y - ISO.cam.y) * ISO.cam.z + KM.H / 2] : [x, y]);
   KM.telaParaCena = (x, y) => (ISO.on ? [(x - KM.W / 2) / ISO.cam.z + ISO.cam.x, (y - KM.H / 2) / ISO.cam.z + ISO.cam.y] : [x, y]);
-  KM.telaParaMundo = (x, y) => { if (!ISO.on) return [x, y]; const [ix, iy] = KM.telaParaCena(x, y), a = ix - ISO.ox, b = 2 * (iy - ISO.oy); return [(a + b) / 2, (b - a) / 2]; };
+  KM.telaParaMundo = (x, y) => { if (!ISO.on) return [x, y]; if (T3()) return KM.tresD.mundo(x, y); const [ix, iy] = KM.telaParaCena(x, y), a = ix - ISO.ox, b = 2 * (iy - ISO.oy); return [(a + b) / 2, (b - a) / 2]; };
   // desenha algo feito "de cima" em pé, no lugar certo da diagonal (X, Y = ponto do chão)
   KM.bb = (g, X, Y, fn) => { if (!ISO.on) return fn(); const [px, py] = prj(X, Y); g.save(); g.translate(px - X, py - Y); try { fn(); } finally { g.restore(); } };
-  KM.rotuloPos = s => (ISO.on ? KM.paraTela(...prj(s.x + s.w / 2, s.fy, WALLH + 10)) : [s.x + s.w / 2, s.y + 2]);
-  function limparIso() { ISO.chao = null; ISO.paredes = null; ISO.sprites.clear(); ISO.ceu = null; }
+  KM.rotuloPos = s => (ISO.on ? KM.paraTela(...prj(s.x + s.w / 2, s.fy, T3() ? KM.tresD.HN + 12 : WALLH + 10)) : [s.x + s.w / 2, s.y + 2]);
+  function limparIso() { ISO.chao = null; ISO.paredes = null; ISO.sprites.clear(); ISO.ceu = null; if (KM.tresD) KM.tresD.sujo = true; }
 
   // ------------------------------------------------------------------ câmera
   function limitarCam() { const c = ISO.cam; c.z = Math.max(0.3, Math.min(2.5, c.z)); c.x = Math.max(0, Math.min(ISO.w, c.x)); c.y = Math.max(0, Math.min(ISO.h, c.y)); }
   KM.camera = {
-    ajustar() { const c = ISO.cam; c.z = Math.min(KM.W / ISO.w, KM.H / ISO.h) * 1.02; c.x = ISO.w / 2; c.y = ISO.h / 2 + 6; },
+    ajustar() { if (T3()) return KM.tresD.cam.ajustar(); const c = ISO.cam; c.z = Math.min(KM.W / ISO.w, KM.H / ISO.h) * 1.02; c.x = ISO.w / 2; c.y = ISO.h / 2 + 6; },
     zoom(f, cx, cy) {
+      if (T3()) return KM.tresD.cam.zoom(f, cx, cy);
       const c = ISO.cam, foco = cx != null ? KM.telaParaCena(cx, cy) : null;
       c.z *= f; limitarCam();
       if (foco) { const [bx, by] = KM.telaParaCena(cx, cy); c.x += foco[0] - bx; c.y += foco[1] - by; limitarCam(); }
     },
-    mover(dx, dy) { const c = ISO.cam; c.x -= dx / c.z; c.y -= dy / c.z; limitarCam(); },
-    focar(X, Y, z) { const [x, y] = prj(X, Y); ISO.cam.x = x; ISO.cam.y = y; if (z) ISO.cam.z = z; limitarCam(); },
-    estado: () => ({ ...ISO.cam }),
+    mover(dx, dy) { if (T3()) return KM.tresD.cam.mover(dx, dy); const c = ISO.cam; c.x -= dx / c.z; c.y -= dy / c.z; limitarCam(); },
+    focar(X, Y, z) { if (T3()) return KM.tresD.cam.focar(X, Y, z); const [x, y] = prj(X, Y); ISO.cam.x = x; ISO.cam.y = y; if (z) ISO.cam.z = z; limitarCam(); },
+    estado: () => (T3() ? KM.tresD.cam.estado() : { ...ISO.cam }),
   };
 
   // ------------------------------------------------------------------ caixa na diagonal (pixel a pixel, coluna por coluna)
@@ -1616,6 +1728,10 @@
     banco2: (g, m) => isoCaixa(g, m.X, m.Y, m.w, m.d, m.h, '#6b7088'),
     puff: (g, m) => isoCaixa(g, m.X, m.Y, m.w, m.d, 7, m.cor || '#ff8c5a'),
     pufeKwik: (g, m) => isoCaixa(g, m.X, m.Y, m.w, m.d, 7, VERDE),
+    prateleiraLimpeza: (g, m) => { isoCaixa(g, m.X, m.Y, m.w, m.d, m.h, '#adb5bd'); faceSul(g, m.X, m.Y, m.w, m.d, m.h, 3, '#4dabf7'); },
+    tanque: (g, m) => { isoCaixa(g, m.X, m.Y, m.w, m.d, m.h, '#e9ecef'); isoCaixa(g, m.X + 2, m.Y + 2, m.w - 4, m.d - 4, 0, '#a5d8ff', { z: m.h }); },
+    ferramentas: (g, m) => isoCaixa(g, m.X, m.Y, m.w, m.d, m.h, '#e03131'),
+    bancadaZeca: (g, m) => { isoCaixa(g, m.X, m.Y, m.w, m.d, m.h, '#8d5a3b'); isoCaixa(g, m.X + 3, m.Y + 2, 10, 4, 6, '#343a40', { z: m.h }); },
     carrinhoLimpeza: null, tanqueMeta: null,
   };
   // sprite (em cache) de cada móvel: caixa na diagonal ou o desenho de sempre em pé
@@ -1703,6 +1819,8 @@
   const dirIso = p => { const d = dirDe(p); return sentado(p) && d[0] === 'c' ? 'cd' : d; }; // sentado de costas: olhando para a mesa (diagonal para cima à direita)
 
   function desenharIso(ctx, cfg, estado, t) {
+    if (KM.tresD && !KM.tresD.ok && !KM.tresD.falhou) KM.tresD.carregar(); // o 3D carrega em segundo plano; enquanto isso, a diagonal desenhada
+    if (T3()) { KM.tresD._dt = ISO.dt; return KM.tresD.render(ctx, cfg, estado, t); }
     const per = periodo(cfg);
     if (ISO.per !== per) { limparIso(); ISO.per = per; }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -1786,6 +1904,7 @@
     if (!L) KM.definirLayout('largo', cfg);
     const dt = Math.min(0.1, Math.max(0, t - tAnterior)); tAnterior = t;
     if (ISO.on) { ISO.dt = dt; return desenharIso(ctx, cfg, estado, t); }
+    if (KM.tresD && KM.tresD.esconder) KM.tresD.esconder();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.imageSmoothingEnabled = false;
     if (!fundo || fundoPer !== periodo(cfg)) fundo = montarFundo(cfg);
@@ -1927,6 +2046,9 @@
 
   // Mãos no teclado: só quando está sentado de frente (as mesas atuais deixam todos de costas).
   KM.desenharMaos = function () {};
+  // para o 3D (cena3d.js): para onde a pessoa olha e as peças da cena que ele reaproveita
+  KM.dirVisivel = p => (ISO.on ? dirIso(p) : dirDe(p));
+  KM._cena = { ISO, montarParedes, desenharDecorDin, DES, pisoDaSala };
 
   // Quem está sob o ponto (x, y) da tela: devolve o id do mais à frente.
   KM.pessoaEm = function (estado, x, y) {
@@ -1934,8 +2056,9 @@
     for (const p of Object.values(estado.pessoas || {})) {
       if (p.visivel === false) continue;
       const [ax, ay] = KM.ancora(p);
-      const topo = sentado(p) ? ay - 37 : ay - 45;
-      if (x >= ax - 11 && x <= ax + 11 && y >= topo + 4 && y <= ay + 2 && p.Y > melhor) { melhor = p.Y; achou = p.id; }
+      const topo = sentado(p) ? ay - (T3() ? 44 : 37) : ay - 45;
+      const prof = ISO.on ? p.X + p.Y : p.Y;
+      if (x >= ax - 11 && x <= ax + 11 && y >= topo + 4 && y <= ay + 2 && prof > melhor) { melhor = prof; achou = p.id; }
     }
     return achou;
   };

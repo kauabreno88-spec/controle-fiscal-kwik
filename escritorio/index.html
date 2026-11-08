@@ -777,24 +777,210 @@ dialog.iva-dlg { max-width: 680px; }
   .jogo-bts .bt { padding: 6px 8px; }
   dialog { max-height: 88vh; }
 }
+
+/* ================= visual novo (topo escuro com números ao vivo, palco grande, ficha do funcionário) ================= */
+body { background: #eef2ee; }
+.topo { gap: 14px; padding: 10px 22px; background: #121b17; border-bottom: 3px solid var(--verde); }
+.marca div small { display: block; font-size: 10.5px; font-weight: 800; color: var(--verde); letter-spacing: 2.6px; text-transform: uppercase; }
+.marca div b { display: block; font-size: 21px; font-weight: 900; letter-spacing: -.2px; line-height: 1.05; }
+.marca div b em { font-style: normal; color: var(--verde); }
+.marca, .chip, .topo .caixa, .bt-pers { white-space: nowrap; flex: none; }
+.topo .caixa .rotulo { display: none; }
+@media (max-width: 1360px) { .chip { padding: 6px 9px; font-size: 12.5px; } .chips { margin-left: 4px; gap: 6px; } .topo { gap: 10px; } }
+@media (max-width: 1180px) and (min-width: 701px) { #chipCafe, #btTelaCheia { display: none; } }
+.marca img { width: 38px; height: 38px; }
+.chips { display: flex; gap: 8px; margin-left: 14px; flex-wrap: nowrap; flex: none; }
+.chip { display: inline-flex; align-items: center; gap: 7px; background: #1b2723; border: 1px solid #2c3b36; color: #d7e2de; border-radius: 9px; padding: 7px 12px; font-weight: 700; font-size: 13.5px; }
+.chip b { color: #fff; font-weight: 900; }
+.chip:hover { border-color: var(--verde); }
+.chip .pt { width: 9px; height: 9px; border-radius: 50%; background: var(--verde); display: inline-block; }
+.chip .pt.anel { background: transparent; box-shadow: inset 0 0 0 2.5px var(--verde); }
+.chip .pt.cinza { background: #9aa3a1; }
+.chip.vivo .pt { animation: pisca 1s infinite; }
+.chip.alerta { border-color: #ffd43b; background: #2a2a17; }
+.chip.alerta .pt.anel { box-shadow: inset 0 0 0 2.5px #ffd43b; animation: pisca 1s infinite; }
+.bt-pers { border: 0; background: var(--verde); color: #0d1a14; font-weight: 900; border-radius: 99px; padding: 10px 18px; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 0 0 3px rgba(40,190,82,.2); }
+.bt-pers:hover { background: #2fd05d; }
+.icone-bt.redondo { border-radius: 50%; width: 40px; height: 40px; background: transparent; border: 1.5px solid #3a4a45; font-size: 16px; }
+.icone-bt.redondo:hover { border-color: var(--verde); }
+.topo .caixa { background: transparent; }
+nav.abas { position: sticky; top: 64px; z-index: 29; display: flex; gap: 4px; margin: 0; padding: 6px 22px; background: #18231f; border-bottom: 1px solid #22302b; }
+nav.abas button { padding: 7px 13px; font-size: 13.5px; border-radius: 99px; }
+.contador.alerta { background: #ffd43b !important; color: #111 !important; }
+main { max-width: 1680px; }
+.grade-escritorio { grid-template-columns: minmax(0, 1fr); position: relative; }
+.palco-card { background: transparent; border: 0; box-shadow: none; padding: 0; position: relative; }
+.palco-topo { display: none; }
+.palco { border-radius: 18px; box-shadow: 0 10px 40px rgba(10,20,15,.25); background: #1a2a20; }
+.lateral { position: absolute; left: 14px; top: 14px; width: 300px; z-index: 8; pointer-events: none; }
+.lateral > * { pointer-events: auto; }
+.lateral .card:not(#cardTarefa):not(.painel-jogos) { display: none; }
+.lateral .card { box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+.acoes { margin-top: 14px; background: #fff; border: 1px solid var(--linha); border-radius: 18px; padding: 8px; box-shadow: var(--sombra); align-items: center; }
+.acoes .bt { border-radius: 12px; }
+.acoes #btTrabalhar { flex: 1; justify-content: center; font-size: 15px; }
+.acoes-setores { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 10px; }
+.setor-bt { border-radius: 16px; }
+.setor-bt.rh .ic { background: #f3f0ff; } .setor-bt.tarefas .ic { background: #fff9db; }
+/* ficha do funcionário */
+.ficha { position: absolute; right: 14px; top: 14px; width: 340px; max-height: calc(100% - 28px); overflow: auto; z-index: 12; background: #fff; border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(10,20,15,.35); padding: 18px 18px 14px; transform: translateX(20px); opacity: 0; transition: transform .2s, opacity .2s; overscroll-behavior: contain; }
+.ficha.on { transform: none; opacity: 1; }
+.ficha-cab { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.ficha-cab small { font-size: 11px; font-weight: 900; letter-spacing: 2.4px; color: var(--verde-esc); }
+.ficha-x { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid var(--linha); background: #fff; font-size: 20px; line-height: 1; color: var(--grafite); }
+.ficha-av { height: 150px; border-radius: 16px; display: flex; align-items: center; justify-content: center; overflow: hidden;
+  background-color: #dff5e5; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M8 8v14M8 15l7-7M8 15l7 7' stroke='%23b9e6c5' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3Cpath d='M28 26v10M28 31l5-5M28 31l5 5' stroke='%23c9eed3' stroke-width='2.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); }
+.ficha-av canvas { width: 90px; height: 138px; image-rendering: pixelated; }
+.ficha h2 { margin: 12px 0 0; font-size: 26px; font-weight: 900; letter-spacing: -.3px; }
+.ficha-cargo { margin: 2px 0 8px; color: var(--cinza); font-weight: 700; font-size: 14px; }
+.ficha-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.ficha-tags .tag { border: 1.5px solid var(--grafite); border-radius: 6px; padding: 3px 8px; font-size: 12px; font-weight: 800; background: #fffbe6; }
+.ficha-tags .tag + .tag { background: #fff; border-color: var(--linha); }
+.ficha-status { margin: 10px 0 6px; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+.ficha-status i { width: 9px; height: 9px; border-radius: 50%; background: #c3cbc8; }
+.ficha-status i.vivo { background: var(--verde); animation: pisca 1s infinite; }
+.ficha-status span { color: var(--cinza); font-size: 12.5px; }
+.ficha-rep { background: var(--nevoa); border-radius: 12px; padding: 9px 11px; margin: 6px 0; }
+.ficha-rep-l { display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 800; }
+.ficha-rep-l b { color: #e8a200; letter-spacing: .5px; }
+.ficha-rep small { color: var(--cinza); font-weight: 700; font-size: 11.5px; }
+.ficha-rep .barra, .tf-barra { height: 6px; background: #dfe6e2; border-radius: 99px; overflow: hidden; margin: 6px 0 3px; }
+.ficha-rep .barra i, .tf-barra i { display: block; height: 100%; background: linear-gradient(90deg, #ffd43b, var(--verde)); border-radius: 99px; }
+.ficha-nums { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 8px 0 4px; }
+.ficha-nums div { background: var(--nevoa); border-radius: 10px; padding: 6px 8px; }
+.ficha-nums small { display: block; font-size: 10px; font-weight: 800; color: var(--cinza); text-transform: uppercase; letter-spacing: 1px; }
+.ficha-nums b { font-size: 15px; font-weight: 900; }
+.ficha h4 { margin: 14px 0 6px; font-size: 11px; letter-spacing: 2.4px; color: var(--verde-esc); font-weight: 900; }
+.ficha-agora { border-left: 4px solid var(--verde); background: #f1faf3; border-radius: 0 10px 10px 0; padding: 10px 12px; font-weight: 800; font-size: 14px; display: flex; gap: 8px; align-items: center; }
+.ficha-bts { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.ficha-bts .bt { flex: 1; justify-content: center; padding: 9px 10px; font-size: 13px; }
+.ficha-log { list-style: none; margin: 0; padding: 0; }
+.ficha-log li { display: grid; grid-template-columns: 44px 22px 1fr; align-items: start; gap: 4px; padding: 7px 0; border-bottom: 1px solid #eef2ee; font-size: 13px; font-weight: 600; }
+.ficha-log li.vazio { display: block; color: var(--cinza); font-size: 12.5px; }
+.ficha-log time { color: var(--cinza); font-size: 12px; font-variant-numeric: tabular-nums; padding-top: 1px; }
+/* RH */
+dialog.rh-dlg { max-width: 760px; }
+.rh-dlg .sub { margin: 0 0 12px; color: var(--cinza); font-size: 13.5px; }
+.rh-setores { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+.rh-setor { border: 2px solid var(--linha); background: #fff; border-radius: 14px; padding: 9px 8px; display: flex; flex-direction: column; align-items: center; gap: 1px; font-size: 13px; }
+.rh-setor .ic { font-size: 20px; } .rh-setor small { color: var(--verde-esc); font-weight: 800; font-size: 11px; } .rh-setor em { font-style: normal; font-size: 10.5px; color: var(--cinza); }
+.rh-setor.on { border-color: var(--verde); background: #f1faf3; } .rh-setor.cheio small { color: #c92a2a; }
+.rh-tit { margin: 16px 0 8px; font-size: 16px; font-weight: 900; } .rh-tit small { font-weight: 700; color: var(--cinza); font-size: 13px; }
+.rh-cands { display: grid; gap: 8px; margin-bottom: 10px; }
+.rh-cand { display: grid; grid-template-columns: 60px minmax(0, 1fr) auto; gap: 10px; align-items: center; border: 1.5px solid var(--linha); border-radius: 14px; padding: 8px 10px; }
+.rh-av { width: 45px; height: 69px; image-rendering: pixelated; background: #dff5e5; border-radius: 10px; padding: 2px; }
+.rh-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; } .rh-info small { color: var(--cinza); font-weight: 600; font-size: 12px; } .rh-info small.rep { color: #b8860b; font-weight: 800; }
+.rh-tags { display: flex; gap: 4px; flex-wrap: wrap; } .rh-tags span { background: #e7f5ff; color: #1864ab; border-radius: 6px; padding: 1px 6px; font-size: 11px; font-weight: 800; }
+/* Tarefas */
+.tf-topo { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 12px; }
+.tf-topo h2 { margin: 0 0 4px; font-weight: 900; } .tf-topo p { margin: 0; max-width: 760px; }
+.tf-resumo { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 10px; }
+.tf-num { background: #fff; border: 2px solid var(--linha); border-radius: 14px; padding: 10px 12px; text-align: left; display: flex; flex-direction: column; }
+.tf-num b { font-size: 20px; font-weight: 900; } .tf-num small { color: var(--cinza); font-weight: 700; } .tf-num.on { border-color: var(--verde); background: #f1faf3; }
+.tf-setores { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.chip-f { border: 1.5px solid var(--linha); background: #fff; border-radius: 99px; padding: 5px 11px; font-weight: 800; font-size: 12.5px; }
+.chip-f.on { background: var(--grafite); border-color: var(--grafite); color: #fff; }
+.tf-grade { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 14px; align-items: start; }
+#tarefasLista { display: grid; gap: 10px; }
+.tf { padding: 14px 16px; border-left: 5px solid var(--linha); }
+.tf.entregue { border-left-color: #ffd43b; } .tf.fazendo { border-left-color: #74c0fc; opacity: .85; } .tf.aprovada { border-left-color: var(--verde); } .tf.reprovada { border-left-color: #ff8787; }
+.tf-cab { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.tf-cab canvas, .tf-rank canvas { width: 34px; height: 34px; image-rendering: pixelated; background: #dff5e5; border-radius: 10px; object-fit: cover; object-position: top; }
+.tf-cab b { font-size: 14px; } .tf-cab small { display: block; color: var(--cinza); font-weight: 600; font-size: 12px; }
+.tf-tipo { font-size: 11.5px; font-weight: 800; border-radius: 99px; padding: 3px 9px; background: var(--nevoa); white-space: nowrap; }
+.tf-tipo.ideia { background: #fff9db; } .tf-tipo.melhoria { background: #e7f5ff; } .tf-tipo.relatorio { background: #f3f0ff; } .tf-tipo.tarefa { background: #ebfbee; }
+.tf h4 { margin: 10px 0 4px; font-size: 16px; font-weight: 900; }
+.tf-texto { margin: 0; white-space: pre-line; font-size: 14px; line-height: 1.5; color: #2b3634; }
+.tf-fazendo { margin: 2px 0 0; color: #1971c2; font-weight: 700; font-size: 13px; }
+.tf-aval { margin-top: 10px; display: grid; gap: 8px; }
+.tf-aval input[type=text] { border: 1.5px solid var(--linha); border-radius: 10px; padding: 9px 10px; font: inherit; font-size: 13px; }
+.tf-bts { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.bt.ouro { background: #ffd43b; border-color: #fab005; color: #3b2f00; }
+.tf-ref { font-size: 12px; color: var(--cinza); font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
+.tf-res { margin-top: 10px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 13px; }
+.tf-res .mais { color: var(--verde-esc); font-weight: 800; } .tf-res .menos { color: #c92a2a; font-weight: 800; } .tf-res em { color: var(--cinza); }
+.tf-vazio { padding: 22px; text-align: center; } .tf-vazio p { color: var(--cinza); margin: 6px 0 0; }
+.tf-ranking-card { padding: 14px; position: sticky; top: 120px; } .tf-ranking-card h3 { margin: 0 0 10px; font-size: 15px; font-weight: 900; }
+.tf-rank { display: grid; grid-template-columns: 30px 34px minmax(0, 1fr) 30px; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid #eef2ee; }
+.tf-rank .pos { font-weight: 900; text-align: center; } .tf-rank b { font-size: 13px; } .tf-rank small { display: block; color: var(--cinza); font-size: 11px; font-weight: 600; }
+.tf-rank .v { font-weight: 900; color: var(--verde-esc); text-align: right; }
+#tela3d { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+/* botões da calçada (Cliente e IPOG) */
+.bts-rua { position: absolute; transform: translateY(-50%); z-index: 6; display: flex; gap: 4px; }
+.bts-rua .bt-rua { position: static; transform: none; }
+.bt-rua.ipog { background: #1b3a6b; } .bt-rua.ipog:hover { background: #24508f; }
+/* IPOG */
+.ipog-cena canvas { height: min(46vh, calc((100vw - 40px) * 0.625)); width: auto; max-width: 100%; display: block; margin: 0 auto; image-rendering: pixelated; aspect-ratio: 320 / 200; cursor: pointer; }
+.ipog-cena { background: #0f1830; max-height: none !important; overflow: hidden !important; }
+.ipog-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+.ipog-mod { display: flex; gap: 10px; align-items: center; text-align: left; border: 2px solid var(--linha); border-left: 6px solid var(--c); background: #fff; border-radius: 14px; padding: 10px 12px; }
+.ipog-mod .ic { font-size: 24px; } .ipog-mod small { display: block; color: var(--cinza); font-weight: 800; font-size: 11px; } .ipog-mod b { font-size: 14px; }
+.ipog-mod:hover, .ipog-mod.on { border-color: var(--c); background: #f8f9ff; }
+.ipog-cab { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 10px; align-items: center; border-left: 6px solid var(--c); padding-left: 10px; }
+.ipog-cab .ic { font-size: 32px; } .ipog-cab small { color: var(--cinza); font-weight: 800; font-size: 11.5px; } .ipog-cab h3 { margin: 0; font-size: 18px; font-weight: 900; }
+.ipog-abas { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0; }
+.ipog-abas button { border: 1.5px solid var(--linha); background: #fff; border-radius: 99px; padding: 7px 12px; font-weight: 800; font-size: 13px; }
+.ipog-abas button.on { background: #1b3a6b; border-color: #1b3a6b; color: #fff; }
+.ipog-corpo { font-size: 14.5px; line-height: 1.55; } .ipog-corpo h4 { margin: 14px 0 6px; font-size: 14px; font-weight: 900; }
+.ipog-resumo { font-size: 15px; background: #f1f6ff; border-radius: 12px; padding: 12px 14px; margin: 0; }
+.ipog-lista li { margin: 6px 0; }
+.ipog-vender { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px; }
+.ipog-vender > div { border: 1.5px solid var(--linha); border-radius: 12px; padding: 10px 12px; } .ipog-vender p { margin: 4px 0 0; font-size: 13.5px; }
+.ipog-roteiro li { margin: 6px 0; font-style: italic; }
+.ipog-bts { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+@media (max-width: 980px) {
+  .chips .chip { padding: 6px 9px; font-size: 12px; }
+  .tf-grade { grid-template-columns: 1fr; }
+  .tf-ranking-card { position: static; }
+  .acoes-setores { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 700px) {
+  .topo { flex-wrap: wrap; row-gap: 8px; border-bottom-width: 2px; }
+  .marca div small { font-size: 9px; letter-spacing: 1.8px; } .marca div b { font-size: 17px; }
+  .chips { order: 3; margin: 0; width: 100%; gap: 6px; }
+  .chip.so-pc, .icone-bt.so-pc { display: none; }
+  nav.abas button[data-aba=personalizar] { display: none; } /* no celular o ✏️ do topo abre o Visual */
+  nav.abas button { min-width: 0; flex: 1 1 0; }
+  .chip { padding: 5px 9px; font-size: 12px; }
+  .bt-pers span { display: none; } .bt-pers { padding: 8px 11px; }
+  .icone-bt.redondo { width: 34px; height: 34px; }
+  nav.abas { position: fixed; top: auto; border-bottom: 0; padding: 6px; }
+  .lateral { position: static; width: auto; pointer-events: auto; margin-top: 10px; }
+  .ficha { position: fixed; left: 8px; right: 8px; top: auto; bottom: calc(84px + env(safe-area-inset-bottom)); width: auto; max-height: 64vh; transform: translateY(30px); z-index: 45; }
+  .ficha-av { height: 110px; } .ficha-av canvas { width: 66px; height: 101px; } .ficha h2 { font-size: 22px; }
+  .tf-resumo { grid-template-columns: 1fr 1fr; }
+  .tf-topo { flex-direction: column; }
+  .rh-cand { grid-template-columns: 50px minmax(0, 1fr); } .rh-cand .bt { grid-column: 1 / -1; justify-content: center; }
+}
 </style>
 </head>
 <body>
 <header class="topo">
-  <a class="marca" href="#escritorio"><img src="assets/kwik-simbolo.svg" alt=""><div><b>KWIK</b><small id="nomeEscritorio">Mini Escritório</small></div></a>
-  <nav class="abas">
-    <button data-aba="escritorio" class="ativa"><i class="ic">🏢</i> <span class="txt">Escritório</span></button>
-    <button data-aba="equipe"><i class="ic">👥</i> <span class="txt">Equipe</span></button>
-    <button data-aba="relatorios"><i class="ic">📑</i> <span class="txt">Relatórios</span> <span class="contador" id="qtdRel">0</span></button>
-    <button data-aba="personalizar"><i class="ic">🎨</i> <span class="txt">Visual</span></button>
-    <button data-aba="config"><i class="ic">⚙️</i> <span class="txt">Config.</span></button>
-  </nav>
+  <a class="marca" href="#escritorio"><img src="assets/kwik-simbolo.svg" alt=""><div><small>Escritório ao vivo</small><b><span id="nomeEscritorio">Escritório</span> <em>KWIK</em></b></div></a>
+  <div class="chips">
+    <button class="chip" id="chipTrab" title="Quem está trabalhando agora"><i class="pt"></i><b id="nTrab">0</b> trabalhando</button>
+    <button class="chip" id="chipVoce" title="Entregas esperando a sua avaliação (aba Tarefas)"><i class="pt anel"></i><b id="nVoce">0</b> precisam de você</button>
+    <button class="chip so-pc" id="chipCafe" title="No refeitório, no cafezinho ou na sala de jogos"><i class="pt cinza"></i><b id="nCafe">0</b> no café</button>
+  </div>
   <div class="dir">
     <div class="caixa" id="caixa" title="Caixa do escritório: cresce a cada tarefa enviada"><span class="rotulo">Caixa</span>💰 <span class="valor" id="caixaValor">R$ 0,00</span></div>
-    <button class="icone-bt" id="btGithub" title="Conexão com o GitHub" hidden>🔗</button>
-    <button class="icone-bt" id="btSom" title="Som ligado/desligado">🔊</button>
+    <button class="bt-pers" id="btPersonalizar" title="Personalizar o escritório e a equipe">✏️ <span>Personalizar</span></button>
+    <button class="icone-bt redondo so-pc" id="btRelTopo" title="Relatórios">📊</button>
+    <button class="icone-bt redondo" id="btGithub" title="Conexão com o GitHub" hidden>🔗</button>
+    <button class="icone-bt redondo" id="btSom" title="Som ligado/desligado">🔊</button>
+    <button class="icone-bt redondo so-pc" id="btCeu" title="Dia, tarde, noite ou automático">🌙</button>
+    <button class="icone-bt redondo so-pc" id="btTelaCheia" title="Tela cheia">⛶</button>
   </div>
 </header>
+<nav class="abas">
+  <button data-aba="escritorio" class="ativa"><i class="ic">🏢</i> <span class="txt">Escritório</span></button>
+  <button data-aba="equipe"><i class="ic">👥</i> <span class="txt">Equipe</span></button>
+  <button data-aba="tarefas"><i class="ic">📋</i> <span class="txt">Tarefas</span> <span class="contador alerta" id="qtdTarefas" hidden>0</span></button>
+  <button data-aba="relatorios"><i class="ic">📑</i> <span class="txt">Relatórios</span> <span class="contador" id="qtdRel">0</span></button>
+  <button data-aba="personalizar"><i class="ic">🎨</i> <span class="txt">Visual</span></button>
+  <button data-aba="config"><i class="ic">⚙️</i> <span class="txt">Config.</span></button>
+</nav>
 <div class="aviso-off"></div>
 
 <main>
@@ -809,6 +995,7 @@ dialog.iva-dlg { max-width: 680px; }
         <div class="palco" id="palco">
           <canvas id="tela" width="484" height="376"></canvas>
           <div class="banner" id="banner"></div>
+          <aside class="ficha" id="ficha" hidden></aside>
         </div>
         <div class="tela-jogo" id="telaJogo">
           <div class="jogo-hud">
@@ -876,8 +1063,10 @@ dialog.iva-dlg { max-width: 680px; }
           </div>
         </div>
         <div class="acoes-setores">
-          <button class="bt setor-bt fiscal" id="btFiscal"><span class="ic">🧾</span><span><b>Fiscal</b><small>Impostos e guias · ver e adicionar</small></span></button>
-          <button class="bt setor-bt folha" id="btFolha"><span class="ic">👥</span><span><b>Folha</b><small>Funcionários e fechamento · ver e adicionar</small></span></button>
+          <button class="bt setor-bt fiscal" id="btFiscal"><span class="ic">🧾</span><span><b>Fiscal</b><small>Impostos e guias</small></span></button>
+          <button class="bt setor-bt folha" id="btFolha"><span class="ic">👥</span><span><b>Folha</b><small>Funcionários e fechamento</small></span></button>
+          <button class="bt setor-bt rh" id="btRH"><span class="ic">🤝</span><span><b>RH</b><small>Contratar para os setores</small></span></button>
+          <button class="bt setor-bt tarefas" id="btTarefasAtalho"><span class="ic">📋</span><span><b>Tarefas</b><small>Avaliar as entregas</small></span></button>
         </div>
       </div>
 
@@ -926,6 +1115,20 @@ dialog.iva-dlg { max-width: 680px; }
   <section class="aba" id="aba-equipe">
     <div class="equipe-cab"><h2>👥 Equipe KWIK</h2><p class="vazio">Toque no botão verde para mandar a pessoa trabalhar. O status atualiza sozinho.</p></div>
     <div class="equipe2" id="equipeLista"></div>
+  </section>
+
+  <!-- TAREFAS -->
+  <section class="aba" id="aba-tarefas">
+    <div class="tf-topo">
+      <div><h2>📋 Tarefas da equipe</h2><p class="vazio">Os chefes passam tarefas para a equipe; cada um entrega tarefas feitas, relatórios de melhoria, ideias e relatórios do setor. Você avalia e a reputação de cada um sobe ou desce.</p></div>
+      <button class="bt prim" id="btPedirTarefa">＋ Pedir uma tarefa</button>
+    </div>
+    <div class="tf-resumo" id="tarefasResumo"></div>
+    <div class="tf-setores" id="tarefasSetores"></div>
+    <div class="tf-grade">
+      <div id="tarefasLista"></div>
+      <aside class="card tf-ranking-card"><h3>🏆 Reputação na empresa</h3><div id="tarefasRanking"></div></aside>
+    </div>
   </section>
 
   <!-- RELATÓRIOS -->
@@ -1077,31 +1280,34 @@ dialog.iva-dlg { max-width: 680px; }
   <div class="dlg-corpo" id="ghCorpo"></div>
 </dialog>
 
-<script src="js/cena.js?v=14"></script>
-<script src="js/boneco.js?v=14"></script>
-<script src="js/nuvem.js?v=14"></script>
-<script src="js/efeitos.js?v=14"></script>
-<script src="js/clara.js?v=14"></script>
-<script src="js/maycon.js?v=14"></script>
-<script src="js/filmes.js?v=14"></script>
-<script src="js/gatinhos.js?v=14"></script>
-<script src="js/jogos.js?v=14"></script>
-<script src="js/marketing.js?v=14"></script>
-<script src="js/enzo.js?v=14"></script>
-<script src="js/relacionamento.js?v=14"></script>
-<script src="js/rotinas.js?v=14"></script>
-<script src="js/limpeza.js?v=14"></script>
-<script src="js/refeitorio.js?v=14"></script>
-<script src="js/reuniao.js?v=14"></script>
-<script src="js/meta.js?v=14"></script>
-<script src="js/pesquisa.js?v=14"></script>
-<script src="js/familia.js?v=14"></script>
-<script src="js/execucao.js?v=14"></script>
-<script src="js/financas.js?v=14"></script>
-<script src="js/precificacao.js?v=14"></script>
-<script src="js/setores.js?v=14"></script>
-<script src="js/clientes.js?v=14"></script>
-<script src="js/recepcao.js?v=14"></script>
-<script src="js/app.js?v=14"></script>
+<script src="js/cena.js?v=15"></script>
+<script src="js/cena3d.js?v=15"></script>
+<script src="js/boneco.js?v=15"></script>
+<script src="js/nuvem.js?v=15"></script>
+<script src="js/efeitos.js?v=15"></script>
+<script src="js/clara.js?v=15"></script>
+<script src="js/maycon.js?v=15"></script>
+<script src="js/filmes.js?v=15"></script>
+<script src="js/gatinhos.js?v=15"></script>
+<script src="js/jogos.js?v=15"></script>
+<script src="js/marketing.js?v=15"></script>
+<script src="js/enzo.js?v=15"></script>
+<script src="js/relacionamento.js?v=15"></script>
+<script src="js/rotinas.js?v=15"></script>
+<script src="js/limpeza.js?v=15"></script>
+<script src="js/refeitorio.js?v=15"></script>
+<script src="js/reuniao.js?v=15"></script>
+<script src="js/meta.js?v=15"></script>
+<script src="js/pesquisa.js?v=15"></script>
+<script src="js/familia.js?v=15"></script>
+<script src="js/execucao.js?v=15"></script>
+<script src="js/financas.js?v=15"></script>
+<script src="js/precificacao.js?v=15"></script>
+<script src="js/setores.js?v=15"></script>
+<script src="js/clientes.js?v=15"></script>
+<script src="js/recepcao.js?v=15"></script>
+<script src="js/rh.js?v=15"></script>
+<script src="js/ipog.js?v=15"></script>
+<script src="js/app.js?v=15"></script>
 </body>
 </html>
