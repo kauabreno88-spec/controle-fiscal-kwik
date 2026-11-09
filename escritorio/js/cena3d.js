@@ -25,8 +25,9 @@
       cv3 = document.createElement('canvas'); cv3.id = 'tela3d';
       const palco = document.getElementById('palco'); palco.insertBefore(cv3, document.getElementById('tela'));
       renderer = new THREE.WebGLRenderer({ canvas: cv3, antialias: true, powerPreference: 'high-performance' });
-      renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+      renderer.setPixelRatio(Math.min(1.5, window.devicePixelRatio || 1)); // mais que 1.5 pesa muito e quase não muda o visual
       renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.shadowMap.autoUpdate = false; // as sombras dos móveis não mudam: calcula só quando o prédio é montado
       renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 6000);
@@ -318,12 +319,17 @@
       paredeCaixa(s.x - T, s.fy, T, s.h - NB, HB, chaves);
       paredeCaixa(s.x + s.w, s.fy, T, s.h - NB, HB, chaves);
     }
-    // pontas dos corredores (a entrada do prédio fica à esquerda do primeiro corredor)
-    L.corredores.forEach((c, i) => {
-      paredeCaixa(P.x + P.w - T, c.y - 16, T, c.h + 16, HB, chaves);
-      if (i > 0) paredeCaixa(P.x, c.y - 16, T, c.h + 16, HB, chaves);
-      else { paredeCaixa(P.x, c.y - 16, T, 28, HB, chaves); paredeCaixa(P.x, c.y + 28, T, c.h - 28, HB, chaves); }
-    });
+    // pontas dos corredores à direita; à esquerda, a parede externa inteira com a entrada de vidro no primeiro corredor
+    L.corredores.forEach(c => paredeCaixa(P.x + P.w - T, c.y - 16, T, c.h + 16, HB, chaves));
+    const c0 = L.corredores[0], q = L.lateral;
+    paredeCaixa(P.x, P.y + NB - T, T, c0.y + 12 - (P.y + NB - T), HB, chaves); paredeCaixa(P.x, c0.y + 28, T, P.y + P.h - (c0.y + 28), HB, chaves);
+    if (q) {
+      paredeCaixa(P.x, q.y + NB - T, q.w + 2 * T, T, HN, chaves); // fundo do corredor lateral (alto, como o das salas)
+      paredeCaixa(P.x, q.y + q.h, q.w + 2 * T, T, HB, chaves);
+      // faixa-guia verde no chão, da entrada até a Apresentação
+      const ap = L.salas.apresentacao, yFim = ap ? ap.y - 8 : q.y + q.h - 8, gm = brilhante('#28BE52', 0.35);
+      for (let y = c0.y + 30; y < yFim; y += 9) caixa(q.x + q.w / 2 - 1, 0.1, y, 2, 0.25, 5, gm, false);
+    }
   }
 
   // ------------------------------------------------------------------ pisos, rua e jardim
@@ -374,7 +380,7 @@
     for (const [x] of L.postes || []) { cil(x, 0, yb + 10, 0.9, 40, '#2b2f45'); caixa(x - 4, 40, yb + 7, 8, 2, 6, '#2b2f45'); caixa(x - 3, 39.4, yb + 8, 6, 0.6, 4, brilhante('#ffe8a3', 1.2)); piscinas.push([x, yb + 14, 0.8]); }
     // carrinho que passa na rua
     carro = new THREE.Group();
-    const corpo = new THREE.Mesh(geo('b', 26, 8, 13), mat('#e03131', { roughness: 0.35, metalness: 0.3 })); corpo.position.y = 6; corpo.castShadow = true;
+    const corpo = new THREE.Mesh(geo('b', 26, 8, 13), mat('#e03131', { roughness: 0.35, metalness: 0.3 })); corpo.position.y = 6;
     const cab = new THREE.Mesh(geo('b', 14, 6, 11), mat('#a5d8ff', { roughness: 0.1, metalness: 0.2 })); cab.position.set(-1, 13, 0);
     carro.add(corpo, cab);
     for (const [a, b] of [[-8, -6.5], [8, -6.5], [-8, 6.5], [8, 6.5]]) { const r = new THREE.Mesh(geo('c', 3, 3, 2, 12), mat('#111111')); r.rotation.x = Math.PI / 2; r.position.set(a, 3, b); carro.add(r); }
@@ -452,10 +458,12 @@
     montarJardim(L);
     montarLuzes(L, per);
     montarDecorDin(L);
+    if (KM.festas) try { KM.festas.montar3D({ THREE, mundo, caixa, cil, bola, brilhante, mat, L, HN, texturas }); } catch (x) { console.warn('decoração 3D', x); }
     anelSel = new THREE.Mesh(new THREE.RingGeometry(7, 10, 28), new THREE.MeshBasicMaterial({ color: cor('#28BE52'), transparent: true, opacity: 0.8, depthWrite: false }));
     anelSel.rotation.x = -Math.PI / 2; anelSel.visible = false; anelSel.renderOrder = 4; scene.add(anelSel);
     if (!D3.camPronta) { const d = L.salas.diretoria, cel = window.matchMedia('(max-width: 760px)').matches; D3.cam.focar(d.x + (cel ? 20 : 140), d.fy + (cel ? 60 : 120), cel ? 0.8 : 1); }
     D3.sujo = false; tDecor = 0;
+    renderer.shadowMap.needsUpdate = true;
   }
 
   // ------------------------------------------------------------------ pessoas (o boneco de sempre, em pé na cena)
@@ -519,7 +527,7 @@
     // telas acesas: verde quando a pessoa daquela mesa está trabalhando
     const trab = new Set(Object.values(estado.pessoas || {}).filter(p => p.trabalhando || p.digitando || p.tarefaRH).map(p => p.funcao));
     for (const q of telas) q.m.emissive.set(trab.has(q.funcao) || q.funcao === 'exec' ? '#7dffb0' : '#3b8cff');
-    if (t - tDecor > 0.3) { tDecor = t; atualizarDecor(cfg, estado, t); }
+    if (t - tDecor > 0.6) { tDecor = t; atualizarDecor(cfg, estado, t); }
     // carro na rua
     if (carro) {
       const u = carro.userData, dt = D3._dt || 0.016;
@@ -528,6 +536,7 @@
       carro.visible = !!u.vel; carro.position.set(u.x, 0, L.rua + (u.vel > 0 ? 50 : 38)); carro.rotation.y = u.vel < 0 ? Math.PI : 0;
     }
     atualizarPessoas(cfg, estado, t);
+    if (KM.festas) KM.festas.animar3D(t);
     renderer.render(scene, camera);
     // por cima (2D): pratos, entregador, clientes da recepção, o carro da KWIK, efeitos dos módulos
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, KM.W, KM.H);

@@ -325,16 +325,85 @@
   }
   const sorteioDe = (arr, r) => arr[Math.floor(r() * arr.length)];
 
+  // Gravação do vídeo. Antes era em "tempo real" (desenhando e gravando a tela ao mesmo tempo), e o vídeo saía travando
+  // quando o computador ou o escritório pesavam. Agora, quando o navegador tem WebCodecs (Chrome/Edge e Safari novos),
+  // cada quadro é desenhado e codificado um por um (30 por segundo, sem pular nenhum) e a música é gerada à parte
+  // (OfflineAudioContext), depois tudo vai para um MP4 (mp4-muxer). Fica liso e ainda grava mais rápido que o tempo real.
+  // Sem WebCodecs, volta para a gravação em tempo real, mas com o escritório pausado e quadros no ritmo certo.
+  const URL_MUX = 'https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.2/build/mp4-muxer.mjs';
   async function gravarVideo(spec, aoProgresso, desenhar = desenharQuadro) {
-    if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) throw new Error('este navegador não grava vídeo. Tente pelo Chrome no computador.');
     await prepararFontes();
+    KM.pausarCena = true; // o escritório para de desenhar enquanto grava (sobra processador para o vídeo)
+    try {
+      if (window.VideoEncoder && window.AudioEncoder && window.VideoFrame && window.OfflineAudioContext) {
+        try { return await gravarQuadroAQuadro(spec, aoProgresso, desenhar); } catch (e) { console.warn('KWIK vídeo: WebCodecs falhou, gravando em tempo real', e); }
+      }
+      return await gravarTempoReal(spec, aoProgresso, desenhar);
+    } finally { KM.pausarCena = false; }
+  }
+  async function gravarQuadroAQuadro(spec, aoProgresso, desenhar) {
+    const M = await import(URL_MUX);
+    const fps = 30, w = spec.w, h = spec.h, n = Math.ceil(spec.duracao * fps), sr = 48000;
+    // vídeo: H.264 (o formato que o Instagram e o WhatsApp aceitam sem converter)
+    let vcfg = null;
+    for (const codec of ['avc1.640028', 'avc1.4d0028', 'avc1.42e028', 'avc1.640033']) {
+      const c = { codec, width: w, height: h, bitrate: 8e6, framerate: fps, avc: { format: 'avc' } };
+      try { if ((await VideoEncoder.isConfigSupported(c)).supported) { vcfg = c; break; } } catch (e) { /* tenta o próximo */ }
+    }
+    if (!vcfg) throw new Error('sem H.264 no WebCodecs');
+    let acfg = null, acodec = null;
+    for (const [codec, nome, br] of [['mp4a.40.2', 'aac', 160000], ['opus', 'opus', 128000]]) {
+      const c = { codec, sampleRate: sr, numberOfChannels: 2, bitrate: br };
+      try { if ((await AudioEncoder.isConfigSupported(c)).supported) { acfg = c; acodec = nome; break; } } catch (e) { /* tenta o próximo */ }
+    }
+    if (!acfg) throw new Error('sem codificador de áudio');
+    // música inteira gerada fora do tempo real
+    const oac = new OfflineAudioContext(2, Math.ceil((spec.duracao + 0.3) * sr), sr);
+    trilha(oac, oac.destination, spec, 0);
+    const som = await oac.startRendering();
+    const muxer = new M.Muxer({ target: new M.ArrayBufferTarget(), video: { codec: 'avc', width: w, height: h, frameRate: fps }, audio: { codec: acodec, sampleRate: sr, numberOfChannels: 2 }, fastStart: 'in-memory', firstTimestampBehavior: 'offset' });
+    let erro = null;
+    const venc = new VideoEncoder({ output: (ch, meta) => muxer.addVideoChunk(ch, meta), error: e => { erro = e; } });
+    venc.configure(vcfg);
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const g = c.getContext('2d');
+    const folga = () => new Promise(r => setTimeout(r, 0));
+    for (let i = 0; i < n; i++) {
+      if (erro) throw erro;
+      desenhar(g, spec, Math.min(i / fps, spec.duracao - 0.01));
+      const fr = new VideoFrame(c, { timestamp: Math.round(i * 1e6 / fps), duration: Math.round(1e6 / fps) });
+      venc.encode(fr, { keyFrame: i % (fps * 2) === 0 }); fr.close();
+      while (venc.encodeQueueSize > 6) await new Promise(r => setTimeout(r, 4));
+      if (i % 8 === 0) { aoProgresso && aoProgresso(0.92 * i / n); await folga(); }
+    }
+    await venc.flush(); venc.close();
+    if (erro) throw erro;
+    const aenc = new AudioEncoder({ output: (ch, meta) => muxer.addAudioChunk(ch, meta), error: e => { erro = e; } });
+    aenc.configure(acfg);
+    const total = Math.min(som.length, Math.ceil(spec.duracao * sr)), L0 = som.getChannelData(0), L1 = som.getChannelData(1), BL = 4800;
+    for (let off = 0; off < total; off += BL) {
+      const nf = Math.min(BL, total - off), data = new Float32Array(nf * 2);
+      data.set(L0.subarray(off, off + nf), 0); data.set(L1.subarray(off, off + nf), nf);
+      const ad = new AudioData({ format: 'f32-planar', sampleRate: sr, numberOfFrames: nf, numberOfChannels: 2, timestamp: Math.round(off * 1e6 / sr), data });
+      aenc.encode(ad); ad.close();
+    }
+    await aenc.flush(); aenc.close();
+    if (erro) throw erro;
+    muxer.finalize();
+    aoProgresso && aoProgresso(1);
+    return new Blob([muxer.target.buffer], { type: 'video/mp4' });
+  }
+  async function gravarTempoReal(spec, aoProgresso, desenhar) {
+    if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) throw new Error('este navegador não grava vídeo. Tente pelo Chrome no computador.');
     const c = document.createElement('canvas'); c.width = spec.w; c.height = spec.h;
     c.style.cssText = 'position:fixed;left:-9999px;top:0;width:10px;height:12px;opacity:0;pointer-events:none';
     document.body.append(c);
     const g = c.getContext('2d');
     desenhar(g, spec, 0);
-    const video = c.captureStream(30);
-    let ac = null, musica = null, faixas = [...video.getVideoTracks()];
+    // captureStream(0): o quadro só vai para o vídeo quando pedimos (requestFrame), sempre depois de desenhar inteiro
+    let video = c.captureStream(0), trilhaV = video.getVideoTracks()[0];
+    if (typeof trilhaV.requestFrame !== 'function') { trilhaV.stop(); video = c.captureStream(30); trilhaV = video.getVideoTracks()[0]; }
+    let ac = null, musica = null, faixas = [trilhaV];
     try {
       ac = new (window.AudioContext || window.webkitAudioContext)(); await ac.resume();
       const dest = ac.createMediaStreamDestination(); musica = trilha(ac, dest, spec, 0); faixas = faixas.concat(dest.stream.getAudioTracks());
@@ -345,16 +414,18 @@
     const rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 8e6 } : {});
     const partes = []; rec.ondataavailable = e => { if (e.data && e.data.size) partes.push(e.data); };
     const parou = new Promise(res => { rec.onstop = res; });
-    rec.start(250);
-    const t0 = performance.now();
+    rec.start(1000);
+    // relógio da música manda no vídeo: cada quadro mostra exatamente o instante em que a música está
+    const t0 = ac ? ac.currentTime + 0.08 : performance.now() / 1000, agora = () => (ac ? ac.currentTime : performance.now() / 1000) - t0;
     await new Promise(res => {
+      let ultimo = -1;
       const passo = () => {
-        const t = (performance.now() - t0) / 1000;
-        desenhar(g, spec, Math.min(t, spec.duracao - 0.01));
-        aoProgresso && aoProgresso(Math.min(1, t / spec.duracao));
-        if (t < spec.duracao + 0.2) requestAnimationFrame(passo); else res();
+        const t = agora();
+        const q = Math.floor(Math.max(0, t) * 30);
+        if (q !== ultimo) { ultimo = q; desenhar(g, spec, Math.min(q / 30, spec.duracao - 0.01)); if (trilhaV.requestFrame) trilhaV.requestFrame(); aoProgresso && aoProgresso(Math.min(1, t / spec.duracao)); }
+        if (t < spec.duracao + 0.2) setTimeout(passo, 8); else res();
       };
-      requestAnimationFrame(passo);
+      passo();
     });
     rec.stop(); await parou;
     stream.getTracks().forEach(tr => tr.stop()); musica && musica.parar(); ac && ac.close(); c.remove();
@@ -594,7 +665,7 @@
         n.resumo ? el('p', { class: 'vazio' }, n.resumo) : null,
         el('h3', { style: 'margin-top:18px' }, '🎞️ Roteiro'),
         el('ol', { class: 'roteiro' }, spec.cenas.map(c => el('li', {}, el('b', {}, `${c.ini.toFixed(1)}s · `), c.tipo === 'pontos' || c.tipo === 'lista' ? c.itens.join(' / ') : c.tipo === 'fim' ? 'Encerramento com a marca KWIK' : semMarca(c.texto)))),
-        el('p', { class: 'vazio', style: 'font-size:12px' }, 'A música é criada pelo app e gravada junto no vídeo (sem direitos autorais). A gravação acontece em tempo real: deixe a tela aberta até terminar.'))));
+        el('p', { class: 'vazio', style: 'font-size:12px' }, 'A música é criada pelo app e gravada junto no vídeo (sem direitos autorais). O vídeo é montado quadro a quadro (30 por segundo, sem travadas): deixe esta tela aberta até terminar.'))));
     box.append(rel);
     prepararFontes().then(() => {
       let voltas = 0;
@@ -602,7 +673,7 @@
         if (!cv.isConnected) { pararSom(); return; }
         const tt = tempo(), volta = Math.floor(tt / spec.duracao);
         if (tocando && volta !== voltas) { voltas = volta; if (som) tocarSom(); }
-        g.setTransform(0.5, 0, 0, 0.5, 0, 0); desenharQuadro(g, spec, tt % spec.duracao);
+        if (!KM.pausarCena) { g.setTransform(0.5, 0, 0, 0.5, 0, 0); desenharQuadro(g, spec, tt % spec.duracao); } // enquanto grava, a prévia descansa
         requestAnimationFrame(passo);
       };
       requestAnimationFrame(passo);

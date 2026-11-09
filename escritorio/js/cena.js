@@ -87,7 +87,7 @@
   KM.periodo = periodo;
 
   // ------------------------------------------------------------------ planta do prédio
-  const G = 4, T = 4, RW = 156, RH = 160, NB = 20, CH = 40, TOPO = 34, BAIXO = 48;
+  const G = 4, T = 4, RW = 156, RH = 160, NB = 20, CH = 40, TOPO = 34, BAIXO = 48, CL = 30; // CL: corredor lateral dos clientes
   const PORTA = [8, 32]; // a porta de cada sala fica sempre à esquerda; essa faixa nunca tem móveis
   // As salas cresceram (eram 136 × 124). Os móveis continuam descritos na medida antiga e são espalhados na largura nova;
   // a faixa de baixo de cada setor fica para as mesas de quem o RH contratar.
@@ -133,15 +133,15 @@
   function montarLayout(nome, cfg) {
     const ex = tamanhoExecucao(ativasExecucao(cfg), nome === 'largo' ? 1 : 2);
     const pl = plantaDe(nome, ex), cols = pl.cols, nl = pl.linhas.length;
-    const BW = T + cols * (RW + T);
-    const W = pl.margem * 2 + BW, bx = pl.margem;
+    const BW = T + CL + T + cols * (RW + T);
+    const W = pl.margem * 2 + BW, bx = pl.margem, x0 = bx + T + CL + T;
     const lay = { nome, W, H: 0, salas: {}, corredores: [], moveis: [], decor: [], assentos: {}, pontos: {}, exec: ex, contratados: chaveContratados(cfg) };
     let y = TOPO;
     pl.linhas.forEach((linha, r) => {
       const h = RH + (pl.extra[r] || 0);
       let vaga = 0;
       linha.forEach(([id, span]) => {
-        const x = bx + T + vaga * (RW + T), w = span * RW + (span - 1) * T;
+        const x = x0 + vaga * (RW + T), w = span * RW + (span - 1) * T;
         lay.salas[id] = { id, nome: NOMES[id], x, y, fx: x, fy: y + NB, w, h, span, linha: r, col: vaga, portaCima: r > 0, portaBaixo: r < nl - 1 };
         vaga += span;
       });
@@ -149,6 +149,8 @@
       if (r < nl - 1) { lay.corredores.push({ x: bx + T, y, w: BW - 2 * T, h: CH }); y += CH; }
     });
     lay.predio = { x: bx, y: TOPO, w: BW, h: y - TOPO };
+    // corredor lateral (à esquerda, de cima a baixo): liga todos os corredores sem passar por dentro das salas
+    lay.lateral = { x: bx + T, y: TOPO, w: CL, h: y - TOPO - T };
     lay.rua = y;
     lay.H = y + BAIXO;
     for (const s of Object.values(lay.salas)) {
@@ -546,6 +548,7 @@
       if (s.portaBaixo) marcar(s.fx + PORTA[0] + 3, s.y + s.h - 6, s.fx + PORTA[1] - 3, s.y + s.h + T + 6, 1);
     }
     for (const c of lay.corredores) marcar(c.x + 4, c.y + 5, c.x + c.w - 4, c.y + c.h - 2, 1);
+    if (lay.lateral) { const q = lay.lateral; marcar(q.x + 4, q.y + NB + 6, q.x + q.w - 4, q.y + q.h - 3, 1); }
     for (const m of lay.moveis) if (m.bloq) marcar(m.X - 3, m.Y - 3, m.X + m.w + 3, m.Y + m.d + 3, 0);
     lay.grade = { cols, lins, g };
   }
@@ -1552,6 +1555,15 @@
       r(g, c.x, c.y, c.w, 3, 'rgba(0,0,0,0.12)');
       for (const s of Object.values(L.salas)) if (s.corrBaixo === c || s.corrCima === c) { r(g, s.fx + 44, c.y + 18, 80, 10, '#8f9aa6'); r(g, s.fx + 45, c.y + 19, 78, 8, '#a8b3be'); r(g, s.fx + 47, c.y + 21, 74, 1, '#8f9aa6'); r(g, s.fx + 47, c.y + 25, 74, 1, '#8f9aa6'); }
     }
+    const LT = L.lateral;
+    if (LT) { // corredor lateral dos clientes: piso, parede do fundo e a faixa-guia verde até a Apresentação
+      g.drawImage(moderno(e) ? texPiso({ piso: 'porcelanato', corPiso: '#cfd2cc' }, LT.w, LT.h - NB) : texXadrez('#d9dde0', '#cfd4d8', LT.w, LT.h - NB, 10), LT.x, LT.y + NB);
+      g.drawImage(texFace({ id: 'lateral', w: LT.w + 2 * T }, e), LT.x - T, LT.y + 4);
+      r(g, LT.x - T, LT.y, LT.w + 2 * T, 4, TOPO_PAREDE); r(g, LT.x - T, LT.y, LT.w + 2 * T, 1, TOPO_LUZ);
+      const ap = L.salas.apresentacao, yFim = ap ? ap.y - 10 : LT.y + LT.h - 8, c0 = L.corredores[0];
+      for (let yy = c0.y + 30; yy < yFim; yy += 9) { r(g, LT.x + LT.w / 2 - 1, yy, 2, 5, 'rgba(40,190,82,.75)'); }
+      for (let yy = c0.y + 48; yy < yFim - 6; yy += 46) { r(g, LT.x + LT.w / 2 - 3, yy, 6, 1, VERDE); r(g, LT.x + LT.w / 2 - 2, yy + 1, 4, 1, VERDE); r(g, LT.x + LT.w / 2 - 1, yy + 2, 2, 1, VERDE); }
+    }
     for (const s of Object.values(L.salas)) {
       const RW = s.w, RH = s.h; // salas podem ter largura/altura diferentes (Execução cresce)
       g.drawImage(pisoDaSala(s, e), s.fx, s.fy);
@@ -1575,9 +1587,11 @@
       }
       else parteBaixo(s.x - T, s.x + RW + T);
     }
-    // paredes externas nas pontas dos corredores (entrada à esquerda do primeiro)
+    // paredes externas: lado esquerdo inteiro (entrada de vidro no primeiro corredor), pontas da direita e o fundo do corredor lateral
+    r(g, P0.x, P0.y, T, P0.h, TOPO_PAREDE); r(g, P0.x, P0.y, 1, P0.h, TOPO_LUZ);
+    if (LT) { r(g, LT.x - T, LT.y + LT.h, LT.w + 2 * T, T, TOPO_PAREDE); r(g, LT.x - T, LT.y + LT.h, LT.w + 2 * T, 1, TOPO_LUZ); }
     L.corredores.forEach((c, i) => {
-      r(g, P0.x, c.y, T, c.h, TOPO_PAREDE); r(g, P0.x + P0.w - T, c.y, T, c.h, TOPO_PAREDE);
+      r(g, P0.x + P0.w - T, c.y, T, c.h, TOPO_PAREDE);
       if (i === 0) { r(g, P0.x, c.y + 12, T, 16, '#a5d8ff'); r(g, P0.x + 1, c.y + 12, 1, 16, '#e7f5ff'); r(g, P0.x, c.y + 19, T, 1, '#74c0fc'); }
     });
   }
@@ -1593,6 +1607,7 @@
     for (const d of L.decor) if (DES[d.tipo]) DES[d.tipo](g, d, cfg);
     const est = L.moveis.filter(m => !m.ordenar && DES[m.tipo]).sort((a, b) => (a.tipo === 'tapete' ? -1e4 : 0) + a.Y + a.d - ((b.tipo === 'tapete' ? -1e4 : 0) + b.Y + b.d));
     for (const m of est) DES[m.tipo](g, m, cfg);
+    if (KM.festas) try { KM.festas.desenhar2D(g, L, cfg); } catch (e) { console.warn('decoração', e); }
     fundoPer = periodo(cfg);
     return c;
   }
@@ -1802,9 +1817,11 @@
       if (s.portaBaixo) { isoCaixa(gi, s.x - T, yb2, PORTA[0] + T, T, BAIXA, pw); isoCaixa(gi, s.fx + PORTA[1], yb2, s.x + s.w + T - (s.fx + PORTA[1]), T, BAIXA, pw); }
       else isoCaixa(gi, s.x - T, yb2, s.w + 2 * T, T, BAIXA, pw);
       isoCaixa(gi, s.x + s.w, s.fy, T, s.h - NB, BAIXA, pw);
-      if (s.x - T <= P0.x + 1) isoCaixa(gi, s.x - T, s.fy, T, s.h - NB, BAIXA, pw);
+      if (s.col === 0) isoCaixa(gi, s.x - T, s.fy, T, s.h - NB, BAIXA, pw);
     }
-    L.corredores.forEach((cc, i) => { isoCaixa(gi, P0.x + P0.w - T, cc.y, T, cc.h, BAIXA, pw); if (i > 0) isoCaixa(gi, P0.x, cc.y, T, cc.h, BAIXA, pw); else { isoCaixa(gi, P0.x, cc.y, T, 12, BAIXA, pw); isoCaixa(gi, P0.x, cc.y + 28, T, cc.h - 28, BAIXA, pw); } });
+    L.corredores.forEach(cc => isoCaixa(gi, P0.x + P0.w - T, cc.y, T, cc.h, BAIXA, pw));
+    isoCaixa(gi, P0.x, P0.y + NB, T, c0.y + 12 - P0.y - NB, BAIXA, pw); isoCaixa(gi, P0.x, c0.y + 28, T, P0.y + P0.h - c0.y - 28, BAIXA, pw);
+    if (L.lateral) { const q = L.lateral; isoCaixa(gi, q.x - T, q.y + q.h, q.w + 2 * T, T, BAIXA, pw); }
     return c;
   }
   function ceuIso(cfg) {

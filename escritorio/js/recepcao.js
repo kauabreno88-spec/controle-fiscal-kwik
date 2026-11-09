@@ -76,20 +76,36 @@
   }
   async function reto(n, x, y, vel = 46) { const g = ger; n.modo = 'em-pe'; await KM.mov.andarAte(n, x, y, vel); return vivo(g); }
   const entrada = () => { const L = KM.LAYOUT, c0 = L.corredores[0]; return { fora: [6, c0.y + 22], dentro: [L.predio.x + 10, c0.y + 22] }; };
+  // Corredor lateral: da Recepção até a porta da Apresentação sem passar por dentro de nenhuma sala.
+  // ida: sai da Recepção pelo corredor de cima, desce pelo corredor lateral e entra pela porta da Apresentação.
+  async function pelaLateral(n, ida) {
+    const L = KM.LAYOUT, q = L.lateral, ap = L.salas.apresentacao; if (!q || !ap) return true;
+    const c0 = L.corredores[0], cA = ap.corrCima || ap.corrBaixo, x = q.x + q.w / 2;
+    if (!cA) return true;
+    if (ida) {
+      if (!(await andar(n, x, c0.y + 22, 46))) return false;
+      if (!(await reto(n, x, cA.y + 22, 46))) return false;
+      return andar(n, ap.porta[0], cA.y + 22, 46);
+    }
+    if (!(await andar(n, ap.porta[0], cA.y + 22, 50))) return false;
+    if (!(await reto(n, x, cA.y + 22, 50))) return false;
+    return reto(n, x, c0.y + 22, 50);
+  }
   function sentar(n, p) { Object.assign(n, { modo: 'sentado-mesa', X: p.X, Y: p.Y, dir: p.dir, est: {} }); }
 
   // ------------------------------------------------------------------ fila de espera
-  async function chegarCliente(instantaneo) {
+  async function chegarCliente(instantaneo, nome) {
     const L = KM.LAYOUT, pf = L.pontos.fila; if (!pf || fila.length >= pf.length) return;
     const g = ger, i = fila.length;
     if (instantaneo) { const n = novoNpc('cliente', pf[i].X, pf[i].Y); sentar(n, pf[i]); n.alvo = i; fila.push(n); return; }
     const e = entrada(), n = novoNpc('cliente', e.fora[0], e.fora[1], 'fd');
+    if (nome) n.nome = String(nome).split(/\s+/).slice(0, 2).join(' ');
     fila.push(n); n.chegando = true;
     if (!(await reto(n, e.dentro[0], e.dentro[1], 50))) return;
     const b = L.pontos.balcao;
     if (!(await andar(n, b.X, b.Y, 50))) return;
     n.dir = 'cd';
-    if (recepcionista) { recepcionista.est = { bracos: 'aceno', aceno: 1, boca: 'sorriso' }; falar(recepcionista, sorteio(['BEM-VINDO A KWIK!', 'OLA! BEM-VINDO!', 'BOM DIA! :)']), '#9be3ad'); }
+    if (recepcionista) { recepcionista.est = { bracos: 'aceno', aceno: 1, boca: 'sorriso' }; falar(recepcionista, n.nome ? `BEM-VINDO, ${n.nome.split(' ')[0]}!` : sorteio(['BEM-VINDO A KWIK!', 'OLA! BEM-VINDO!', 'BOM DIA! :)']), '#9be3ad'); }
     KM.tocar('campainha');
     await KM.esperar(1600); if (!vivo(g)) return;
     if (recepcionista) { recepcionista.est = { boca: 'sorriso' }; falar(recepcionista, 'CAFEZINHO?', '#ffe8cc'); }
@@ -126,6 +142,7 @@
     if (recepcionista) falar(recepcionista, 'PODE ENTRAR!', '#9be3ad');
     const cad = pa.cadeiras[1];
     n.modo = 'em-pe'; n.Y += 13;
+    if (!(await pelaLateral(n, true))) return; // corredor dos clientes: não atravessa nenhuma sala
     if (!(await andar(n, cad.X, cad.Y + 12, 46))) return;
     Object.assign(n, { modo: 'sentado-mesa', X: cad.X, Y: cad.Y, dir: 'ce', cadeira: 1, est: {} });
     const est = A().estado;
@@ -133,7 +150,7 @@
     for (let k = 0; k < 5; k++) {
       if (!vivo(g)) return;
       est.apresentacao.slide = k;
-      if (consultor) { consultor.est = { bracos: 'aceno', aceno: k % 2, boca: 'sorriso' }; falar(consultor, FALAS[k][0], '#9be3ad'); }
+      if (consultor) { consultor.est = { bracos: 'aceno', aceno: k % 2, boca: 'sorriso' }; falar(consultor, k === 0 && n.nome ? `PARA ${n.nome}` : FALAS[k][0], '#9be3ad'); }
       KM.tocar('clique');
       await KM.esperar(2600); if (!vivo(g)) return;
       if (consultor) consultor.est = { boca: 'sorriso' };
@@ -155,8 +172,9 @@
     if (consultor) consultor.est = {};
     n.est = {};
     naReuniao = null;
-    // vai embora pela entrada
+    // vai embora pelo corredor dos clientes até a entrada
     const e = entrada();
+    if (!(await pelaLateral(n, false))) return;
     if (!(await andar(n, e.dentro[0], e.dentro[1], 52))) return;
     if (!(await reto(n, e.fora[0], e.fora[1], 52))) return;
     npcs.delete(n);
@@ -203,5 +221,5 @@
     ultimaPlanta = KM.LAYOUT.nome;
     montar();
   }
-  KM.recepcao = { iniciar: layoutMudou, layoutMudou, fila: () => fila };
+  KM.recepcao = { iniciar: layoutMudou, layoutMudou, fila: () => fila, chegar: nome => { if (fila.length < 4) chegarCliente(false, nome); } };
 })();

@@ -953,6 +953,174 @@ dialog.rh-dlg { max-width: 760px; }
   .tf-topo { flex-direction: column; }
   .rh-cand { grid-template-columns: 50px minmax(0, 1fr); } .rh-cand .bt { grid-column: 1 / -1; justify-content: center; }
 }
+
+/* ================= PC: escritório em tela cheia, menus flutuando por cima (vidro meio transparente) ================= */
+body.pc-cheia { overflow: hidden; background: #0e1512; }
+.pc-cheia main { max-width: none; padding: 0; margin: 0; }
+.pc-cheia #aba-escritorio { display: block !important; position: fixed; inset: 0; z-index: 1; }
+.pc-cheia .grade-escritorio { display: block; height: 100%; }
+.pc-cheia .palco-card { height: 100%; }
+.pc-cheia .palco { position: absolute; margin: 0; border-radius: 0; box-shadow: none; aspect-ratio: auto !important; min-width: 0; background: #0e1512; }
+.pc-cheia .palco.iso { background: #141838; }
+/* topo: dois "chips" de vidro (marca + números à esquerda, botões à direita) */
+.pc-cheia .topo { position: fixed; top: 12px; left: 14px; right: 14px; z-index: 40; background: transparent; border: 0; padding: 0; pointer-events: none; gap: 10px; }
+.pc-cheia .topo > * { pointer-events: auto; }
+.pc-cheia .marca, .pc-cheia .chips, .pc-cheia .topo .dir { background: rgba(14,22,19,.58); backdrop-filter: blur(14px) saturate(1.4); -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  border: 1px solid rgba(255,255,255,.10); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+.pc-cheia .marca { padding: 6px 12px 6px 8px; }
+.pc-cheia .marca img { width: 30px; height: 30px; }
+.pc-cheia .marca div b { font-size: 16px; } .pc-cheia .marca div small { font-size: 9px; letter-spacing: 2px; }
+.pc-cheia .chips { margin-left: 0; padding: 5px; gap: 4px; }
+.pc-cheia .chip { background: transparent; border-color: transparent; padding: 5px 9px; font-size: 12.5px; }
+.pc-cheia .chip:hover { background: rgba(255,255,255,.07); }
+.pc-cheia .topo .dir { padding: 5px 6px 5px 10px; gap: 6px; }
+.pc-cheia .icone-bt.redondo { width: 34px; height: 34px; font-size: 15px; border-color: rgba(255,255,255,.14); color: #fff; }
+.pc-cheia .bt-pers { padding: 7px 13px; font-size: 13px; box-shadow: none; }
+.pc-cheia .aviso-off { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); z-index: 39; border-radius: 12px; border: 0; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+/* dock: um menu só, embaixo e no meio */
+#dock { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 42; display: flex; align-items: center; gap: 4px; padding: 6px;
+  background: rgba(14,22,19,.62); backdrop-filter: blur(16px) saturate(1.4); -webkit-backdrop-filter: blur(16px) saturate(1.4); border: 1px solid rgba(255,255,255,.10);
+  border-radius: 22px; box-shadow: 0 16px 44px rgba(0,0,0,.38); max-width: calc(100vw - 24px); }
+#dock .sep { width: 1px; height: 36px; background: rgba(255,255,255,.14); margin: 0 3px; flex: none; }
+#dock .dock-grupo { display: flex; align-items: center; gap: 3px; }
+#dock nav.abas { position: static; display: flex; background: transparent; border: 0; padding: 0; margin: 0; gap: 2px; }
+#dock nav.abas button, #dock .dock-bt { flex-direction: column; gap: 1px; padding: 5px 9px; border-radius: 14px; color: #c7d3cf; font-size: 10.5px; font-weight: 800; min-width: 56px;
+  background: transparent; border: 0; display: flex; align-items: center; position: relative; transition: transform .15s, background .15s, color .15s; }
+#dock nav.abas button .ic, #dock .dock-bt i { font-size: 19px; font-style: normal; line-height: 1.15; }
+#dock nav.abas button span.txt { display: block !important; }
+#dock nav.abas button:hover, #dock .dock-bt:hover { transform: translateY(-3px); background: rgba(255,255,255,.08); color: #fff; }
+#dock nav.abas button.ativa { background: var(--verde); color: #0d1a14; }
+#dock nav.abas .contador { position: absolute; top: 1px; right: 4px; font-size: 10px; padding: 0 5px; min-width: 16px; }
+#dock .acoes { margin: 0; padding: 0; background: transparent; border: 0; box-shadow: none; gap: 3px; position: relative; flex-wrap: nowrap; }
+#dock .acoes .bt.icone { background: transparent; border: 0; color: #fff; min-width: 54px; min-height: 46px; border-radius: 14px; font-size: 19px; box-shadow: none; transition: transform .15s, background .15s; }
+#dock .acoes .bt.icone:hover { transform: translateY(-3px); background: rgba(255,255,255,.08); }
+#dock .acoes .bt.icone small { font-size: 10.5px; color: #c7d3cf; }
+#dock .acoes #btTrabalhar { flex: none; min-height: 46px; padding: 0 22px; border-radius: 15px; font-size: 15px; box-shadow: 0 0 0 3px rgba(40,190,82,.25); }
+#dock .menu-anim { bottom: calc(100% + 16px); left: 0; background: rgba(255,255,255,.94); backdrop-filter: blur(12px); }
+.menu-setores { position: absolute; bottom: calc(100% + 16px); left: 50%; transform: translateX(-50%) translateY(8px); opacity: 0; pointer-events: none; transition: .18s;
+  width: 520px; background: rgba(14,22,19,.82); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,.12); border-radius: 20px; padding: 10px; box-shadow: 0 20px 50px rgba(0,0,0,.4); }
+.menu-setores.on { opacity: 1; pointer-events: auto; transform: translateX(-50%); }
+.menu-setores .acoes-setores { margin: 0; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.menu-setores .setor-bt { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08); color: #fff; box-shadow: none; padding: 9px 10px; }
+.menu-setores .setor-bt:hover { background: rgba(40,190,82,.18); border-color: var(--verde); }
+.menu-setores .setor-bt small { color: #a9b8b4; } .menu-setores .setor-bt .ic { background: rgba(255,255,255,.1) !important; }
+/* cartões do lado esquerdo (tarefa atual, sala de jogos) e ficha do funcionário: vidro */
+.pc-cheia .lateral { position: fixed; left: 14px; top: 76px; width: 290px; z-index: 30; }
+.pc-cheia .lateral .card, .pc-cheia .ficha { background: rgba(255,255,255,.86); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,.6); }
+.pc-cheia .ficha { position: fixed; top: 76px; right: 14px; max-height: calc(100vh - 176px); z-index: 31; }
+.pc-cheia .cam-bts { position: fixed; top: auto; right: 14px; bottom: 18px; flex-direction: column; z-index: 41; padding: 5px; gap: 4px; border-radius: 16px;
+  background: rgba(14,22,19,.58); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,.1); }
+.pc-cheia .cam-bts button { background: transparent; box-shadow: none; height: 32px; }
+.pc-cheia .cam-bts button:hover { background: rgba(40,190,82,.35); }
+.pc-cheia .toasts { bottom: 96px; }
+/* as outras abas abrem como painel de vidro por cima do escritório (que continua vivo atrás) */
+.pc-cheia .aba:not(#aba-escritorio).ativa { position: fixed; top: 72px; bottom: 92px; left: 50%; transform: translateX(-50%); width: min(1260px, calc(100vw - 40px)); overflow: auto; z-index: 30;
+  background: rgba(241,244,242,.86); backdrop-filter: blur(18px) saturate(1.2); -webkit-backdrop-filter: blur(18px) saturate(1.2); border-radius: 24px; padding: 22px 24px 26px;
+  border: 1px solid rgba(255,255,255,.6); box-shadow: 0 30px 80px rgba(0,0,0,.35); animation: painelSobe .2s ease-out; overscroll-behavior: contain; }
+@keyframes painelSobe { from { opacity: 0; transform: translate(-50%, 14px); } to { opacity: 1; transform: translate(-50%, 0); } }
+#fecharPainel { display: none; }
+.pc-cheia.painel-aberto #fecharPainel { display: flex; position: fixed; top: 54px; right: max(6px, calc(50vw - 650px)); z-index: 33; width: 38px; height: 38px; border-radius: 50%; border: 0;
+  background: var(--grafite); color: #fff; font-size: 20px; align-items: center; justify-content: center; box-shadow: 0 6px 18px rgba(0,0,0,.3); cursor: pointer; }
+.pc-cheia.painel-aberto .lateral, .pc-cheia.painel-aberto .ficha { display: none; }
+.pc-cheia .tf-ranking-card { top: 0; }
+@media (max-width: 1180px) { #dock nav.abas button, #dock .dock-bt { min-width: 48px; padding: 5px 6px; } #dock .acoes #btTrabalhar { padding: 0 14px; } .pc-cheia .marca div { display: none; } }
+
+/* ================= RH automático ================= */
+.rh-auto { border: 2px solid var(--linha); border-radius: 14px; padding: 10px 12px; margin-bottom: 12px; background: #fff; }
+.rh-auto.on { border-color: var(--verde); background: #f1faf3; }
+.rh-auto label { display: flex; gap: 8px; align-items: center; font-size: 15px; } .rh-auto small { display: block; color: var(--cinza); margin-top: 4px; font-size: 12.5px; }
+.rh-quadro { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+.rh-sq { border: 1.5px solid var(--linha); border-radius: 14px; padding: 9px 10px; background: #fff; display: flex; flex-direction: column; gap: 4px; }
+.rh-sq-cab { display: flex; justify-content: space-between; align-items: center; } .rh-rep { font-weight: 900; color: #b8860b; font-size: 12.5px; }
+.rh-chefe { color: var(--cinza); font-weight: 700; font-size: 11.5px; } .rh-vagas { color: var(--verde-esc); font-weight: 800; font-size: 11px; }
+.rh-eq { display: grid; gap: 4px; }
+.rh-pessoa { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 6px; align-items: center; } .rh-pessoa canvas { width: 30px; height: 30px; padding: 0; object-fit: cover; object-position: top; }
+.rh-pessoa b { font-size: 12.5px; display: block; } .rh-pessoa small { color: var(--cinza); font-size: 11px; font-weight: 600; } .rh-pessoa.adv small { color: #c92a2a; }
+.rh-log { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.rh-log li { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 6px; align-items: start; border-bottom: 1px solid #eef2ee; padding: 5px 0; font-size: 13px; }
+.rh-log small { display: block; color: var(--cinza); font-size: 11.5px; }
+.rh-manual { margin-top: 14px; border-top: 1px solid var(--linha); padding-top: 10px; } .rh-manual summary { cursor: pointer; font-weight: 800; color: var(--cinza); margin-bottom: 8px; }
+.tf-credito { color: var(--verde-esc); font-weight: 700; font-size: 11.5px; }
+.tf-rank.setor { grid-template-columns: 30px 30px minmax(0, 1fr) 30px; } .tf-rank .ic-setor { font-size: 20px; text-align: center; }
+
+/* ================= Apresentação ================= */
+dialog.ap-dlg { max-width: 760px; }
+.ap-rot { display: block; font-weight: 800; font-size: 13px; margin: 10px 0 6px; color: var(--grafite); }
+.ap-tipos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.ap-tipo { text-align: left; border: 2px solid var(--linha); background: #fff; border-radius: 14px; padding: 9px 10px; display: grid; grid-template-columns: 30px minmax(0, 1fr); column-gap: 6px; }
+.ap-tipo .ic { grid-row: span 2; font-size: 22px; } .ap-tipo b { font-size: 13.5px; } .ap-tipo small { color: var(--cinza); font-size: 11.5px; font-weight: 600; }
+.ap-tipo.on { border-color: var(--verde); background: #f1faf3; }
+.ap-preco { margin-top: 12px; border: 2px dashed #d0bfff; background: #f8f5ff; border-radius: 16px; padding: 10px 12px; display: grid; gap: 8px; }
+.ap-preco-cab b { color: #5f3dc4; } .ap-preco-cab small { display: block; color: var(--cinza); font-size: 12px; }
+.ap-item { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; background: #fff; border-radius: 12px; padding: 8px 10px; border: 1px solid #e5dbff; }
+.ap-item small { display: block; color: var(--cinza); font-size: 11.5px; } .ap-valor { display: flex; align-items: center; gap: 4px; font-weight: 800; } .ap-valor input { width: 96px; }
+.ap-palco { position: relative; border-radius: 16px; overflow: hidden; background: #111A19; outline: none; }
+.ap-palco:fullscreen { display: flex; align-items: center; justify-content: center; background: #000; border-radius: 0; }
+.ap-slide { width: 100%; height: auto; display: block; cursor: pointer; aspect-ratio: 16 / 9; }
+.ap-palco:fullscreen .ap-slide { width: auto; height: 100%; max-width: 100%; object-fit: contain; }
+.ap-seta { position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(17,26,25,.55); color: #fff; font-size: 28px; line-height: 1; cursor: pointer; }
+.ap-seta.esq { left: 10px; } .ap-seta.dir { right: 10px; } .ap-seta:hover { background: var(--verde); color: var(--grafite); }
+.ap-barra { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 10px 0; } .ap-num { font-weight: 900; margin-right: auto; }
+.ap-thumbs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+.ap-thumbs canvas { width: 128px; height: 72px; border-radius: 8px; border: 2px solid transparent; cursor: pointer; flex: none; }
+.ap-thumbs canvas.on { border-color: var(--verde); }
+.ap-iva { margin-top: 12px; background: #f8f5ff; border-radius: 12px; padding: 10px 12px; } .ap-iva ul { margin: 6px 0 0; padding-left: 18px; }
+.ap-ctx { margin-top: 10px; } .ap-ctx p { white-space: pre-line; color: #2b3634; }
+
+/* ================= Checklist do mês (Fiscal e Folha) ================= */
+.ob-topo { display: grid; grid-template-columns: auto minmax(160px, 1fr) auto; gap: 10px; align-items: center; margin: 4px 0 6px; }
+.ob-mes { display: flex; align-items: center; gap: 6px; } .ob-mes b { min-width: 130px; text-align: center; font-size: 15px; }
+.ob-barra { height: 8px; background: #dfe6e2; border-radius: 99px; overflow: hidden; } .ob-barra i { display: block; height: 100%; background: linear-gradient(90deg, #ffd43b, var(--verde)); border-radius: 99px; transition: width .4s; }
+.ob-prog small { color: var(--cinza); font-weight: 700; font-size: 12px; }
+.ob-filtros { display: flex; gap: 4px; align-items: center; }
+.ob-nota { font-size: 12px; color: var(--cinza); margin: 2px 0 10px; }
+.ob-emp { border: 1.5px solid var(--linha); border-radius: 14px; padding: 10px 12px; margin-bottom: 10px; background: #fff; }
+.ob-emp.completo { border-color: var(--verde); background: #f6fcf7; }
+.ob-emp-cab { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; } .ob-emp-cab b { font-size: 15px; } .ob-cont { font-weight: 900; color: var(--verde-esc); margin-right: auto; }
+.ob-ops { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; } .ob-regime { font-size: 12px; padding: 4px 6px; border-radius: 8px; } .ob-op { font-size: 12px; font-weight: 700; color: var(--cinza); display: inline-flex; gap: 4px; align-items: center; }
+.ob-lista { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
+.ob-lista li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 10px; background: var(--nevoa); }
+.ob-lista li.ok { opacity: .62; } .ob-lista li.ok label span { text-decoration: line-through; } .ob-lista li.extra { background: #fff9db; }
+.ob-lista label { display: flex; gap: 8px; align-items: flex-start; font-size: 13.5px; font-weight: 600; cursor: pointer; } .ob-lista input { margin-top: 3px; width: 17px; height: 17px; accent-color: var(--verde); }
+.ob-lista small { display: block; color: var(--verde-esc); font-size: 11px; font-weight: 700; }
+.ob-chip { font-size: 11.5px; font-weight: 800; padding: 2px 8px; border-radius: 99px; background: #e9ecef; white-space: nowrap; }
+.ob-chip.ok { background: #d3f9d8; color: #2b8a3e; } .ob-chip.av { background: #fff3bf; color: #8a6d00; } .ob-chip.ve { background: #ffe3e3; color: #c92a2a; }
+.ob-x { border: 0; background: transparent; font-size: 18px; color: var(--cinza); cursor: pointer; }
+.ob-tudo { margin: 6px 0 0; color: var(--verde-esc); font-weight: 800; font-size: 13px; }
+@media (max-width: 700px) { .ob-topo { grid-template-columns: 1fr; } .ap-tipos { grid-template-columns: 1fr; } .ap-item { grid-template-columns: 1fr auto auto; } }
+
+/* ================= Cidade dos clientes em 3D ================= */
+.cid3d { position: fixed; inset: 0; z-index: 45; background: #0a0f26; color: #e7ecff; }
+.cid3d[hidden] { display: none; }
+body.cidade-aberta #dock, body.cidade-aberta .topo, body.cidade-aberta nav.abas, body.cidade-aberta .cam-bts { display: none !important; }
+#cid3dTela { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; }
+.cid-topo { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; gap: 10px; align-items: center; pointer-events: none; z-index: 2; }
+.cid-topo > * { pointer-events: auto; }
+.cid-tit, .cid-ticker, .cid-bts { background: rgba(12,18,48,.66); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(160,185,255,.18); border-radius: 14px; }
+.cid-tit { padding: 7px 12px; } .cid-tit b { display: block; font-size: 15px; } .cid-tit small { color: #9fb0e8; font-size: 11px; font-weight: 700; }
+.cid-ticker { margin: 0 auto; padding: 8px 14px; display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; font-size: 12.5px; font-weight: 700; font-family: ui-monospace, Consolas, monospace; letter-spacing: .3px; }
+.cid-ticker b { color: #fff; } .cid-ticker .v { color: #69db7c; } .cid-ticker .mal { color: #ff8787; } .cid-ticker .bem { color: #8ce99a; }
+.cid-bts { display: flex; gap: 4px; padding: 4px; }
+.cid-bt { border: 0; background: transparent; color: #dbe4ff; font-weight: 800; font-size: 12.5px; padding: 7px 10px; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+.cid-bt:hover { background: rgba(160,185,255,.16); } .cid-bt.verde { background: var(--verde); color: #0d1a14; }
+.cid-rotulo { position: absolute; transform: translate(-50%, -100%); background: rgba(12,18,48,.82); border: 1px solid rgba(160,185,255,.35); color: #fff; font-weight: 800; font-size: 12px;
+  padding: 4px 10px; border-radius: 99px; pointer-events: none; white-space: nowrap; z-index: 2; }
+.cid-rotulo.sel { background: #dbe8ff; color: #0a0f26; border-color: #fff; box-shadow: 0 0 24px rgba(160,200,255,.7); }
+.cid-painel { position: absolute; top: 72px; right: 12px; bottom: 12px; width: min(440px, calc(100vw - 24px)); overflow: auto; z-index: 3; border-radius: 20px; padding: 16px 16px 18px;
+  background: rgba(246,248,255,.92); color: var(--grafite); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 24px 70px rgba(0,0,0,.5); overscroll-behavior: contain; }
+.cid-painel[hidden] { display: none; }
+.cid-x { position: sticky; top: 0; float: right; width: 34px; height: 34px; border-radius: 50%; border: 0; background: var(--grafite); color: #fff; font-size: 18px; cursor: pointer; z-index: 2; }
+.cid-h { margin: 2px 0 10px; font-size: 17px; } .cid-sub { margin: 0 0 8px; color: var(--cinza); font-weight: 700; font-size: 13px; }
+.cid-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-bottom: 10px; }
+.cid-tiles div { background: #fff; border-radius: 12px; padding: 7px 8px; border: 1px solid #e3e8f5; } .cid-tiles small { display: block; font-size: 10px; font-weight: 800; color: var(--cinza); text-transform: uppercase; letter-spacing: .6px; }
+.cid-tiles b { font-size: 15px; font-weight: 900; } .cid-tiles .mal b { color: #c92a2a; }
+.cid-painel .rua-grade { grid-template-columns: 1fr; }
+.cid-dica { position: absolute; left: 12px; bottom: 12px; font-size: 11.5px; color: #9fb0e8; background: rgba(12,18,48,.55); padding: 5px 10px; border-radius: 10px; font-weight: 700; }
+@media (max-width: 760px) {
+  .cid-topo { flex-wrap: wrap; } .cid-ticker { order: 3; width: 100%; font-size: 11px; gap: 8px; padding: 6px 8px; } .cid-tit small { display: none; }
+  .cid-painel { top: auto; left: 8px; right: 8px; width: auto; bottom: 8px; max-height: 58vh; } .cid-dica { display: none; }
+  .cid-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 </style>
 </head>
 <body>
@@ -1028,7 +1196,7 @@ dialog.rh-dlg { max-width: 760px; }
           <p class="jogo-dica"><b>Arraste as caminhas</b> para qualquer lado. Passando por cima de gatinhos da <b>mesma cor</b>, eles pulam para dentro (o número é quantos faltam) e a caminha cheia vai embora. Gatos de outra cor, outras caminhas e buracos bloqueiam. As <b>cestas</b> na borda soltam mais gatinhos quando a casa da frente fica livre. As <b>cercas roxas</b> abrem depois que o número do cadeado de caminhas forem para casa. Setas ⇔ ⇕: só anda naquela direção. 💀 Níveis difíceis têm menos tempo!</p>
         </div>
         <div class="acoes">
-          <button class="bt icone" id="btSelecionar" title="Escolher funcionário">👤<small>Equipe</small></button>
+          <button class="bt icone" id="btSelecionar" title="Escolher funcionário">👤<small>Escolher</small></button>
           <button class="bt prim" id="btTrabalhar">▶ Trabalhar</button>
           <button class="bt icone" id="btAnimacoes" title="Animações">✨<small>Animar</small></button>
           <button class="bt icone jogos" id="btSalaJogos" title="Sala de jogos">💡<small>Jogos</small></button>
@@ -1067,6 +1235,8 @@ dialog.rh-dlg { max-width: 760px; }
           <button class="bt setor-bt folha" id="btFolha"><span class="ic">👥</span><span><b>Folha</b><small>Funcionários e fechamento</small></span></button>
           <button class="bt setor-bt rh" id="btRH"><span class="ic">🤝</span><span><b>RH</b><small>Contratar para os setores</small></span></button>
           <button class="bt setor-bt tarefas" id="btTarefasAtalho"><span class="ic">📋</span><span><b>Tarefas</b><small>Avaliar as entregas</small></span></button>
+          <button class="bt setor-bt apres" id="btApresentacao"><span class="ic">📊</span><span><b>Apresentação</b><small>Slides e propostas KWIK</small></span></button>
+          <button class="bt setor-bt clientes" id="btClientesAtalho"><span class="ic">🌃</span><span><b>Clientes</b><small>Cidade 3D dos clientes</small></span></button>
         </div>
       </div>
 
@@ -1120,14 +1290,14 @@ dialog.rh-dlg { max-width: 760px; }
   <!-- TAREFAS -->
   <section class="aba" id="aba-tarefas">
     <div class="tf-topo">
-      <div><h2>📋 Tarefas da equipe</h2><p class="vazio">Os chefes passam tarefas para a equipe; cada um entrega tarefas feitas, relatórios de melhoria, ideias e relatórios do setor. Você avalia e a reputação de cada um sobe ou desce.</p></div>
+      <div><h2>📋 Tarefas da equipe</h2><p class="vazio">O chefe de cada setor só delega: quem faz e entrega é a equipe do setor (tarefas feitas, relatórios de melhoria, ideias e relatórios do setor). Você avalia e o crédito vai para o setor todo.</p></div>
       <button class="bt prim" id="btPedirTarefa">＋ Pedir uma tarefa</button>
     </div>
     <div class="tf-resumo" id="tarefasResumo"></div>
     <div class="tf-setores" id="tarefasSetores"></div>
     <div class="tf-grade">
       <div id="tarefasLista"></div>
-      <aside class="card tf-ranking-card"><h3>🏆 Reputação na empresa</h3><div id="tarefasRanking"></div></aside>
+      <aside class="card tf-ranking-card"><h3>🏆 Reputação dos setores</h3><div id="tarefasRanking"></div></aside>
     </div>
   </section>
 
@@ -1274,40 +1444,45 @@ dialog.rh-dlg { max-width: 760px; }
 </dialog>
 
 <div class="toasts" id="toasts"></div>
+<button id="fecharPainel" title="Voltar para o escritório (Esc)" aria-label="Fechar">×</button>
 
 <dialog id="dlgGithub">
   <div class="dlg-topo"><h2>🔗 Conectar ao GitHub</h2><button data-fechar aria-label="Fechar">×</button></div>
   <div class="dlg-corpo" id="ghCorpo"></div>
 </dialog>
 
-<script src="js/cena.js?v=15"></script>
-<script src="js/cena3d.js?v=15"></script>
-<script src="js/boneco.js?v=15"></script>
-<script src="js/nuvem.js?v=15"></script>
-<script src="js/efeitos.js?v=15"></script>
-<script src="js/clara.js?v=15"></script>
-<script src="js/maycon.js?v=15"></script>
-<script src="js/filmes.js?v=15"></script>
-<script src="js/gatinhos.js?v=15"></script>
-<script src="js/jogos.js?v=15"></script>
-<script src="js/marketing.js?v=15"></script>
-<script src="js/enzo.js?v=15"></script>
-<script src="js/relacionamento.js?v=15"></script>
-<script src="js/rotinas.js?v=15"></script>
-<script src="js/limpeza.js?v=15"></script>
-<script src="js/refeitorio.js?v=15"></script>
-<script src="js/reuniao.js?v=15"></script>
-<script src="js/meta.js?v=15"></script>
-<script src="js/pesquisa.js?v=15"></script>
-<script src="js/familia.js?v=15"></script>
-<script src="js/execucao.js?v=15"></script>
-<script src="js/financas.js?v=15"></script>
-<script src="js/precificacao.js?v=15"></script>
-<script src="js/setores.js?v=15"></script>
-<script src="js/clientes.js?v=15"></script>
-<script src="js/recepcao.js?v=15"></script>
-<script src="js/rh.js?v=15"></script>
-<script src="js/ipog.js?v=15"></script>
-<script src="js/app.js?v=15"></script>
+<script src="js/cena.js?v=16"></script>
+<script src="js/festas.js?v=16"></script>
+<script src="js/cena3d.js?v=16"></script>
+<script src="js/boneco.js?v=16"></script>
+<script src="js/nuvem.js?v=16"></script>
+<script src="js/efeitos.js?v=16"></script>
+<script src="js/clara.js?v=16"></script>
+<script src="js/maycon.js?v=16"></script>
+<script src="js/filmes.js?v=16"></script>
+<script src="js/gatinhos.js?v=16"></script>
+<script src="js/jogos.js?v=16"></script>
+<script src="js/marketing.js?v=16"></script>
+<script src="js/enzo.js?v=16"></script>
+<script src="js/relacionamento.js?v=16"></script>
+<script src="js/rotinas.js?v=16"></script>
+<script src="js/limpeza.js?v=16"></script>
+<script src="js/refeitorio.js?v=16"></script>
+<script src="js/reuniao.js?v=16"></script>
+<script src="js/meta.js?v=16"></script>
+<script src="js/pesquisa.js?v=16"></script>
+<script src="js/familia.js?v=16"></script>
+<script src="js/execucao.js?v=16"></script>
+<script src="js/financas.js?v=16"></script>
+<script src="js/precificacao.js?v=16"></script>
+<script src="js/obrigacoes.js?v=16"></script>
+<script src="js/setores.js?v=16"></script>
+<script src="js/clientes.js?v=16"></script>
+<script src="js/cidade3d.js?v=16"></script>
+<script src="js/recepcao.js?v=16"></script>
+<script src="js/rh.js?v=16"></script>
+<script src="js/ipog.js?v=16"></script>
+<script src="js/apresentacao.js?v=16"></script>
+<script src="js/app.js?v=16"></script>
 </body>
 </html>

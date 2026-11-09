@@ -215,13 +215,13 @@
   }
 
   // ------------------------------------------------------------------ diálogo dos setores
-  let abaAtual = 'ver', setorAtual = 'fiscal', empFiltro = '';
+  let abaAtual = 'check', setorAtual = 'fiscal', empFiltro = '';
   function montar() {
     if ($('#dlgSetor')) return;
     const d = document.createElement('dialog');
     d.id = 'dlgSetor'; d.className = 'setor-dlg';
     d.innerHTML = `<div class="dlg-topo"><h2 id="setorTitulo">🧾 Fiscal</h2><button data-fechar aria-label="Fechar">×</button></div>
-      <div class="setor-abas" id="setorAbas"><button data-s="ver">📊 Ver informações</button><button data-s="add">＋ Adicionar</button></div>
+      <div class="setor-abas" id="setorAbas"><button data-s="check">✅ Checklist do mês</button><button data-s="ver">📊 Ver informações</button><button data-s="add">＋ Adicionar</button></div>
       <div class="dlg-corpo" id="setorCorpo"></div>`;
     document.body.append(d);
     d.querySelector('[data-fechar]').addEventListener('click', () => d.close());
@@ -245,6 +245,7 @@
     const corpo = $('#setorCorpo'); corpo.innerHTML = '';
     const c = dados(setorAtual); if (!c) return;
     corpo.append(barraOrigem(c));
+    if (abaAtual === 'check' && KM.obrigacoes) return KM.obrigacoes.render(corpo, setorAtual, c.db, render);
     if (setorAtual === 'fiscal') (abaAtual === 'add' ? formFiscal : verFiscal)(corpo, c.db);
     else (abaAtual === 'add' ? formFolha : verFolha)(corpo, c.db);
   }

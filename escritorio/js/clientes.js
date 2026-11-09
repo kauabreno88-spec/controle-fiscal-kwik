@@ -1,7 +1,7 @@
 /* KWIK Mini Escritório · botão "Cliente" (cidade dos clientes).
    O botão fica na calçada, ao lado do carro da KWIK. O Kauã sai do prédio, entra no carro e vai até a rua dos
-   clientes ativos: cada empresa tem um prédio de acordo com a atividade (a Moraes é um mini consultório
-   odontológico, a Fertnutri uma clínica de nutrição, a Vanice uma clínica de estética…). Tocando num prédio, o
+   clientes ativos: cada empresa tem um prédio de acordo com a atividade (um consultório vira um mini consultório
+   odontológico, uma nutricionista vira uma clínica de nutrição, uma estética vira um spa…). Tocando num prédio, o
    carro vai até lá, o Kauã entra e aparece o cartão do cliente com o resumo fiscal e da folha, a validade do
    certificado digital e os atalhos para e-CAC, eSocial, SEMFAZ São Luís e NFS-e Nacional.
    O certificado (.pfx) é lido só neste aparelho, sem senha: o app guarda apenas CNPJ, razão social, titular e
@@ -247,6 +247,7 @@
   }
   async function carregarDados() { await Promise.all(['fiscal', 'folha'].map(k => S().carregar(k).catch(() => null))); }
   async function abrirRua() {
+    if (KM.cidade3d && KM.cidade3d.disponivel()) return KM.cidade3d.abrir(); // cidade em 3D (sem WebGL, fica a cidade desenhada)
     montar();
     const d = $('#dlgRua');
     if (!d.open) d.showModal();
@@ -592,26 +593,27 @@
     if (fol && c.folhaId) out.folha = S().resumoFolha(fol.db).porEmp.find(x => x.e.id === c.folhaId);
     return out;
   }
-  function renderResumoRua() {
-    const { el } = A(), box = $('#ruaInfo'); box.innerHTML = '';
+  function renderResumoRua(box = $('#ruaInfo'), aoEscolher) {
+    const { el } = A(); box.innerHTML = '';
     const g = el('div', { class: 'rua-grade' });
     for (const [i, l] of cena.lotes.entries()) {
       const c = l.c, M = MODELOS[c.modelo], R = resumoCliente(c), cert = c.info.cert;
-      g.append(el('button', { class: 'rua-cli', onclick: () => irAoCliente(i) }, el('span', { class: 'ic' }, M.ic), el('span', {}, el('b', {}, c.nome), el('small', {},
+      g.append(el('button', { class: 'rua-cli', onclick: () => (aoEscolher ? aoEscolher(i) : irAoCliente(i)) }, el('span', { class: 'ic' }, M.ic), el('span', {}, el('b', {}, c.nome), el('small', {},
         [M.nome, R.fiscal ? (R.fiscal.qVencido ? `🔴 ${R.fiscal.qVencido} guia(s) vencida(s)` : '🟢 impostos em dia') : null, R.folha ? `👥 ${R.folha.ativos}` : null, cert ? `📜 até ${fmtD(cert.validade)}` : null].filter(Boolean).join(' · ')))));
     }
     box.append(g);
   }
   function diasAte(s) { return Math.round((new Date(s + 'T12:00:00') - new Date(new Date().toDateString())) / 86400000); }
-  function renderInfo(c, indo) {
-    const { el } = A(), box = $('#ruaInfo'); box.innerHTML = '';
+  function renderInfo(c, indo, box = $('#ruaInfo')) {
+    const { el } = A(); box.innerHTML = '';
     const M = MODELOS[c.modelo] || MODELOS.escritorio, R = resumoCliente(c), cert = c.info.cert;
     const lote = cena.lotes.find(l => l.c.chave === c.chave);
     const sel = el('select', { onchange: e => {
       infos()[c.chave] = { ...(infos()[c.chave] || {}), modelo: e.target.value }; A().salvar();
       const estavaDentro = cena.dentro && cena.dentro.c.chave === c.chave;
       montarCena(true); const nl = cena.lotes.find(l => l.c.chave === c.chave);
-      cena.sel = nl || null; if (estavaDentro) cena.dentro = nl; renderInfo(nl.c);
+      cena.sel = nl || null; if (estavaDentro) cena.dentro = nl; renderInfo(nl.c, false, box);
+      if (KM.cidade3d && KM.cidade3d.aberta()) KM.cidade3d.atualizar();
     } }, Object.entries(MODELOS).map(([k, m]) => el('option', { value: k, selected: k === c.modelo }, `${m.ic} ${m.nome}`)));
     box.append(el('div', { class: 'rua-cab' }, el('div', {}, el('h3', {}, `${M.ic} ${c.nome}`), el('small', {}, [c.razao && c.razao !== c.nome ? c.razao : null, c.cnpj ? 'CNPJ ' + c.cnpj : null, c.regime].filter(Boolean).join(' · '))),
       el('label', { class: 'rua-modelo' }, 'Prédio: ', sel)));
@@ -701,10 +703,12 @@
     A().salvar(true);
     montarCena(true);
     if (cena.sel) { const ch = cena.sel.c.chave, dentro = cena.dentro; cena.sel = cena.lotes.find(l => l.c.chave === ch) || null; if (dentro) cena.dentro = cena.sel; }
-    if (cena.sel) renderInfo(cena.sel.c); else renderResumoRua();
+    if (KM.cidade3d && KM.cidade3d.aberta()) KM.cidade3d.atualizar();
+    else if (cena.sel) renderInfo(cena.sel.c); else renderResumoRua();
     A().toast(msgs.join('\n'), { ms: 12000 });
   }
 
   function iniciar() { posicionarBotao(); }
-  KM.clientesFora = { iniciar, posicionarBotao, sair, voltar, abrir: abrirRua, lista, detectar, lerCertificado, MODELOS, _ir: irAoCliente, _cena: cena };
+  KM.clientesFora = { iniciar, posicionarBotao, sair, voltar, abrir: abrirRua, lista, detectar, lerCertificado, lerCertificados, MODELOS, _ir: irAoCliente, _cena: cena,
+    montarDlg: montar, montarCena, carregarDados, renderInfo, renderResumoRua, resumoCliente, desenharDentro };
 })();
