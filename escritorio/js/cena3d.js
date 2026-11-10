@@ -25,7 +25,7 @@
       cv3 = document.createElement('canvas'); cv3.id = 'tela3d';
       const palco = document.getElementById('palco'); palco.insertBefore(cv3, document.getElementById('tela'));
       renderer = new THREE.WebGLRenderer({ canvas: cv3, antialias: true, powerPreference: 'high-performance' });
-      renderer.setPixelRatio(Math.min(1.5, window.devicePixelRatio || 1)); // mais que 1.5 pesa muito e quase não muda o visual
+      renderer.setPixelRatio(Math.min(window.matchMedia('(max-width: 760px)').matches ? 1.25 : 1.5, window.devicePixelRatio || 1)); // mais que 1.5 pesa muito e quase não muda o visual
       renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       renderer.shadowMap.autoUpdate = false; // as sombras dos móveis não mudam: calcula só quando o prédio é montado
       renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
@@ -439,8 +439,49 @@
   }
 
   // ------------------------------------------------------------------ montar tudo
+  // Desempenho: o prédio tem milhares de peças paradas (pés de mesa, livros, folhas das plantas…). Junta todas as que usam o
+  // mesmo material numa peça só: a placa de vídeo desenha umas dezenas de coisas em vez de milhares.
+  function otimizar() {
+    const grupos = new Map(), telasM = new Set(telas.map(q => q.m));
+    for (const o of mundo.children) {
+      if (!o.isMesh || Array.isArray(o.material) || !o.geometry || !o.geometry.attributes.position || !o.geometry.attributes.normal) continue;
+      const m = o.material;
+      if (m.transparent || telasM.has(m) || o.renderOrder) continue;
+      const k = m.uuid + (o.castShadow ? 's' : '') + (o.geometry.attributes.uv ? 'u' : '');
+      if (!grupos.has(k)) grupos.set(k, []);
+      grupos.get(k).push(o);
+    }
+    const v = new THREE.Vector3(), nm = new THREE.Matrix3();
+    for (const lista of grupos.values()) {
+      if (lista.length < 2) continue;
+      let nv = 0, ni = 0;
+      for (const o of lista) { const g = o.geometry; nv += g.attributes.position.count; ni += g.index ? g.index.count : g.attributes.position.count; }
+      const temUV = !!lista[0].geometry.attributes.uv, pos = new Float32Array(nv * 3), nor = new Float32Array(nv * 3), uv = temUV ? new Float32Array(nv * 2) : null, idx = new Uint32Array(ni);
+      let bv = 0, bi = 0;
+      for (const o of lista) {
+        o.updateMatrixWorld(true);
+        const g = o.geometry, P = g.attributes.position, N = g.attributes.normal, U = g.attributes.uv, n = P.count;
+        nm.getNormalMatrix(o.matrixWorld);
+        for (let i = 0; i < n; i++) {
+          const j = (bv + i) * 3;
+          v.fromBufferAttribute(P, i).applyMatrix4(o.matrixWorld); pos[j] = v.x; pos[j + 1] = v.y; pos[j + 2] = v.z;
+          v.fromBufferAttribute(N, i).applyMatrix3(nm).normalize(); nor[j] = v.x; nor[j + 1] = v.y; nor[j + 2] = v.z;
+          if (uv && U) { uv[(bv + i) * 2] = U.getX(i); uv[(bv + i) * 2 + 1] = U.getY(i); }
+        }
+        if (g.index) { const I = g.index.array; for (let i = 0; i < I.length; i++) idx[bi + i] = I[i] + bv; bi += I.length; }
+        else { for (let i = 0; i < n; i++) idx[bi + i] = bv + i; bi += n; }
+        bv += n;
+      }
+      const geom = new THREE.BufferGeometry();
+      geom.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geom.setAttribute('normal', new THREE.BufferAttribute(nor, 3)); if (uv) geom.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+      geom.setIndex(new THREE.BufferAttribute(idx, 1)); geom.computeBoundingSphere();
+      const junta = new THREE.Mesh(geom, lista[0].material); junta.castShadow = lista[0].castShadow; junta.receiveShadow = true;
+      for (const o of lista) mundo.remove(o);
+      mundo.add(junta);
+    }
+  }
   function limpar() {
-    if (mundo) { scene.remove(mundo); mundo.traverse(o => { if (o.geometry && ![...cache.geo.values()].includes(o.geometry)) o.geometry.dispose(); }); }
+    if (mundo) { scene.remove(mundo); const fixas = new Set(cache.geo.values()); mundo.traverse(o => { if (o.geometry && !fixas.has(o.geometry)) o.geometry.dispose(); }); }
     for (const t of texturas) t.dispose();
     texturas = []; telas = []; piscinas = []; decorDin = [];
     for (const [, o] of pessoas) { scene.remove(o.m, o.sh); o.tex.dispose(); }
@@ -459,6 +500,7 @@
     montarLuzes(L, per);
     montarDecorDin(L);
     if (KM.festas) try { KM.festas.montar3D({ THREE, mundo, caixa, cil, bola, brilhante, mat, L, HN, texturas }); } catch (x) { console.warn('decoração 3D', x); }
+    try { otimizar(); } catch (x) { console.warn('KWIK 3D: otimizar', x); }
     anelSel = new THREE.Mesh(new THREE.RingGeometry(7, 10, 28), new THREE.MeshBasicMaterial({ color: cor('#28BE52'), transparent: true, opacity: 0.8, depthWrite: false }));
     anelSel.rotation.x = -Math.PI / 2; anelSel.visible = false; anelSel.renderOrder = 4; scene.add(anelSel);
     if (!D3.camPronta) { const d = L.salas.diretoria, cel = window.matchMedia('(max-width: 760px)').matches; D3.cam.focar(d.x + (cel ? 20 : 140), d.fy + (cel ? 60 : 120), cel ? 0.8 : 1); }

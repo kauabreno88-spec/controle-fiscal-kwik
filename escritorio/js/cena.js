@@ -95,9 +95,9 @@
   const mx = rx => { const col = Math.floor(rx / (RW + T)), l = rx - col * (RW + T); return col * (RW + T) + (l < 34 ? l : Math.round(34 + (l - 34) * KX)); };
   const NOMES = { recepcao: 'Recepção', diretoria: 'Diretoria · CEO', controladoria: 'Controladoria', comercial: 'Comercial', apresentacao: 'Apresentação', jogos: 'Sala de jogos', marketing: 'Marketing',
     relacionamento: 'Relacionamento', reuniao: 'Reunião', meta: 'META', refeitorio: 'Refeitório', financeiro: 'Financeiro', precificacao: 'Precificação', execucao: 'Execução',
-    fiscal: 'Fiscal', folha: 'Folha', rh: 'RH', zeladoria: 'Zeladoria' };
+    fiscal: 'Fiscal', folha: 'Folha', rh: 'RH', zeladoria: 'Zeladoria', ebook: 'E-book' };
   // setores que podem contratar (sala → função do chefe)
-  KM.SETORES = { controladoria: 'prospeccao', comercial: 'contato', marketing: 'video', relacionamento: 'relacionamento', financeiro: 'financas', precificacao: 'precificacao', fiscal: 'fiscal', folha: 'folha', rh: 'rh' };
+  KM.SETORES = { controladoria: 'prospeccao', comercial: 'contato', marketing: 'video', relacionamento: 'relacionamento', financeiro: 'financas', precificacao: 'precificacao', fiscal: 'fiscal', folha: 'folha', rh: 'rh', ebook: 'ebook' };
   KM.P = (X, Y, Z = 0) => [X, Y - Z];
   KM.chaoEm = (x, y) => [x, y];
   let L = null;
@@ -115,19 +115,19 @@
   const chaveContratados = cfg => contratadosDe(cfg).map(f => f.id + ':' + f.setor).join(',');
   const ativasExecucao = cfg => (cfg && cfg.execucao || []).filter(a => !a.fim).length;
   function plantaDe(nome, ex) {
-    if (nome === 'largo') return {
-      margem: 30, cols: 6, extra: [0, 0, ex.extraH],
+    if (nome === 'largo') return { // 7 colunas: o E-book entrou na primeira fileira e a Execução foi para a segunda
+      margem: 30, cols: 7, extra: [0, ex.extraH, 0],
       linhas: [
-        [['recepcao', 1], ['diretoria', 1], ['controladoria', 1], ['fiscal', 1], ['folha', 1], ['comercial', 1]],
-        [['relacionamento', 1], ['marketing', 1], ['financeiro', 1], ['precificacao', 1], ['meta', 1], ['reuniao', 1]],
-        [['apresentacao', 1], ['refeitorio', 1], ['rh', 1], ['zeladoria', 0.5], ['jogos', 1.5], ['execucao', 1]],
+        [['recepcao', 1], ['diretoria', 1], ['controladoria', 1], ['fiscal', 1], ['folha', 1], ['comercial', 1], ['ebook', 1]],
+        [['relacionamento', 1], ['marketing', 1], ['financeiro', 1], ['precificacao', 1], ['meta', 1], ['reuniao', 1], ['execucao', 1]],
+        [['apresentacao', 1], ['refeitorio', 1], ['rh', 1], ['zeladoria', 1], ['jogos', 3]],
       ],
     };
     const base = [[['recepcao', 1], ['diretoria', 1]], [['controladoria', 1], ['comercial', 1]], [['fiscal', 1], ['folha', 1]], [['relacionamento', 1], ['marketing', 1]],
-      [['financeiro', 1], ['precificacao', 1]], [['meta', 1], ['reuniao', 1]], [['apresentacao', 1], ['refeitorio', 1]], [['rh', 1], ['zeladoria', 1]]];
-    const fim = ex.span === 1 ? [[['jogos', 1], ['execucao', 1]]] : [[['jogos', 2]], [['execucao', 2]]];
+      [['financeiro', 1], ['precificacao', 1]], [['meta', 1], ['reuniao', 1]], [['apresentacao', 1], ['refeitorio', 1]], [['rh', 1], ['ebook', 1]]];
+    const fim = ex.span === 1 ? [[['zeladoria', 1], ['execucao', 1]], [['jogos', 2]]] : [[['zeladoria', 1], ['jogos', 1]], [['execucao', 2]]];
     const linhas = base.concat(fim);
-    return { margem: 12, cols: 2, linhas, extra: linhas.map((l, i) => (i === linhas.length - 1 ? ex.extraH : 0)) };
+    return { margem: 12, cols: 2, linhas, extra: linhas.map(l => (l.some(([id]) => id === 'execucao') ? ex.extraH : 0)) };
   }
 
   function montarLayout(nome, cfg) {
@@ -480,6 +480,20 @@
     {
       const s = lay.salas.rh;
       lay.pontos.rh = { candidato: [{ X: s.fx + mx(49), Y: s.fy + 74, dir: 'fe' }, { X: s.fx + mx(69), Y: s.fy + 74, dir: 'fe' }], frente: { X: s.fx + mx(62), Y: s.fy + 44 } };
+    }
+
+    // E-book: a Luna cuida de tudo do e-book (vendas na Kiwify, página de vendas, compradores)
+    if (lay.salas.ebook) {
+      assento('ebook', 'ebook', 62, 40, ['papeis', 'caneca'], 'duplo');
+      if (it.estante !== false) { add('ebook', 'estante', 112, 4, 13, 10, 24); add('ebook', 'estante', 98, 4, 13, 10, 24); }
+      add('ebook', 'poltrona', 92, 62, 15, 13, 10);
+      add('ebook', 'mesinha', 110, 66, 12, 8, 6, { redonda: true });
+      add('ebook', 'pilhaLivros', 44, 64, 14, 10, 12);
+      add('ebook', 'pilhaLivros', 60, 88, 14, 10, 8);
+      planta('ebook', 124, 88);
+      if (e.tapete) add('ebook', 'tapete', 82, 52, 52, 32, 0, { bloq: false, redondo: true });
+      parede('ebook', 'painelEbook', 84, 40, { din: true });
+      parede('ebook', 'capaEbook', 40, 14);
     }
 
     // Quem o RH contratou: mesas na faixa de baixo do setor (até 3 por setor)
@@ -1189,11 +1203,27 @@
       r(g, X + 3, Y - h - 5, 10, 6, '#343a40'); r(g, X + 4, Y - h - 4, 4, 4, '#868e96'); r(g, X + 9, Y - h - 4, 3, 1, '#ffd43b'); r(g, X + 12, Y - h - 8, 1, 4, '#adb5bd'); // rádio
       r(g, X + w - 8, Y - h + 1, 4, 5, '#ffffff'); r(g, X + w - 8, Y - h + 1, 4, 1, '#6b3a1e'); // café
     },
+    pilhaLivros(g, m) { // pilha de e-books impressos (capas verdes e grafite)
+      const { X, Y, w, d } = m; sombra(g, X, Y, w, d);
+      ['#28BE52', '#111A19', '#1E8A45', '#f1f3f5', '#28BE52'].forEach((c, i) => { r(g, X + (i % 2), Y + d - 4 - i * 3, w - 1, 3, c); r(g, X + (i % 2), Y + d - 2 - i * 3, w - 1, 1, tom(c, 0.7)); });
+    },
+    capaEbook(g, m) { // capa do e-book na parede
+      const { X, Y } = m; r(g, X, Y + 1, 12, 15, CONTORNO); r(g, X + 1, Y + 2, 10, 13, GRAFITE); simboloPixel(g, X + 2, Y + 3, 0.5, VERDE); r(g, X + 2, Y + 11, 8, 1, VERDE); r(g, X + 2, Y + 13, 6, 1, '#ffffff');
+    },
     quadroEscala(g, m) { // escala de limpeza
       const { X, Y, w } = m; r(g, X, Y + 1, w, 14, CONTORNO); r(g, X + 1, Y + 2, w - 2, 12, '#fff9db');
       for (let k = 0; k < 4; k++) { r(g, X + 3, Y + 4 + k * 3, w - 9, 1, '#adb5bd'); r(g, X + w - 5, Y + 3 + k * 3, 2, 2, k < 3 ? VERDE : '#e03131'); }
     },
   };
+  // painel do E-book: vendas de hoje e um gráfico das últimas semanas (dados da Kiwify, js/ebook.js)
+  function painelEbook(ctx, d, t) {
+    const { X, Y, w } = d, R = KM.ebook && KM.ebook.resumoParede ? KM.ebook.resumoParede() : null;
+    r(ctx, X, Y + 1, w, 14, CONTORNO); r(ctx, X + 1, Y + 2, w - 2, 12, '#0f1a16');
+    texto(ctx, 'EBOOK', X + 3, Y + 3, VERDE);
+    texto(ctx, R ? String(R.hoje) : '-', X + 26, Y + 3, R && R.hoje && Math.floor(t * 2) % 2 ? '#ffd43b' : '#ffffff');
+    const barras = (R && R.semanas) || [1, 2, 1, 3, 2, 4], mxv = Math.max(1, ...barras);
+    barras.slice(-8).forEach((v, i) => { const h = Math.max(1, Math.round(5 * v / mxv)); r(ctx, X + 3 + i * 4, Y + 13 - h, 3, h, i === barras.slice(-8).length - 1 ? VERDE : '#2E8B45'); });
+  }
   // quadro de vagas do RH: setores com vaga aberta e quantos já entraram
   function quadroVagas(ctx, d, t) {
     const { X, Y, w } = d, cfg = KM.config && KM.config(), n = cfg ? cfg.funcionarios.filter(f => f.contratado).length : 0;
@@ -1436,6 +1466,7 @@
       else if (d.tipo === 'quadroFiscal') quadroSetor(ctx, d, t, 'fiscal');
       else if (d.tipo === 'quadroFolha') quadroSetor(ctx, d, t, 'folha');
       else if (d.tipo === 'quadroVagas') quadroVagas(ctx, d, t);
+      else if (d.tipo === 'painelEbook') painelEbook(ctx, d, t);
     }
   }
   function dinMovel(ctx, m, estado, t) {
@@ -1633,7 +1664,7 @@
         const d = L.salas.diretoria; cel ? KM.camera.focar(d.x + 20, d.fy + 60, 0.8) : KM.camera.focar(d.x + 140, d.fy + 120, 1);
         ISO.camPronta = true;
       }
-    } else { KM.W = L.W; KM.H = L.H; }
+    } else { KM.W = L.W; KM.H = L.H; Object.assign(CIMA, { z: 1, x: L.W / 2, y: L.H / 2 }); }
     limparIso();
     fundo = null;
     return true;
@@ -1652,28 +1683,45 @@
   const T3 = () => ISO.on && KM.tresD && KM.tresD.ok;
   const prj = (X, Y, Z = 0) => (T3() ? KM.tresD.prj(X, Y, Z) : [X - Y + ISO.ox, (X + Y) / 2 - Z + ISO.oy]);
   KM.prj = (X, Y, Z = 0) => (ISO.on ? prj(X, Y, Z) : [X, Y - Z]);
-  KM.paraTela = (x, y) => (ISO.on ? [(x - ISO.cam.x) * ISO.cam.z + KM.W / 2, (y - ISO.cam.y) * ISO.cam.z + KM.H / 2] : [x, y]);
-  KM.telaParaCena = (x, y) => (ISO.on ? [(x - KM.W / 2) / ISO.cam.z + ISO.cam.x, (y - KM.H / 2) / ISO.cam.z + ISO.cam.y] : [x, y]);
-  KM.telaParaMundo = (x, y) => { if (!ISO.on) return [x, y]; if (T3()) return KM.tresD.mundo(x, y); const [ix, iy] = KM.telaParaCena(x, y), a = ix - ISO.ox, b = 2 * (iy - ISO.oy); return [(a + b) / 2, (b - a) / 2]; };
+  // a visão de cima também tem câmera (arrastar e zoom): CIMA = centro (X, Y do mundo) e zoom
+  const camAtual = () => (ISO.on ? ISO.cam : CIMA);
+  KM.paraTela = (x, y) => { const c = camAtual(); return [(x - c.x) * c.z + KM.W / 2, (y - c.y) * c.z + KM.H / 2]; };
+  KM.telaParaCena = (x, y) => { const c = camAtual(); return [(x - KM.W / 2) / c.z + c.x, (y - KM.H / 2) / c.z + c.y]; };
+  KM.telaParaMundo = (x, y) => { if (!ISO.on) return KM.telaParaCena(x, y); if (T3()) return KM.tresD.mundo(x, y); const [ix, iy] = KM.telaParaCena(x, y), a = ix - ISO.ox, b = 2 * (iy - ISO.oy); return [(a + b) / 2, (b - a) / 2]; };
   // desenha algo feito "de cima" em pé, no lugar certo da diagonal (X, Y = ponto do chão)
   KM.bb = (g, X, Y, fn) => { if (!ISO.on) return fn(); const [px, py] = prj(X, Y); g.save(); g.translate(px - X, py - Y); try { fn(); } finally { g.restore(); } };
-  KM.rotuloPos = s => (ISO.on ? KM.paraTela(...prj(s.x + s.w / 2, s.fy, T3() ? KM.tresD.HN + 12 : WALLH + 10)) : [s.x + s.w / 2, s.y + 2]);
+  KM.rotuloPos = s => (ISO.on ? KM.paraTela(...prj(s.x + s.w / 2, s.fy, T3() ? KM.tresD.HN + 12 : WALLH + 10)) : KM.paraTela(s.x + s.w / 2, s.y + 2));
   function limparIso() { ISO.chao = null; ISO.paredes = null; ISO.sprites.clear(); ISO.ceu = null; if (KM.tresD) KM.tresD.sujo = true; }
 
   // ------------------------------------------------------------------ câmera
-  function limitarCam() { const c = ISO.cam; c.z = Math.max(0.3, Math.min(2.5, c.z)); c.x = Math.max(0, Math.min(ISO.w, c.x)); c.y = Math.max(0, Math.min(ISO.h, c.y)); }
+  function limitarCam() { if (!ISO.on) return limitarCima(); const c = ISO.cam; c.z = Math.max(0.3, Math.min(2.5, c.z)); c.x = Math.max(0, Math.min(ISO.w, c.x)); c.y = Math.max(0, Math.min(ISO.h, c.y)); }
+  // de cima: dá para afastar até ver o prédio inteiro e aproximar até 3×; arrastar não deixa o prédio sair da tela
+  function limitarCima() {
+    if (!L) return;
+    const c = CIMA, zMin = Math.min(KM.W / L.W, KM.H / L.H) * 0.98;
+    c.z = Math.max(zMin, Math.min(3, c.z));
+    const mw = KM.W / 2 / c.z, mh = KM.H / 2 / c.z;
+    c.x = L.W * c.z <= KM.W ? L.W / 2 : Math.max(mw, Math.min(L.W - mw, c.x));
+    c.y = L.H * c.z <= KM.H ? L.H / 2 : Math.max(mh, Math.min(L.H - mh, c.y));
+  }
+  KM.cameraCima = {
+    cobrir() { if (!L) return; Object.assign(CIMA, { z: Math.max(KM.W / L.W, KM.H / L.H), x: L.W / 2, y: L.H / 2 }); limitarCima(); }, // enche a tela, sem bordas
+    caber() { if (!L) return; Object.assign(CIMA, { z: 1, x: L.W / 2, y: L.H / 2 }); limitarCima(); },
+  };
   KM.camera = {
-    ajustar() { if (T3()) return KM.tresD.cam.ajustar(); const c = ISO.cam; c.z = Math.min(KM.W / ISO.w, KM.H / ISO.h) * 1.02; c.x = ISO.w / 2; c.y = ISO.h / 2 + 6; },
+    ajustar() { if (T3()) return KM.tresD.cam.ajustar(); if (!ISO.on) { CIMA.z = 0; CIMA.x = L.W / 2; CIMA.y = L.H / 2; return limitarCima(); } const c = ISO.cam; c.z = Math.min(KM.W / ISO.w, KM.H / ISO.h) * 1.02; c.x = ISO.w / 2; c.y = ISO.h / 2 + 6; },
     zoom(f, cx, cy) {
       if (T3()) return KM.tresD.cam.zoom(f, cx, cy);
-      const c = ISO.cam, foco = cx != null ? KM.telaParaCena(cx, cy) : null;
+      const c = camAtual(), foco = cx != null ? KM.telaParaCena(cx, cy) : null;
       c.z *= f; limitarCam();
       if (foco) { const [bx, by] = KM.telaParaCena(cx, cy); c.x += foco[0] - bx; c.y += foco[1] - by; limitarCam(); }
     },
-    mover(dx, dy) { if (T3()) return KM.tresD.cam.mover(dx, dy); const c = ISO.cam; c.x -= dx / c.z; c.y -= dy / c.z; limitarCam(); },
-    focar(X, Y, z) { if (T3()) return KM.tresD.cam.focar(X, Y, z); const [x, y] = prj(X, Y); ISO.cam.x = x; ISO.cam.y = y; if (z) ISO.cam.z = z; limitarCam(); },
-    estado: () => (T3() ? KM.tresD.cam.estado() : { ...ISO.cam }),
+    mover(dx, dy) { if (T3()) return KM.tresD.cam.mover(dx, dy); const c = camAtual(); c.x -= dx / c.z; c.y -= dy / c.z; limitarCam(); },
+    focar(X, Y, z) { if (T3()) return KM.tresD.cam.focar(X, Y, z); if (!ISO.on) { CIMA.x = X; CIMA.y = Y; if (z) CIMA.z = z; return limitarCima(); } const [x, y] = prj(X, Y); ISO.cam.x = x; ISO.cam.y = y; if (z) ISO.cam.z = z; limitarCam(); },
+    estado: () => (T3() ? KM.tresD.cam.estado() : { ...camAtual() }),
+    aproximado: () => (ISO.on ? true : !!L && CIMA.z > Math.min(KM.W / L.W, KM.H / L.H) * 1.02 + 0.001),
   };
+  const CIMA = { x: 0, y: 0, z: 1 };
 
   // ------------------------------------------------------------------ caixa na diagonal (pixel a pixel, coluna por coluna)
   // (X, Y) = canto de trás do móvel no chão; w ao longo de X, d ao longo de Y, h de altura; o.z = altura da base
@@ -1925,6 +1973,10 @@
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.imageSmoothingEnabled = false;
     if (!fundo || fundoPer !== periodo(cfg)) fundo = montarFundo(cfg);
+    if (KM.W !== L.W || KM.H !== L.H || CIMA.z !== 1) { // câmera de cima: fora do prédio é grama (sem borda preta)
+      ctx.fillStyle = periodo(cfg) === 'noite' ? '#22381f' : '#3f6b33'; ctx.fillRect(0, 0, KM.W, KM.H);
+    }
+    ctx.setTransform(CIMA.z, 0, 0, CIMA.z, Math.round(KM.W / 2 - CIMA.x * CIMA.z), Math.round(KM.H / 2 - CIMA.y * CIMA.z));
     ctx.drawImage(fundo, 0, 0);
     desenharCarro(ctx, t, dt);
     desenharDinamicos(ctx, cfg, estado, t);

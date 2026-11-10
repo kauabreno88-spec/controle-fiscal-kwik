@@ -22,6 +22,7 @@
     fiscal: { nome: 'Fiscal', ic: '🧾', cargo: 'Assistente Fiscal' },
     folha: { nome: 'Folha', ic: '👥', cargo: 'Assistente de Departamento Pessoal' },
     rh: { nome: 'RH', ic: '🤝', cargo: 'Assistente de RH' },
+    ebook: { nome: 'E-book', ic: '📘', cargo: 'Assistente de E-book' },
   };
   const SALA_EXTRA = { noticias: 'diretoria', checklist: 'diretoria', limpeza: 'zeladoria' };
   const cfg = () => A().cfg();
@@ -65,6 +66,7 @@
     fiscal: ['Simples Nacional', 'Notas fiscais', 'Apuração de ICMS/ISS', 'SPED', 'Reforma Tributária'],
     folha: ['eSocial', 'Cálculo de férias e rescisão', 'FGTS Digital', 'DCTFWeb', 'Admissões'],
     rh: ['Recrutamento', 'Entrevistas', 'Treinamentos', 'Clima organizacional', 'Integração de novatos'],
+    ebook: ['Copy de vendas', 'Tráfego pago', 'Canva', 'Atendimento a compradores', 'Kiwify'],
   };
   const EXP = ['Primeiro emprego, muita vontade de aprender', '1 ano em escritório de contabilidade', '2 anos em escritório de contabilidade', '3 anos numa empresa do comércio', 'Estagiou 1 ano numa contabilidade', '4 anos de experiência na área', 'Formado(a) em Ciências Contábeis, 2 anos na área'];
   function aparenciaNova(fem) {
@@ -146,6 +148,12 @@
       ['melhoria', 'Treinamento mensal', 'Uma hora por mês de treinamento interno (um setor ensina o outro). Ajuda a cobrir férias e faltas.'],
       ['ideia', 'Funcionário do mês', 'Reconhecer quem teve a melhor reputação no mês com um quadro na recepção e um vale-presente simples.'],
       ['relatorio', 'Clima da equipe', 'Pesquisa rápida com a equipe: nota {nota}/10. Pontos fortes: ambiente e família KWIK. A melhorar: prazos apertados no fim do mês.'],
+    ],
+    ebook: [
+      ['tarefa', 'Respostas aos compradores', 'Respondi as dúvidas de quem comprou o e-book esta semana e mandei o link de acesso de novo para quem não achou o e-mail da Kiwify.'],
+      ['melhoria', 'Página de vendas mais clara', 'Proposta: colocar logo no início da página para quem é o e-book, um sumário com o que a pessoa aprende e 3 depoimentos. Páginas assim costumam converter mais.'],
+      ['ideia', 'Cupom para clientes da KWIK', 'Um cupom de desconto do e-book para os clientes do escritório e para quem chama no WhatsApp. Ajuda a vender e mostra autoridade.'],
+      ['relatorio', 'Vendas do e-book no mês', 'Resumo das vendas da Kiwify: quantidade, valor líquido, reembolsos e de onde vieram os compradores. Próximo passo: um anúncio pequeno no Instagram.'],
     ],
   };
   const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];

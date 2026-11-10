@@ -136,8 +136,18 @@
         olhos: 'normal', sobrancelha: 'normal', boca: 'sorriso', sardas: false, bochechas: false, pinta: false, estampa: 'lisa', corEstampa: '#ffffff', relogio: true, corRelogio: '#e2b33c', colar: true, corColar: '#e2b33c', brinco: true, corBrinco: '#e2b33c', corFone: '#28BE52', corOculos: '#8a5a2b',
       },
       xp: 0, tarefas: 0, ganhos: 0,
+    }, {
+      id: 'luna', nome: 'Luna', cargo: 'Chefe do E-book', funcao: 'ebook',
+      aparencia: {
+        pele: '#F5D0B5', cabelo: 'longo', corCabelo: '#8a5a2b', estiloCamisa: 'kwik', corCamisa: '#28BE52', corGravata: '#28BE52',
+        calca: '#111A19', sapato: '#ffffff', oculos: 'redondo', fone: true, bone: false, barba: false, corBone: '#28BE52',
+        cracha: true, corCordao: '#28BE52', chapeu: '', baixo: 'calca', calcado: 'tenis', altura: 'normal', cachecol: false, corCachecol: '#c9453a',
+        olhos: 'normal', sobrancelha: 'normal', boca: 'sorriso', sardas: true, bochechas: false, pinta: false, estampa: 'lisa', corEstampa: '#ffffff', relogio: false, corRelogio: '#212529', colar: false, corColar: '#e2b33c', brinco: true, corBrinco: '#e2b33c', corFone: '#111A19', corOculos: '#1b1b1b',
+      },
+      xp: 0, tarefas: 0, ganhos: 0,
     }],
     tarefas: [],
+    ebook: { vistas: 0 },
     clientes: [],
     clientesInfo: {},
     execucao: [],
@@ -208,7 +218,7 @@
   KM.estado = estado;
   const func = id => cfg.funcionarios.find(f => f.id === (id || estado.selecionado || estado.principal)) || cfg.funcionarios[0];
   const pessoaDe = id => estado.pessoas[id || estado.selecionado || estado.principal];
-  const ROTULO_TRABALHO = { noticias: '📰 Buscar notícias', checklist: '📋 Abrir prancheta', prospeccao: '📞 Buscar clientes', video: '🎬 Criar conteúdo', contato: '💬 Preparar contatos', relacionamento: '💚 Falar com clientes', limpeza: '🧹 Faxina geral', financas: '📈 Analisar investimentos', precificacao: '🧮 Precificar serviços', fiscal: '🧾 Conferir impostos', folha: '👥 Conferir a folha', rh: '🤝 Abrir o RH' };
+  const ROTULO_TRABALHO = { noticias: '📰 Buscar notícias', checklist: '📋 Abrir prancheta', prospeccao: '📞 Buscar clientes', video: '🎬 Criar conteúdo', contato: '💬 Preparar contatos', relacionamento: '💚 Falar com clientes', limpeza: '🧹 Faxina geral', financas: '📈 Analisar investimentos', precificacao: '🧮 Precificar serviços', fiscal: '🧾 Conferir impostos', folha: '👥 Conferir a folha', rh: '🤝 Abrir o RH', ebook: '📘 Ver as vendas do e-book' };
   const rotuloTrabalho = f => ROTULO_TRABALHO[f.funcao] || (f.contratado ? '📋 Pedir tarefa ao chefe' : '▶ Trabalhar');
   // Primeiro nome de quem cuida de uma função (os textos do app usam o nome que você coloca em Visual).
   KM.nomeDe = funcao => { const f = cfg.funcionarios.find(x => x.funcao === funcao); return f ? (f.nome || '').trim().split(' ')[0] : ''; };
@@ -353,6 +363,7 @@
     fiscal: 'Oi! Eu sou {n}, do Fiscal. Cuido dos impostos e das guias dos clientes 🧾',
     folha: 'Oi! Eu sou {n}, da Folha. Cuido dos funcionários dos clientes 👥',
     rh: 'Oi! Eu sou {n}, do RH. Quer contratar alguém? 🤝',
+    ebook: 'Oi! Eu sou {n}, do E-book. Cuido das vendas na Kiwify 📘',
   };
   function selecionar(id) {
     estado.selecionado = id;
@@ -510,6 +521,7 @@
     }
     const f = func(), p = pessoaDe();
     if (f.funcao === 'rh') return KM.rh.abrir();
+    if (f.funcao === 'ebook') return KM.ebook.trabalhar(f, p);
     if (f.contratado) return KM.rh.trabalhar(f, p);
     registrar(f.id, '▶️', 'Você mandou: ' + rotuloTrabalho(f).replace(/^\S+\s/, ''));
     if (f.funcao === 'checklist') return KM.clara.trabalhar(f, p);
@@ -1006,10 +1018,11 @@
   function renderEquipe() {
     const box = $('#equipeLista'); if (!box) return;
     box.innerHTML = '';
-    for (const f of cfg.funcionarios) {
+    // só a equipe principal (chefes de setor e a família KWIK); quem o RH contratou aparece no perfil do chefe
+    for (const f of cfg.funcionarios.filter(x => !x.contratado)) {
       const q = estado.pessoas[f.id], n = nivelDe(f.xp), [cls, st] = statusDe(q);
       const cv = el('canvas', { width: 30, height: 46 });
-      box.append(el('div', { class: 'membro2' + (estado.selecionado === f.id ? ' sel' : '') },
+      box.append(el('div', { class: 'membro2 clicavel' + (estado.selecionado === f.id ? ' sel' : ''), title: 'Toque para ver melhor', onclick: e => { if (!e.target.closest('button')) abrirPerfil(f.id); } },
         el('div', { class: 'm2-topo' }, cv, el('div', {},
           el('b', {}, f.nome), el('span', {}, f.cargo),
           el('div', { class: 'm2-tags' }, el('span', { class: 'nivel' }, `Nv. ${n.i + 1} · ${n.nome}`), el('span', { class: 'st ' + cls }, st)))),
@@ -1020,6 +1033,29 @@
           el('button', { class: 'bt peq', onclick: () => { irPara('escritorio'); selecionar(f.id); window.scrollTo({ top: 0, behavior: 'smooth' }); } }, '📍 Ver'))));
       desenharAvatar(cv, { bracos: 'aceno', boca: 'sorriso' }, 0, f.id);
     }
+  }
+  // perfil grande de um chefe (aba Equipe): boneco grande, números, reputação e a equipe do setor
+  function abrirPerfil(id) {
+    const f = func(id), q = estado.pessoas[id], n = nivelDe(f.xp || 0), [, st] = statusDe(q);
+    const setor = KM.rh ? KM.rh.setorDe(f) : null, S = setor && KM.rh.SETOR[setor], ri = KM.rh ? KM.rh.repInfo(f) : { v: 50, nome: '', estrelas: '' };
+    const equipe = cfg.funcionarios.filter(x => x.contratado && x.setor === setor);
+    let d = $('#dlgPerfil');
+    if (!d) { d = el('dialog', { id: 'dlgPerfil', class: 'perfil-dlg' }); document.body.append(d); d.addEventListener('click', e => { if (e.target === d) d.close(); }); }
+    d.innerHTML = '';
+    const cv = el('canvas', { width: 30, height: 46, class: 'perfil-av' });
+    let pose = 0; const anima = () => { if (!d.open) return; pose++; desenharAvatar(cv, { bracos: pose % 6 < 2 ? 'aceno' : 'baixo', aceno: pose % 2, boca: 'sorriso', piscar: pose % 9 === 0 }, 0, id); setTimeout(anima, 260); };
+    d.append(el('div', { class: 'dlg-topo' }, el('h2', {}, `${S ? S.ic + ' ' : ''}${f.nome}`), el('button', { onclick: () => d.close() }, '×')),
+      el('div', { class: 'dlg-corpo perfil' },
+        el('div', { class: 'perfil-cab' }, el('div', { class: 'perfil-fundo' }, cv),
+          el('div', {}, el('b', { class: 'perfil-nome' }, f.nome), el('p', {}, f.cargo), el('p', { class: 'perfil-st' }, `● ${st}`),
+            el('div', { class: 'ficha-tags' }, el('span', { class: 'tag' }, `📁 ${S ? S.nome : setor === 'diretoria' ? 'Diretoria' : setor === 'zeladoria' ? 'Zeladoria' : 'KWIK'}`), el('span', { class: 'tag' }, `Nv. ${n.i + 1} · ${n.nome}`)))),
+        el('div', { class: 'ficha-rep' }, el('div', { class: 'ficha-rep-l' }, el('span', {}, 'Reputação'), el('b', {}, `${ri.estrelas} ${ri.v}`)), el('div', { class: 'barra' }, el('i', { style: `width:${ri.v}%` })), el('small', {}, ri.nome)),
+        el('div', { class: 'ficha-nums' }, el('div', {}, el('small', {}, 'Tarefas'), el('b', {}, String(f.tarefas || 0))), el('div', {}, el('small', {}, 'Experiência'), el('b', {}, `${n.pct}%`)), el('div', {}, el('small', {}, 'Ganhou'), el('b', {}, brlCurto(f.ganhos)))),
+        equipe.length ? el('div', {}, el('h4', { class: 'perfil-h' }, `Equipe do setor (${equipe.length})`), el('div', { class: 'perfil-eq' }, equipe.map(x => { const c = el('canvas', { width: 30, height: 46 }); desenharAvatar(c, { boca: 'sorriso' }, 0, x.id); return el('div', {}, c, el('b', {}, x.nome.split(' ')[0]), el('small', {}, (x.cargo || '').replace(/^Assistente (de |do |da )?/, ''))); }))) : null,
+        el('div', { class: 'ficha-bts' },
+          el('button', { class: 'bt prim', onclick: () => { d.close(); irPara('escritorio'); selecionar(f.id); trabalhar(); } }, rotuloTrabalho(f)),
+          el('button', { class: 'bt', onclick: () => { d.close(); irPara('escritorio'); selecionar(f.id); } }, '📍 Ver no escritório'))));
+    d.showModal(); anima();
   }
 
   // ------------------------------------------------------------------ clientes ativos (Relacionamento)
@@ -1150,8 +1186,8 @@
     if (KM.execucao) KM.execucao.layoutMudou();
     if (KM.recepcao) KM.recepcao.layoutMudou();
     for (const r of $$('.rotulo-sala')) r.remove();
-    const ICONE_SALA = { apresentacao: ' 📊', recepcao: ' 🛎️', jogos: ' 🎮', reuniao: ' 🗓️', meta: ' 🎯', refeitorio: ' 🍽️', execucao: ' ⚙️', financeiro: ' 📈', precificacao: ' 🧮', diretoria: ' 👑', fiscal: ' 🧾', folha: ' 👥', rh: ' 🤝', zeladoria: ' 🧹' };
-    const ABRIR_SALA = { apresentacao: () => KM.apresentacao.abrir(), reuniao: () => KM.reuniao.abrir(), meta: () => KM.meta.abrir(), execucao: () => KM.execucao.abrir(), fiscal: () => KM.setores.abrir('fiscal', 'check'), folha: () => KM.setores.abrir('folha', 'check'), rh: () => KM.rh.abrir() };
+    const ICONE_SALA = { apresentacao: ' 📊', recepcao: ' 🛎️', jogos: ' 🎮', reuniao: ' 🗓️', meta: ' 🎯', refeitorio: ' 🍽️', execucao: ' ⚙️', financeiro: ' 📈', precificacao: ' 🧮', diretoria: ' 👑', fiscal: ' 🧾', folha: ' 👥', rh: ' 🤝', zeladoria: ' 🧹', ebook: ' 📘' };
+    const ABRIR_SALA = { apresentacao: () => KM.apresentacao.abrir(), reuniao: () => KM.reuniao.abrir(), meta: () => KM.meta.abrir(), execucao: () => KM.execucao.abrir(), fiscal: () => KM.setores.abrir('fiscal', 'check'), folha: () => KM.setores.abrir('folha', 'check'), rh: () => KM.rh.abrir(), ebook: () => KM.ebook.abrir() };
     for (const s of Object.values(KM.LAYOUT.salas)) {
       const clicavel = !!ABRIR_SALA[s.id];
       const r = el('div', { class: 'rotulo-sala' + (s.id === 'jogos' ? ' jogos' : '') + (clicavel ? ' clicavel' : '') + (s.id === 'diretoria' ? ' ceo' : '') }, s.nome + (ICONE_SALA[s.id] || ''));
@@ -1199,9 +1235,10 @@
       const H = 600, W = Math.max(600, Math.round(H * vw / vh));
       if (KM.W !== W || KM.H !== H) { KM.W = W; KM.H = H; tela.width = W; tela.height = H; }
       Object.assign(palco.style, { width: vw + 'px', height: vh + 'px', left: '0px', top: '0px' });
-    } else {
-      const k = Math.min(vw / KM.W, vh / KM.H);
-      Object.assign(palco.style, { width: Math.round(KM.W * k) + 'px', height: Math.round(KM.H * k) + 'px', left: Math.round((vw - KM.W * k) / 2) + 'px', top: Math.round((vh - KM.H * k) / 2) + 'px' });
+    } else { // de cima: o palco cobre a janela inteira e a câmera enche a tela (dá para arrastar e dar zoom)
+      const L = KM.LAYOUT, H = Math.min(L.H, 720), W = Math.round(H * vw / vh);
+      if (KM.W !== W || KM.H !== H) { KM.W = W; KM.H = H; tela.width = W; tela.height = H; if (KM.cameraCima) KM.cameraCima.cobrir(); }
+      Object.assign(palco.style, { width: vw + 'px', height: vh + 'px', left: '0px', top: '0px' });
     }
     if (forcar !== false) posicionarRotulos(true);
   }
@@ -1209,7 +1246,7 @@
   // nomes das salas e botão do carro acompanham a câmera (na diagonal)
   let camAntes = '';
   function posicionarRotulos(forcar) {
-    const k = KM.isoAtivo && KM.isoAtivo() ? JSON.stringify(KM.camera.estado()) + KM.W : 'cima' + KM.W;
+    const k = JSON.stringify(KM.camera.estado()) + KM.W + 'x' + KM.H + (KM.isoAtivo && KM.isoAtivo() ? 'd' : 'c');
     if (!forcar && k === camAntes) return;
     camAntes = k;
     for (const r of $$('.rotulo-sala')) {
@@ -1227,7 +1264,7 @@
   }
   function atualizarBotoesCam() {
     const b = $('#camBts'); if (!b) return;
-    b.querySelectorAll('.so-iso').forEach(x => { x.hidden = !visaoDiagonal(); });
+    b.querySelectorAll('.so-iso').forEach(x => { x.hidden = false; }); // zoom e "ver tudo" valem nas duas visões
     const v = $('#btVisao'); if (v) v.textContent = visaoDiagonal() ? '⬛ De cima' : '🔷 Diagonal';
   }
   mqCelular.addEventListener ? mqCelular.addEventListener('change', aplicarLayout) : mqCelular.addListener(aplicarLayout);
@@ -1268,7 +1305,7 @@
     ultimoDesenho = agora;
     KM.desenhar(ctx, cfg, estado, t);
     KM.desenharEfeitos(ctx, t);
-    if (KM.isoAtivo && KM.isoAtivo()) posicionarRotulos();
+    posicionarRotulos();
 
     // tremor da tela
     const tr = KM.fx.tremor;
@@ -1313,26 +1350,35 @@
     });
     const pontoLogico = e => { const r = tela.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * KM.W, (e.clientY - r.top) / r.height * KM.H]; };
     // câmera da visão diagonal: arrastar (mouse ou dedo), pinça e rodinha para o zoom
-    const toques = new Map(); let arrastou = false, distPinca = 0;
-    tela.addEventListener('pointerdown', e => { if (!visaoDiagonal()) return; toques.set(e.pointerId, [e.clientX, e.clientY]); arrastou = false; distPinca = 0; });
+    // No celular (escritório dentro da página): um dedo rola a página e toca nas pessoas; dois dedos movem e dão zoom.
+    // No PC (tela cheia) e com o mouse: arrastar move, rodinha dá zoom. Vale para a diagonal e para a visão de cima.
+    const toques = new Map(); let arrastou = false, distPinca = 0, meio = null;
+    const umDedoRola = e => e.pointerType === 'touch' && !document.body.classList.contains('pc-cheia');
+    tela.addEventListener('pointerdown', e => { toques.set(e.pointerId, [e.clientX, e.clientY]); arrastou = false; distPinca = 0; meio = null; });
     tela.addEventListener('pointermove', e => {
-      if (!visaoDiagonal() || !toques.has(e.pointerId)) return;
+      if (!toques.has(e.pointerId)) return;
       const [ax, ay] = toques.get(e.pointerId), rr = tela.getBoundingClientRect(), esc = KM.W / rr.width;
       if (toques.size >= 2) {
         toques.set(e.pointerId, [e.clientX, e.clientY]);
-        const [p1, p2] = [...toques.values()], d = Math.hypot(p1[0] - p2[0], p1[1] - p2[1]);
-        if (distPinca) KM.camera.zoom(d / distPinca); distPinca = d; arrastou = true; return;
+        const [p1, p2] = [...toques.values()], d = Math.hypot(p1[0] - p2[0], p1[1] - p2[1]), m = [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2];
+        KM.interagindo();
+        if (distPinca) { const [px, py] = pontoLogico({ clientX: m[0], clientY: m[1] }); KM.camera.zoom(d / distPinca, px, py); }
+        if (meio) KM.camera.mover((m[0] - meio[0]) * esc, (m[1] - meio[1]) * esc);
+        distPinca = d; meio = m; arrastou = true; atualizarToque(); return;
       }
+      if (umDedoRola(e)) return; // deixa a página rolar
       if (!arrastou && Math.hypot(e.clientX - ax, e.clientY - ay) < 6) return;
       KM.interagindo();
       if (!arrastou) { arrastou = true; try { tela.setPointerCapture(e.pointerId); } catch (x) { /* ok */ } }
       KM.camera.mover((e.clientX - ax) * esc, (e.clientY - ay) * esc);
       toques.set(e.pointerId, [e.clientX, e.clientY]);
     });
-    const soltar = e => { toques.delete(e.pointerId); if (toques.size < 2) distPinca = 0; };
+    const soltar = e => { toques.delete(e.pointerId); if (toques.size < 2) { distPinca = 0; meio = null; } };
     tela.addEventListener('pointerup', soltar); tela.addEventListener('pointercancel', soltar);
-    tela.style.touchAction = 'none';
-    tela.addEventListener('wheel', e => { if (!visaoDiagonal()) return; e.preventDefault(); KM.interagindo(); const [px, py] = pontoLogico(e); KM.camera.zoom(e.deltaY < 0 ? 1.12 : 1 / 1.12, px, py); }, { passive: false });
+    // celular: "pan-y" deixa um dedo rolar a página; a pinça e os dois dedos ficam com o escritório
+    const atualizarToque = () => { tela.style.touchAction = document.body.classList.contains('pc-cheia') ? 'none' : 'pan-y'; };
+    atualizarToque(); mqPC.addEventListener && mqPC.addEventListener('change', atualizarToque);
+    tela.addEventListener('wheel', e => { e.preventDefault(); KM.interagindo(); const [px, py] = pontoLogico(e); KM.camera.zoom(e.deltaY < 0 ? 1.12 : 1 / 1.12, px, py); }, { passive: false });
     tela.addEventListener('click', e => {
       ativo();
       if (arrastou) { arrastou = false; return; } // foi um arrasto da câmera, não um toque
@@ -1346,13 +1392,14 @@
       if (sala === 'execucao' && KM.execucao) return KM.execucao.abrir();
       if ((sala === 'fiscal' || sala === 'folha') && KM.setores) return KM.setores.abrir(sala, 'check');
       if (sala === 'rh' && KM.rh) return KM.rh.abrir();
+      if (sala === 'ebook' && KM.ebook) return KM.ebook.abrir();
       if (sala === 'apresentacao' && KM.apresentacao) return KM.apresentacao.abrir();
       if (estado.selecionado) selecionar(null); // tocar no vazio esconde o nome
     });
     tela.addEventListener('mousemove', e => {
       const [tx, ty] = pontoLogico(e), [cx, cy] = KM.telaParaCena(tx, ty), [x, y] = KM.telaParaMundo(tx, ty);
       const sala = KM.salaEm(x, y);
-      tela.style.cursor = toques.size && visaoDiagonal() ? 'grabbing' : KM.pessoaEm(estado, cx, cy) || KM.jogos.sobre(x, y) || ['reuniao', 'meta', 'execucao', 'fiscal', 'folha', 'rh', 'apresentacao'].includes(sala) ? 'pointer' : 'default';
+      tela.style.cursor = toques.size && visaoDiagonal() ? 'grabbing' : KM.pessoaEm(estado, cx, cy) || KM.jogos.sobre(x, y) || ['reuniao', 'meta', 'execucao', 'fiscal', 'folha', 'rh', 'apresentacao', 'ebook'].includes(sala) ? 'pointer' : 'default';
     });
     document.addEventListener('keydown', ativo);
     window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (ABAS.includes(h)) irPara(h); });
@@ -1425,6 +1472,10 @@
       for (const pf of PADRAO.funcionarios) if (!cfg.funcionarios.some(f => f.id === pf.id)) cfg.funcionarios.push(clone(pf));
       cfg.tarefas = cfg.tarefas || [];
       cfg.versao = 8; migrou = true;
+    }
+    if ((cfg.versao || 1) < 9) { // versão 9: setor do E-book (Luna)
+      for (const pf of PADRAO.funcionarios) if (!cfg.funcionarios.some(f => f.id === pf.id)) cfg.funcionarios.push(clone(pf));
+      cfg.versao = 9; migrou = true;
     }
     // quem foi contratado não herda nada de quem estava na mesma posição da lista padrão
     for (const f of cfg.funcionarios) if (f.contratado && !f.funcao.startsWith('h_')) f.funcao = 'h_' + f.id;
@@ -1512,7 +1563,9 @@
     requestAnimationFrame(quadro);
     KM.clara.iniciar(); KM.maycon.iniciar(); KM.jogos.iniciar(); KM.rotinas.iniciar();
     KM.limpeza.iniciar(); KM.refeitorio.iniciar(); KM.reuniao.iniciar(); KM.pesquisa.iniciar(); KM.execucao.iniciar();
-    KM.setores.iniciar(); KM.clientesFora.iniciar(); KM.rh.iniciar(); if (KM.ipog) KM.ipog.iniciar();
+    KM.setores.iniciar(); KM.clientesFora.iniciar(); KM.rh.iniciar(); if (KM.ipog) KM.ipog.iniciar(); if (KM.ebook && KM.ebook.iniciar) KM.ebook.iniciar(); if (KM.fazenda) KM.fazenda.iniciar();
+    const btEb = document.getElementById('btEbook'); if (btEb) btEb.addEventListener('click', () => { ativo(); KM.ebook.abrir(); });
+    const btFz = document.getElementById('btFazenda'); if (btFz) btFz.addEventListener('click', () => { ativo(); KM.fazenda.abrir(); });
     $('#btFiscal').addEventListener('click', () => { ativo(); KM.setores.abrir('fiscal', 'check'); });
     $('#btFolha').addEventListener('click', () => { ativo(); KM.setores.abrir('folha', 'check'); });
     $('#btRH').addEventListener('click', () => { ativo(); KM.rh.abrir(); });
@@ -1550,7 +1603,7 @@
     const hh = new Date().getHours(), sauda = hh < 12 ? 'Bom dia' : hh < 18 ? 'Boa tarde' : 'Boa noite';
     const APRESENTA = { noticias: `${sauda}! Clique em um de nós para mandar trabalhar 👋`, checklist: 'Oi! Eu cuido da sua prancheta de tarefas 📋', prospeccao: 'E eu acho clientes novos! 📞📸',
       video: 'Eu transformo as notícias em vídeo! 🎬', contato: 'E eu chamo os clientes no WhatsApp 💬', relacionamento: 'E eu cuido de quem já é cliente 💚', limpeza: 'E eu deixo tudo brilhando! 🧹✨',
-      financas: 'Eu fico de olho na bolsa 📈', precificacao: 'E eu cuido dos preços, meus netos 🧮💜', fiscal: 'E eu não deixo guia vencer! 🧾', folha: 'E eu fecho a folha de todo mundo 👥', rh: 'E eu contrato gente boa para os setores 🤝' };
+      financas: 'Eu fico de olho na bolsa 📈', precificacao: 'E eu cuido dos preços, meus netos 🧮💜', fiscal: 'E eu não deixo guia vencer! 🧾', folha: 'E eu fecho a folha de todo mundo 👥', rh: 'E eu contrato gente boa para os setores 🤝', ebook: 'E eu cuido do nosso e-book 📘' };
     APRESENTA.noticias = `${sauda}, família KWIK! Bora trabalhar 👑`;
     cfg.funcionarios.forEach((f, i) => setTimeout(() => falar(f.id, APRESENTA[f.funcao] || 'Oi! 👋', 3400), 700 + i * 1500));
   }

@@ -1121,6 +1121,89 @@ body.cidade-aberta #dock, body.cidade-aberta .topo, body.cidade-aberta nav.abas,
   .cid-painel { top: auto; left: 8px; right: 8px; width: auto; bottom: 8px; max-height: 58vh; } .cid-dica { display: none; }
   .cid-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+/* ================= menu (dock) na lateral esquerda, de cima a baixo ================= */
+#dock { left: 12px; top: 50%; bottom: auto; transform: translateY(-50%); flex-direction: column; padding: 6px 5px; gap: 2px; max-width: none; max-height: calc(100vh - 24px); }
+#dock .sep { width: 40px; height: 1px; margin: 3px 0; }
+#dock .dock-grupo, #dock nav.abas, #dock .acoes { flex-direction: column; }
+#dock nav.abas button, #dock .dock-bt, #dock .acoes .bt.icone { min-width: 62px; padding: 4px 4px; min-height: 0; }
+#dock nav.abas button .ic, #dock .dock-bt i { font-size: 17px; }
+#dock .acoes #btTrabalhar { min-height: 40px; padding: 0 6px; font-size: 12px; width: 62px; justify-content: center; white-space: normal; line-height: 1.1; }
+#dock nav.abas button:hover, #dock .dock-bt:hover, #dock .acoes .bt.icone:hover { transform: translateX(3px); }
+#dock .menu-anim { left: calc(100% + 14px); bottom: auto; top: -60px; }
+.menu-setores { left: calc(100% + 16px); bottom: auto; top: 50%; transform: translateY(-50%) translateX(-8px); }
+.menu-setores.on { transform: translateY(-50%); }
+.pc-cheia .lateral { left: 96px; }
+.pc-cheia .topo .marca { margin-left: 0; }
+.pc-cheia .cam-bts { bottom: 18px; }
+@media (max-height: 700px) { #dock nav.abas button span.txt, #dock .dock-bt small, #dock .acoes .bt.icone small { display: none !important; } }
+/* aba Equipe: cartões clicáveis e o perfil grande */
+.membro2.clicavel { cursor: pointer; transition: transform .12s, box-shadow .12s; } .membro2.clicavel:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(17,26,25,.14); }
+dialog.perfil-dlg { max-width: 560px; }
+.perfil-cab { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 16px; align-items: center; margin-bottom: 10px; }
+.perfil-fundo { height: 190px; border-radius: 18px; display: flex; align-items: center; justify-content: center; background-color: #dff5e5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M8 8v14M8 15l7-7M8 15l7 7' stroke='%23b9e6c5' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); }
+.perfil-av { width: 110px; height: 169px; image-rendering: pixelated; }
+.perfil-nome { font-size: 26px; font-weight: 900; display: block; } .perfil-cab p { margin: 2px 0 6px; color: var(--cinza); font-weight: 700; } .perfil-st { color: var(--verde-esc) !important; }
+.perfil-h { margin: 12px 0 6px; font-size: 13px; letter-spacing: 1px; color: var(--verde-esc); }
+.perfil-eq { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 6px; }
+.perfil-eq > div { background: var(--nevoa); border-radius: 12px; padding: 6px; text-align: center; } .perfil-eq canvas { width: 45px; height: 69px; image-rendering: pixelated; }
+.perfil-eq b { display: block; font-size: 12.5px; } .perfil-eq small { color: var(--cinza); font-size: 10.5px; font-weight: 700; }
+@media (max-width: 700px) { .perfil-cab { grid-template-columns: 110px minmax(0, 1fr); } .perfil-fundo { height: 150px; } .perfil-av { width: 84px; height: 129px; } .perfil-nome { font-size: 21px; } }
+/* bairro dos clientes: de dia, claro */
+.cid3d { background: #cde9ff; color: var(--grafite); }
+.cid-tit, .cid-ticker, .cid-bts { background: rgba(255,255,255,.86); border: 1px solid rgba(255,255,255,.9); box-shadow: 0 8px 24px rgba(30,60,90,.15); }
+.cid-tit small { color: var(--cinza); } .cid-ticker { font-family: inherit; } .cid-ticker b { color: var(--grafite); } .cid-ticker .v, .cid-ticker .bem { color: var(--verde-esc); } .cid-ticker .mal { color: #c92a2a; }
+.cid-bt { color: var(--grafite); } .cid-bt:hover { background: #eef5ee; }
+.cid-painel { background: rgba(255,255,255,.96); box-shadow: 0 24px 60px rgba(30,60,90,.3); bottom: 76px; }
+.cid-chips { position: absolute; left: 12px; right: 12px; bottom: 12px; z-index: 2; display: flex; gap: 6px; overflow-x: auto; padding: 6px; border-radius: 18px;
+  background: rgba(255,255,255,.86); box-shadow: 0 8px 24px rgba(30,60,90,.18); scrollbar-width: thin; -webkit-overflow-scrolling: touch; }
+.cid-chip { flex: none; border: 1.5px solid var(--linha); background: #fff; border-radius: 99px; padding: 9px 14px; font-weight: 800; font-size: 13.5px; white-space: nowrap; cursor: pointer; }
+.cid-chip.on, .cid-chip:hover { border-color: var(--verde); background: #e9f9ee; } .cid-chip.kwik { background: var(--verde); border-color: var(--verde); color: #0d1a14; }
+.cid-vazio { color: var(--cinza); font-weight: 700; font-size: 13px; padding: 8px; }
+@media (max-width: 760px) {
+  .cid-tit { display: none; } .cid-bt span { display: none; }
+  .cid-painel { bottom: 70px; max-height: 52vh; }
+  .cid-chip { padding: 10px 14px; font-size: 14px; }
+}
+/* E-book */
+dialog.eb-dlg { max-width: 860px; }
+.eb-abas { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.eb-abas button { border: 1.5px solid var(--linha); background: #fff; border-radius: 99px; padding: 7px 12px; font-weight: 800; font-size: 13px; }
+.eb-abas button.on { background: var(--grafite); border-color: var(--grafite); color: #fff; }
+.eb-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.eb-tile { border: 1.5px solid var(--linha); border-radius: 14px; padding: 9px 11px; background: #fff; display: flex; flex-direction: column; gap: 2px; }
+.eb-tile small { font-size: 10.5px; font-weight: 800; color: var(--cinza); text-transform: uppercase; letter-spacing: .6px; } .eb-tile b { font-size: 20px; font-weight: 900; } .eb-tile span { font-size: 12px; color: var(--cinza); font-weight: 700; }
+.eb-tile.verde { border-color: var(--verde); background: #f1faf3; } .eb-tile.verde b { color: var(--verde-esc); } .eb-tile.mal b { color: #c92a2a; }
+.eb-h { margin: 14px 0 6px; font-size: 13px; letter-spacing: 1px; color: var(--verde-esc); } .eb-graf { width: 100%; max-width: 640px; height: auto; }
+.eb-aviso { border: 2px dashed #b2f2bb; background: #f1faf3; border-radius: 16px; padding: 14px; } .eb-aviso p { margin: 6px 0 10px; color: var(--cinza); }
+#ebCorpo input[type=search] { width: 100%; border: 1.5px solid var(--linha); border-radius: 12px; padding: 10px 12px; font: inherit; margin-bottom: 8px; }
+.eb-lista { display: grid; gap: 6px; max-height: 52vh; overflow: auto; }
+.eb-item { display: flex; justify-content: space-between; gap: 10px; align-items: center; border: 1px solid var(--linha); border-radius: 12px; padding: 8px 10px; background: #fff; }
+.eb-item small { display: block; color: var(--cinza); font-size: 12px; font-weight: 600; } .eb-dir { text-align: right; flex: none; }
+.eb-st { font-size: 11px; font-weight: 800; border-radius: 99px; padding: 2px 8px; background: #e9ecef; } .eb-st.ok { background: #d3f9d8; color: #2b8a3e; } .eb-st.mal { background: #ffe3e3; color: #c92a2a; } .eb-st.esp { background: #fff3bf; color: #8a6d00; }
+.eb-links { display: grid; gap: 8px; } .eb-link { display: flex; gap: 12px; align-items: center; text-decoration: none; text-align: left; border: 1.5px solid var(--linha); border-radius: 14px; padding: 12px 14px; background: #fff; font: inherit; cursor: pointer; }
+.eb-link span { font-size: 26px; } .eb-link small { display: block; color: var(--cinza); font-weight: 600; }
+.setor-bt.ebook .ic { background: #e7f5ff; } .setor-bt.fazenda .ic { background: #ebfbee; }
+/* Fazendinha */
+.faz { position: fixed; inset: 0; z-index: 46; background: #3a6b2c; display: flex; flex-direction: column; color: var(--grafite); }
+.faz[hidden] { display: none; }
+body.fazenda-aberta #dock, body.fazenda-aberta .topo, body.fazenda-aberta nav.abas { display: none !important; }
+.faz-topo { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 8px 12px; background: #fff7e6; border-bottom: 3px solid #c98a55; font-weight: 800; }
+.faz-topo > b { font-size: 16px; margin-right: 6px; } .faz-topo #fzDia, .faz-topo #fzMoedas { background: #fff; border-radius: 99px; padding: 4px 10px; border: 1.5px solid #e9d5b7; font-size: 13px; }
+.faz-energia { width: 110px; height: 12px; border-radius: 99px; background: #e9d5b7; overflow: hidden; margin-right: auto; } .faz-energia i { display: block; height: 100%; background: linear-gradient(90deg, #fab005, #40c057); transition: width .3s; }
+.faz-palco { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 8px; }
+.faz-palco canvas { max-width: 100%; max-height: 100%; aspect-ratio: 384 / 264; image-rendering: pixelated; border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,.35); cursor: pointer; width: min(100%, calc((100vh - 170px) * 1.4545)); }
+.faz-baixo { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: center; padding: 6px 10px; background: rgba(255,247,230,.92); }
+.faz-sem { display: flex; gap: 5px; flex-wrap: wrap; } .faz-semente { border: 2px solid #e9d5b7; background: #fff; border-radius: 12px; padding: 6px 10px; font-weight: 800; font-size: 14px; cursor: pointer; }
+.faz-semente.on { border-color: #40c057; background: #ebfbee; }
+.faz-inv { display: flex; gap: 6px; align-items: center; font-weight: 800; } .faz-inv small { color: #8a6d00; font-weight: 700; }
+.faz-dica { text-align: center; font-size: 11.5px; color: #e9f5e2; padding: 4px 10px 8px; font-weight: 700; }
+.faz-loja { position: absolute; top: 60px; right: 12px; width: min(420px, calc(100vw - 24px)); max-height: calc(100vh - 80px); overflow: auto; background: #fff7e6; border: 3px solid #c98a55; border-radius: 18px; padding: 12px; box-shadow: 0 20px 50px rgba(0,0,0,.35); }
+.faz-loja[hidden] { display: none; }
+.faz-loja-cab { display: flex; gap: 8px; align-items: center; } .faz-loja-cab b { margin-right: auto; font-size: 16px; } .faz-loja h4 { margin: 10px 0 6px; color: #8a5a2b; }
+.faz-item { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 6px; align-items: center; background: #fff; border-radius: 12px; padding: 7px 9px; margin-bottom: 5px; border: 1px solid #f1e3c8; }
+.faz-item small { grid-column: 1; color: var(--cinza); font-size: 11.5px; } .faz-item span { font-weight: 800; } .faz-item em { color: #2b8a3e; font-weight: 800; font-style: normal; }
+@media (max-width: 700px) { .faz-topo > b { display: none; } .faz-energia { width: 70px; } .faz-palco canvas { width: 100%; } .faz-dica { font-size: 10.5px; } }
 </style>
 </head>
 <body>
@@ -1235,6 +1318,8 @@ body.cidade-aberta #dock, body.cidade-aberta .topo, body.cidade-aberta nav.abas,
           <button class="bt setor-bt folha" id="btFolha"><span class="ic">👥</span><span><b>Folha</b><small>Funcionários e fechamento</small></span></button>
           <button class="bt setor-bt rh" id="btRH"><span class="ic">🤝</span><span><b>RH</b><small>Contratar para os setores</small></span></button>
           <button class="bt setor-bt tarefas" id="btTarefasAtalho"><span class="ic">📋</span><span><b>Tarefas</b><small>Avaliar as entregas</small></span></button>
+          <button class="bt setor-bt ebook" id="btEbook"><span class="ic">📘</span><span><b>E-book</b><small>Vendas e compradores</small></span></button>
+          <button class="bt setor-bt fazenda" id="btFazenda"><span class="ic">🌾</span><span><b>Fazendinha</b><small>Mini jogo, salva sozinho</small></span></button>
           <button class="bt setor-bt apres" id="btApresentacao"><span class="ic">📊</span><span><b>Apresentação</b><small>Slides e propostas KWIK</small></span></button>
           <button class="bt setor-bt clientes" id="btClientesAtalho"><span class="ic">🌃</span><span><b>Clientes</b><small>Cidade 3D dos clientes</small></span></button>
         </div>
@@ -1248,6 +1333,7 @@ body.cidade-aberta #dock, body.cidade-aberta .topo, body.cidade-aberta nav.abas,
           <p>Arraste as caminhas coloridas e leve cada gatinho para a caminha da sua cor.</p>
           <div class="nums"><div><small>Nível</small><b id="casaFase">1</b></div><div><small>Estrelas</small><b id="casaEstrelas">0</b></div></div>
           <button class="bt prim" id="btJogarCasa" style="width:100%;justify-content:center;margin-top:12px">🕹️ Jogar no fliperama</button>
+          <button class="bt" onclick="KM.fazenda && KM.fazenda.abrir()" style="width:100%;justify-content:center;margin-top:8px">🌾 Jogar Fazendinha KWIK</button>
           <small class="vazio">Cada nível vencido rende moedas para o caixa 💰 · Sinuca e cartas chegam em breve.</small>
         </div>
         <div class="card">
@@ -1451,38 +1537,40 @@ body.cidade-aberta #dock, body.cidade-aberta .topo, body.cidade-aberta nav.abas,
   <div class="dlg-corpo" id="ghCorpo"></div>
 </dialog>
 
-<script src="js/cena.js?v=16"></script>
-<script src="js/festas.js?v=16"></script>
-<script src="js/cena3d.js?v=16"></script>
-<script src="js/boneco.js?v=16"></script>
-<script src="js/nuvem.js?v=16"></script>
-<script src="js/efeitos.js?v=16"></script>
-<script src="js/clara.js?v=16"></script>
-<script src="js/maycon.js?v=16"></script>
-<script src="js/filmes.js?v=16"></script>
-<script src="js/gatinhos.js?v=16"></script>
-<script src="js/jogos.js?v=16"></script>
-<script src="js/marketing.js?v=16"></script>
-<script src="js/enzo.js?v=16"></script>
-<script src="js/relacionamento.js?v=16"></script>
-<script src="js/rotinas.js?v=16"></script>
-<script src="js/limpeza.js?v=16"></script>
-<script src="js/refeitorio.js?v=16"></script>
-<script src="js/reuniao.js?v=16"></script>
-<script src="js/meta.js?v=16"></script>
-<script src="js/pesquisa.js?v=16"></script>
-<script src="js/familia.js?v=16"></script>
-<script src="js/execucao.js?v=16"></script>
-<script src="js/financas.js?v=16"></script>
-<script src="js/precificacao.js?v=16"></script>
-<script src="js/obrigacoes.js?v=16"></script>
-<script src="js/setores.js?v=16"></script>
-<script src="js/clientes.js?v=16"></script>
-<script src="js/cidade3d.js?v=16"></script>
-<script src="js/recepcao.js?v=16"></script>
-<script src="js/rh.js?v=16"></script>
-<script src="js/ipog.js?v=16"></script>
-<script src="js/apresentacao.js?v=16"></script>
-<script src="js/app.js?v=16"></script>
+<script src="js/cena.js?v=17"></script>
+<script src="js/festas.js?v=17"></script>
+<script src="js/cena3d.js?v=17"></script>
+<script src="js/boneco.js?v=17"></script>
+<script src="js/nuvem.js?v=17"></script>
+<script src="js/efeitos.js?v=17"></script>
+<script src="js/clara.js?v=17"></script>
+<script src="js/maycon.js?v=17"></script>
+<script src="js/filmes.js?v=17"></script>
+<script src="js/gatinhos.js?v=17"></script>
+<script src="js/jogos.js?v=17"></script>
+<script src="js/marketing.js?v=17"></script>
+<script src="js/enzo.js?v=17"></script>
+<script src="js/relacionamento.js?v=17"></script>
+<script src="js/rotinas.js?v=17"></script>
+<script src="js/limpeza.js?v=17"></script>
+<script src="js/refeitorio.js?v=17"></script>
+<script src="js/reuniao.js?v=17"></script>
+<script src="js/meta.js?v=17"></script>
+<script src="js/pesquisa.js?v=17"></script>
+<script src="js/familia.js?v=17"></script>
+<script src="js/execucao.js?v=17"></script>
+<script src="js/financas.js?v=17"></script>
+<script src="js/precificacao.js?v=17"></script>
+<script src="js/obrigacoes.js?v=17"></script>
+<script src="js/setores.js?v=17"></script>
+<script src="js/clientes.js?v=17"></script>
+<script src="js/cidade3d.js?v=17"></script>
+<script src="js/recepcao.js?v=17"></script>
+<script src="js/rh.js?v=17"></script>
+<script src="js/ipog.js?v=17"></script>
+<script src="js/ebook.js?v=17"></script>
+<script src="js/fazenda.js?v=17"></script>
+<script src="js/apresentacao.js?v=17"></script>
+<script src="js/app.js?v=17"></script>
 </body>
 </html>

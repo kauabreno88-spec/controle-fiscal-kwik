@@ -91,13 +91,57 @@
       musica: { bpm: sorteio([96, 100, 104, 110, 116]), prog: Math.floor(Math.random() * PROGS.length), semente: Math.floor(Math.random() * 1e6) },
     };
   }
+  // "Fazer 2.0": mesmo tema, vídeo totalmente diferente — abre com uma pergunta, resume em uma frase, conta os pontos
+  // na ordem inversa com números gigantes, checklist novo, outro fundo, música lo-fi (ou pop, se o anterior era lo-fi),
+  // barra de progresso e transição em círculo.
+  const FAZER2 = ['Separe os documentos da empresa', 'Confira as datas no seu calendário', 'Mande este vídeo para quem cuida das contas'];
+  function montarVideo2(ant, n, cfg) {
+    const reels = ant.formato === 'reels';
+    const pontos = ant.cenas.filter(c => c.tipo === 'ponto' || c.tipo === 'contagem').map(c => semMarca(c.texto));
+    if (!pontos.length) pontos.push(...frasesResumo(n));
+    if (!pontos.length) pontos.push('Saiu uma novidade que pode mexer com a rotina da sua empresa.');
+    const d = acharDestaque(n.titulo || ''), tema = d ? d[0] : ((n.temas || [])[0] || 'sua empresa');
+    const perguntas = [`Você já sabe o que muda com *${tema}*?`, `*${tema}*: sua empresa está preparada?`, `Isso pode mexer no seu *bolso*. Sabia?`, `Empresário, me dá 30 segundos: *${tema}*`];
+    const whats = U().foneBonito(cfg.marketing.whats);
+    const lista = pontos.slice().reverse();
+    const cenas = [
+      { tipo: 'pergunta', d: 4.2, texto: sorteio(perguntas) },
+      { tipo: 'resumo', d: limitar(2.8 + palavras(n.titulo) * 0.22, 5, 8), rotulo: 'EM UMA FRASE', texto: marcar(n.titulo || '') },
+      ...lista.map((x, i) => ({ tipo: 'contagem', d: limitar(2.8 + palavras(x) * 0.3, 4.5, 9), n: i + 1, total: lista.length, texto: marcarFrase(x) })),
+      { tipo: 'lista', d: 7, rotulo: 'CHECKLIST RÁPIDO', itens: FAZER2 },
+      { tipo: 'cta', d: 4.6, texto: 'Salva este vídeo e chama a *KWIK*', sub: 'A gente cuida disso pra você.', whats },
+      { tipo: 'fim', d: 3.2, whats },
+    ];
+    let total = cenas.reduce((s, c) => s + c.d, 0);
+    if (!reels && total < 31) { const k = (31 - total) / cenas.filter(c => c.tipo !== 'fim' && c.tipo !== 'cta').reduce((s, c) => s + c.d, 0); cenas.forEach(c => { if (c.tipo !== 'fim' && c.tipo !== 'cta') c.d *= 1 + k; }); }
+    while (reels && cenas.reduce((s, c) => s + c.d, 0) > 90) { const i = cenas.map(c => c.tipo).lastIndexOf('contagem'); if (i < 0) break; cenas.splice(i, 1); }
+    let t = 0; for (const c of cenas) { c.ini = Math.round(t * 100) / 100; t += c.d; c.fim = Math.round(t * 100) / 100; delete c.d; }
+    const estiloAnt = (ant.musica && ant.musica.estilo) || 'pop', lofi = estiloAnt !== 'lofi';
+    return {
+      formato: ant.formato, versao: 2, w: ant.w || 1080, h: ant.h || 1920, duracao: Math.round(t * 10) / 10, data: ant.data, fonte: ant.fonte,
+      fundo: sorteio(['grafite', 'branco', 'verde', 'nevoa'].filter(f => f !== ant.fundo)), cenas,
+      musica: { estilo: lofi ? 'lofi' : 'pop', bpm: lofi ? sorteio([80, 84, 88]) : sorteio([104, 110, 116]), prog: ((ant.musica && ant.musica.prog) || 0) + 1 + Math.floor(Math.random() * 2), semente: Math.floor(Math.random() * 1e6) },
+    };
+  }
+  async function fazer2(r) {
+    if (U().semConexao()) return;
+    const cfg = A().cfg(), n = r.noticia || { titulo: r.titulo }, f = cfg.funcionarios.find(x => x.funcao === 'video') || { id: 'enzo', nome: 'Enzo' };
+    const video = montarVideo2(r.video, n, cfg);
+    const salvo = { id: U().agoraId('video'), tipo: 'video', criadoEm: U().agoraIso(), funcionario: { id: f.id, nome: f.nome }, tarefa: `${r.video.formato === 'reels' ? 'Reels' : 'Stories'} 2.0 para o Instagram`,
+      titulo: (n.titulo || r.titulo || 'Vídeo') + ' (2.0)', noticia: n, relatorioNoticias: r.relatorioNoticias, video, legenda: montarLegenda(n, cfg, video), duracao: 12, leuArtigo: r.leuArtigo, origem: r.id };
+    A().falar(f.id, 'Bora fazer uma versão 2.0, totalmente diferente! 🎬✨', 3000);
+    await A().BK().salvarRelatorio(salvo);
+    await A().carregarRelatorios(KM.resumoRelatorio(salvo));
+    A().toast('✨ Vídeo 2.0 pronto: mesmo tema, outro roteiro, outro visual e outra música.');
+    A().abrirRelatorio(salvo.id);
+  }
   function montarLegenda(n, cfg, spec) {
     const texto = `${n.titulo} ${(n.temas || []).join(' ')} ${n.categoria || ''}`;
     const tags = ['#contabilidade', '#kwikcontabilidade'];
     for (const [re, h] of HASHTAGS) if (re.test(texto) && !tags.includes(h)) tags.push(h);
     ['#empreendedorismo', '#impostos', '#pequenasempresas'].forEach(x => { if (tags.length < 7 && !tags.includes(x)) tags.push(x); });
     const g = semMarca(spec.cenas[0].texto);
-    const corpo = spec.cenas.filter(c => c.tipo === 'ponto').slice(0, 2).map(c => semMarca(c.texto)).join(' ');
+    const corpo = spec.cenas.filter(c => c.tipo === 'ponto' || c.tipo === 'contagem').slice(0, 2).map(c => semMarca(c.texto)).join(' ');
     const whats = U().foneBonito(cfg.marketing.whats);
     return [
       `⚠️ ${g} ${n.titulo}`, '',
@@ -276,10 +320,31 @@
       if (cena.whats) g.fillText('WhatsApp ' + cena.whats, W / 2, cy + 430);
       g.fillText('@kwik_contabilidade', W / 2, cy + 490);
       g.textAlign = 'left'; g.globalAlpha = 1;
+    } else if (cena.tipo === 'pergunta') { // 2.0: pergunta gigante com o "?" pulsando no fundo
+      g.save(); g.globalAlpha = 0.13; g.fillStyle = T.dest === '#ffffff' ? GRAFITE : VERDE; g.font = `900 ${vert ? 1100 : 700}px Montserrat`; g.textAlign = 'center';
+      g.translate(W * 0.72, H * 0.62); g.rotate(Math.sin(tc * 1.4) * 0.08); const s0 = 0.9 + 0.1 * easeBack(tc / 0.6); g.scale(s0, s0); g.fillText('?', 0, 0); g.restore();
+      txt({ texto: cena.texto, x: W / 2, y: H * (vert ? 0.4 : 0.38), tam: vert ? 132 : 104, peso: 900, atraso: 0.2, passo: 0.1, alinhar: 'centro', estilo: 'soco', maxLinhas: 5, lh: 1.1 });
+    } else if (cena.tipo === 'resumo') { // 2.0: "em uma frase", com aspas grandes
+      g.fillStyle = T.dest === '#ffffff' ? GRAFITE : VERDE; g.font = '900 300px Montserrat'; g.globalAlpha = Math.min(1, tc / 0.4); g.fillText('“', mx - 10, topo + 230); g.globalAlpha = 1;
+      g.font = '800 34px Montserrat'; g.textAlign = 'center'; g.fillStyle = T.suave; g.fillText(cena.rotulo, W / 2, topo + 40); g.textAlign = 'left';
+      txt({ texto: cena.texto, x: W / 2, y: topo + 330, tam: vert ? 100 : 78, peso: 900, atraso: 0.3, passo: 0.05, alinhar: 'centro', maxLinhas: vert ? 9 : 7 });
+    } else if (cena.tipo === 'contagem') { // 2.0: número gigante no fundo + texto
+      g.save(); g.fillStyle = T.dest === '#ffffff' ? GRAFITE : VERDE; g.globalAlpha = 0.14 * Math.min(1, tc / 0.3); g.font = `900 ${vert ? 900 : 620}px Montserrat`; g.textAlign = 'right';
+      g.fillText(String(cena.n), W - 30 + (1 - ease(tc / 0.6)) * 200, vert ? H * 0.66 : H * 0.8); g.restore();
+      g.fillStyle = T.dest === '#ffffff' ? GRAFITE : VERDE; retRed(g, mx, topo - 10, 270, 70, 35); g.fill();
+      g.fillStyle = T.dest === '#ffffff' ? '#ffffff' : GRAFITE; g.font = '900 34px Montserrat'; g.fillText(`Nº ${cena.n} de ${cena.total}`, mx + 30, topo + 37);
+      txt({ texto: cena.texto, y: topo + 230, tam: vert ? 84 : 58, peso: 800, atraso: 0.3, passo: 0.045, maxLinhas: vert ? 10 : 7, lh: 1.22, estilo: 'soco' });
     } else if (cena.texto) {
       txt({ texto: cena.texto, y: topo + 150, tam: 80, peso: 900 });
     }
-    for (const c of spec.cenas.slice(1)) { // transição: faixa verde varrendo a tela
+    if (spec.versao === 2) { // 2.0: barra de progresso no topo e transição em círculo
+      g.fillStyle = T.dest === '#ffffff' ? 'rgba(17,26,25,.2)' : 'rgba(40,190,82,.25)'; g.fillRect(0, 0, W, 14);
+      g.fillStyle = T.dest === '#ffffff' ? GRAFITE : VERDE; g.fillRect(0, 0, W * Math.min(1, t / spec.duracao), 14);
+      for (const c of spec.cenas.slice(1)) {
+        const k = (t - (c.ini - 0.3)) / 0.6;
+        if (k > 0 && k < 1) { const rr = Math.hypot(W, H) * (k < 0.5 ? ease(k * 2) : 1 - ease((k - 0.5) * 2)); g.fillStyle = spec.fundo === 'verde' ? GRAFITE : VERDE; g.beginPath(); g.arc(W / 2, H / 2, rr * 0.6, 0, Math.PI * 2); g.fill(); }
+      }
+    } else for (const c of spec.cenas.slice(1)) { // transição: faixa verde varrendo a tela
       const k = (t - (c.ini - 0.28)) / 0.56;
       if (k > 0 && k < 1) { const x = -W + 2 * W * ease(k); g.fillStyle = spec.fundo === 'verde' ? GRAFITE : VERDE; g.fillRect(x, 0, W, H); g.fillStyle = spec.fundo === 'verde' ? VERDE : GRAFITE; g.fillRect(x + W - 26, 0, 26, H); }
     }
@@ -288,13 +353,25 @@
 
   // ------------------------------------------------------------------ música (sintetizada, vai junto no vídeo)
   let ruidoBuf = null;
-  function trilha(ac, destino, spec, desde = 0) {
-    const m = spec.musica || { bpm: 104, prog: 0 }, beat = 60 / m.bpm, total = spec.duracao;
+  // narr = falas do narrador ([{ ini, buf }]): com narrador, a música fica mais baixa (por baixo da voz)
+  function trilha(ac, destino, spec, desde = 0, narr = null) {
+    const m = spec.musica || { bpm: 104, prog: 0 }, beat = 60 / m.bpm, total = spec.duracao, lofi = m.estilo === 'lofi';
     const t0 = ac.currentTime + 0.08 - desde;
-    if (!ruidoBuf) { ruidoBuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate); const d = ruidoBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+    if (!ruidoBuf || ruidoBuf.sampleRate !== ac.sampleRate) { ruidoBuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate); const d = ruidoBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+    const comVoz = !!(narr && narr.length), volMus = comVoz ? 0.24 : 0.55;
     const mestre = ac.createGain(); mestre.connect(destino);
-    mestre.gain.setValueAtTime(0.0001, ac.currentTime); mestre.gain.exponentialRampToValueAtTime(0.55, ac.currentTime + 0.5);
-    const fimT = t0 + total; mestre.gain.setValueAtTime(0.55, Math.max(ac.currentTime + 0.6, fimT - 1.5)); mestre.gain.linearRampToValueAtTime(0.0001, Math.max(ac.currentTime + 0.7, fimT));
+    mestre.gain.setValueAtTime(0.0001, ac.currentTime); mestre.gain.exponentialRampToValueAtTime(volMus, ac.currentTime + 0.5);
+    const fimT = t0 + total; mestre.gain.setValueAtTime(volMus, Math.max(ac.currentTime + 0.6, fimT - 1.5)); mestre.gain.linearRampToValueAtTime(0.0001, Math.max(ac.currentTime + 0.7, fimT));
+    const sfxG = ac.createGain(); sfxG.gain.value = comVoz ? 0.5 : 0.7; sfxG.connect(destino);
+    const vozG = ac.createGain(); vozG.gain.value = 1.15; vozG.connect(destino);
+    efeitos(ac, sfxG, spec, t0);
+    if (comVoz) for (const f of narr) {
+      if (!f || !f.buf) continue;
+      const ini = t0 + f.ini; if (ini + f.buf.duration < ac.currentTime) continue;
+      const s = ac.createBufferSource(); s.buffer = f.buf; s.connect(vozG);
+      if (ini >= ac.currentTime) s.start(ini); else s.start(ac.currentTime, ac.currentTime - ini);
+    }
+    const pararExtra = () => { for (const x of [sfxG, vozG]) { try { x.gain.cancelScheduledValues(ac.currentTime); x.gain.setValueAtTime(0.0001, ac.currentTime); x.disconnect(); } catch (e) { /* já parou */ } } };
     const hz = n => 440 * Math.pow(2, (n - 69) / 12);
     const nota = (freq, ini, dur, tipo, vol, freqFim) => {
       if (ini + dur < ac.currentTime) return;
@@ -313,6 +390,15 @@
       const tt = t0 + k * beat; if (tt < ac.currentTime - 0.01) continue;
       const [raiz, tipo] = prog[Math.floor(k / 4) % 4], terca = tipo === 'm' ? 3 : 4;
       const intro = k < 4;
+      if (lofi) { // 2.0 lo-fi: batida macia, piano/pad e baixo redondo
+        if (k % 2 === 0) nota(110, tt, 0.25, 'sine', intro ? 0.2 : 0.42, 45);
+        if (!intro && k % 4 === 2) ruido(tt, 0.12, 0.09, 'bandpass', 1400);
+        if (!intro) ruido(tt + beat / 2, 0.03, 0.035, 'highpass', 6000);
+        nota(hz(raiz - 12), tt, beat * 0.9, 'sine', 0.26);
+        if (k % 4 === 0) [0, terca, 7, 10].forEach((iv, j) => nota(hz(raiz + iv + 12), tt + j * 0.03, beat * 3.6, 'sine', 0.05));
+        if (!intro && r() < 0.45) nota(hz(raiz + 24 + sorteioDe([0, terca, 7, 10], r)), tt + beat / 2, 0.5, 'triangle', 0.03);
+        continue;
+      }
       nota(150, tt, 0.22, 'sine', intro ? 0.25 : 0.6, 42); // bumbo
       if (!intro) ruido(tt + beat / 2, 0.05, 0.07, 'highpass', 7000); // chimbal
       if (k % 4 === 2 && !intro) ruido(tt, 0.14, 0.2, 'bandpass', 1800); // palma
@@ -320,10 +406,87 @@
       if (k % 4 === 0) [0, terca, 7].forEach(iv => nota(hz(raiz + iv + 12), tt, beat * 3.8, 'triangle', 0.035)); // acorde
       if (!intro && k % 2 === 1 && r() < 0.7) nota(hz(raiz + 12 + sorteioDe([0, terca, 7, 12, 14], r)), tt + beat / 2, 0.18, 'square', 0.025);
     }
-    for (const c of spec.cenas.slice(1)) ruido(t0 + c.ini - 0.3, 0.55, 0.16, 'bandpass', 400, 5000); // whoosh nas transições
-    return { parar() { try { mestre.gain.cancelScheduledValues(ac.currentTime); mestre.gain.setValueAtTime(0.0001, ac.currentTime); mestre.disconnect(); } catch (e) { /* já parou */ } } };
+    return { parar() { pararExtra(); try { mestre.gain.cancelScheduledValues(ac.currentTime); mestre.gain.setValueAtTime(0.0001, ac.currentTime); mestre.disconnect(); } catch (e) { /* já parou */ } } };
   }
   const sorteioDe = (arr, r) => arr[Math.floor(r() * arr.length)];
+
+  // ------------------------------------------------------------------ efeitos sonoros (no ritmo das cenas)
+  function efeitos(ac, saida, spec, t0) {
+    const agora = ac.currentTime;
+    const tom = (f, ini, dur, tipo, vol, f2) => { if (ini + dur < agora) return; const o = ac.createOscillator(), g = ac.createGain(); o.type = tipo; o.frequency.setValueAtTime(f, ini); if (f2) o.frequency.exponentialRampToValueAtTime(f2, ini + dur); g.gain.setValueAtTime(0.0001, ini); g.gain.exponentialRampToValueAtTime(vol, ini + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, ini + dur); o.connect(g).connect(saida); o.start(Math.max(ini, agora)); o.stop(ini + dur + 0.05); };
+    const chiado = (ini, dur, vol, tipo, f1, f2, sobe) => { if (ini + dur < agora) return; const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain(); s.buffer = ruidoBuf; f.type = tipo; f.frequency.setValueAtTime(f1, ini); if (f2) f.frequency.exponentialRampToValueAtTime(f2, ini + dur); if (sobe) { g.gain.setValueAtTime(0.0001, ini); g.gain.exponentialRampToValueAtTime(vol, ini + dur * 0.9); g.gain.exponentialRampToValueAtTime(0.0001, ini + dur); } else { g.gain.setValueAtTime(vol, ini); g.gain.exponentialRampToValueAtTime(0.0001, ini + dur); } s.connect(f).connect(g).connect(saida); s.start(Math.max(ini, agora), 0, dur + 0.05); };
+    spec.cenas.forEach((c, i) => {
+      const a = t0 + c.ini;
+      if (i > 0) chiado(a - 0.32, 0.56, 0.22, 'bandpass', 400, 5200); // whoosh da transição
+      if (c.tipo === 'gancho' || c.tipo === 'pergunta') { tom(130, a + 0.25, 0.6, 'sine', 0.9, 38); chiado(a + 0.25, 0.35, 0.3, 'lowpass', 900); } // impacto
+      else if (c.tipo === 'titulo' || c.tipo === 'resumo') { chiado(a + 0.05, 0.5, 0.12, 'bandpass', 2400, 600); tom(660, a + 0.3, 0.12, 'triangle', 0.15, 990); } // "zip" do texto
+      else if (c.tipo === 'ponto' || c.tipo === 'contagem') { tom(880, a + 0.15, 0.1, 'sine', 0.4, 520); tom(1320, a + 0.24, 0.08, 'sine', 0.18); } // pop do número
+      else if (c.tipo === 'lista') c.itens.forEach((_, j) => { const d = a + 0.4 + j * 0.9; tom(1318, d, 0.35, 'sine', 0.2); tom(1976, d + 0.02, 0.3, 'sine', 0.1); }); // ding de cada item
+      else if (c.tipo === 'cta') { tom(1568, a + 1.4, 0.18, 'sine', 0.25); tom(2093, a + 1.53, 0.3, 'sine', 0.25); } // plim do WhatsApp
+      else if (c.tipo === 'fim') [523, 659, 784, 1047].forEach((f, j) => tom(f, a + j * 0.05, 1.4, 'triangle', 0.07)); // assinatura da marca
+      else if (c.tipo === 'aviso') tom(440, a + 0.2, 0.25, 'square', 0.05, 880);
+    });
+    // subida antes do encerramento
+    const cta = spec.cenas.find(c => c.tipo === 'cta'); if (cta) chiado(t0 + cta.ini - 1.1, 1.1, 0.14, 'bandpass', 300, 4000, true);
+  }
+
+  // ------------------------------------------------------------------ narrador
+  // Voz neural em português do Brasil que roda dentro do navegador (Piper/VITS, @diffusionstudio/vits-web): na primeira vez
+  // baixa a voz (~60 MB) e guarda no aparelho; depois funciona sem internet. Vai junto no vídeo baixado.
+  // Se o aparelho não conseguir (sem suporte), a prévia usa a voz do próprio navegador (essa não entra no arquivo).
+  const URL_TTS = 'https://cdn.jsdelivr.net/npm/@diffusionstudio/vits-web@1.0.3/+esm';
+  let ttsMod = null, vozId = null;
+  const cacheVoz = new Map();
+  const paraFala = s => semMarca(s).replace(/KWIK/g, 'Kuík').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').replace(/\s*>>>\s*/g, ' ').replace(/\s+/g, ' ').trim();
+  function roteiroFala(spec) {
+    return spec.cenas.map(c => {
+      if (c.tipo === 'lista') return paraFala(`${c.rotulo.charAt(0) + c.rotulo.slice(1).toLowerCase()}: ${c.itens.join('. ')}.`);
+      if (c.tipo === 'cta') return paraFala(`${c.texto} ${c.sub || ''}${c.whats ? ' Chama no WhatsApp.' : ''}`);
+      if (c.tipo === 'fim') return 'Kuík Contabilidade. Até a próxima!';
+      if (c.tipo === 'contagem') return paraFala(`Número ${c.n}. ${c.texto}`);
+      return c.texto ? paraFala(c.texto) : '';
+    });
+  }
+  async function vozNeural(textos, aviso) {
+    if (!ttsMod) ttsMod = await import(URL_TTS);
+    if (!vozId) {
+      let vs = null; try { vs = await ttsMod.voices(); } catch (e) { /* lista indisponível */ }
+      const chaves = !vs ? [] : Array.isArray(vs) ? vs.map(v => (typeof v === 'string' ? v : v.key || v.id || '')) : Object.keys(vs);
+      vozId = chaves.find(k => /^pt_BR-faber/.test(k)) || chaves.find(k => /^pt_BR/.test(k)) || 'pt_BR-faber-medium';
+    }
+    const dec = new OfflineAudioContext(1, 48000, 48000), out = [];
+    for (let i = 0; i < textos.length; i++) {
+      const tx = textos[i]; if (!tx) { out.push(null); continue; }
+      const k = vozId + '|' + tx;
+      if (!cacheVoz.has(k)) {
+        const wav = await ttsMod.predict({ text: tx, voiceId: vozId }, p => { if (p && p.total) aviso && aviso(`Baixando a voz do narrador (só na 1ª vez)… ${Math.round(p.loaded * 100 / p.total)}%`); });
+        cacheVoz.set(k, await dec.decodeAudioData(await wav.arrayBuffer()));
+      }
+      out.push(cacheVoz.get(k));
+      aviso && aviso(`Gravando a narração… ${i + 1} de ${textos.length}`);
+    }
+    return out;
+  }
+  // devolve o vídeo com o tempo de cada cena ajustado à fala + a lista de falas
+  async function narrar(spec, aviso) {
+    const bufs = await vozNeural(roteiroFala(spec), aviso);
+    const novo = JSON.parse(JSON.stringify(spec)), narr = [];
+    let t = 0;
+    novo.cenas.forEach((c, i) => {
+      const d = c.fim - c.ini, b = bufs[i], atraso = c.tipo === 'gancho' || c.tipo === 'pergunta' ? 0.45 : 0.3;
+      const nd = b ? Math.max(d, b.duration + atraso + 0.55) : d;
+      c.ini = Math.round(t * 100) / 100; t += nd; c.fim = Math.round(t * 100) / 100;
+      if (b) narr.push({ ini: c.ini + atraso, buf: b });
+    });
+    novo.duracao = Math.round(t * 10) / 10;
+    return { spec: novo, narr };
+  }
+  // reserva: voz do navegador falando a cena atual (só na prévia)
+  function vozNavegador() {
+    if (!window.speechSynthesis) return null;
+    const v = speechSynthesis.getVoices().find(x => /pt-BR/i.test(x.lang)) || speechSynthesis.getVoices().find(x => /^pt/i.test(x.lang));
+    return { falar(tx) { try { speechSynthesis.cancel(); if (!tx) return; const u = new SpeechSynthesisUtterance(tx); u.lang = 'pt-BR'; if (v) u.voice = v; u.rate = 1.05; speechSynthesis.speak(u); } catch (e) { /* sem voz */ } }, parar() { try { speechSynthesis.cancel(); } catch (e) { /* ok */ } } };
+  }
 
   // Gravação do vídeo. Antes era em "tempo real" (desenhando e gravando a tela ao mesmo tempo), e o vídeo saía travando
   // quando o computador ou o escritório pesavam. Agora, quando o navegador tem WebCodecs (Chrome/Edge e Safari novos),
@@ -331,17 +494,17 @@
   // (OfflineAudioContext), depois tudo vai para um MP4 (mp4-muxer). Fica liso e ainda grava mais rápido que o tempo real.
   // Sem WebCodecs, volta para a gravação em tempo real, mas com o escritório pausado e quadros no ritmo certo.
   const URL_MUX = 'https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.2/build/mp4-muxer.mjs';
-  async function gravarVideo(spec, aoProgresso, desenhar = desenharQuadro) {
+  async function gravarVideo(spec, aoProgresso, desenhar = desenharQuadro, narr = null) {
     await prepararFontes();
     KM.pausarCena = true; // o escritório para de desenhar enquanto grava (sobra processador para o vídeo)
     try {
       if (window.VideoEncoder && window.AudioEncoder && window.VideoFrame && window.OfflineAudioContext) {
-        try { return await gravarQuadroAQuadro(spec, aoProgresso, desenhar); } catch (e) { console.warn('KWIK vídeo: WebCodecs falhou, gravando em tempo real', e); }
+        try { return await gravarQuadroAQuadro(spec, aoProgresso, desenhar, narr); } catch (e) { console.warn('KWIK vídeo: WebCodecs falhou, gravando em tempo real', e); }
       }
-      return await gravarTempoReal(spec, aoProgresso, desenhar);
+      return await gravarTempoReal(spec, aoProgresso, desenhar, narr);
     } finally { KM.pausarCena = false; }
   }
-  async function gravarQuadroAQuadro(spec, aoProgresso, desenhar) {
+  async function gravarQuadroAQuadro(spec, aoProgresso, desenhar, narr) {
     const M = await import(URL_MUX);
     const fps = 30, w = spec.w, h = spec.h, n = Math.ceil(spec.duracao * fps), sr = 48000;
     // vídeo: H.264 (o formato que o Instagram e o WhatsApp aceitam sem converter)
@@ -357,9 +520,11 @@
       try { if ((await AudioEncoder.isConfigSupported(c)).supported) { acfg = c; acodec = nome; break; } } catch (e) { /* tenta o próximo */ }
     }
     if (!acfg) throw new Error('sem codificador de áudio');
+    // sem AAC o som iria em Opus, que muitos celulares e o Instagram não tocam (vídeo mudo): grava em tempo real com AAC
+    if (acodec !== 'aac' && window.MediaRecorder && MediaRecorder.isTypeSupported('video/mp4;codecs=avc1.42E01E,mp4a.40.2')) throw new Error('sem AAC no WebCodecs');
     // música inteira gerada fora do tempo real
     const oac = new OfflineAudioContext(2, Math.ceil((spec.duracao + 0.3) * sr), sr);
-    trilha(oac, oac.destination, spec, 0);
+    trilha(oac, oac.destination, spec, 0, narr);
     const som = await oac.startRendering();
     const muxer = new M.Muxer({ target: new M.ArrayBufferTarget(), video: { codec: 'avc', width: w, height: h, frameRate: fps }, audio: { codec: acodec, sampleRate: sr, numberOfChannels: 2 }, fastStart: 'in-memory', firstTimestampBehavior: 'offset' });
     let erro = null;
@@ -393,7 +558,7 @@
     aoProgresso && aoProgresso(1);
     return new Blob([muxer.target.buffer], { type: 'video/mp4' });
   }
-  async function gravarTempoReal(spec, aoProgresso, desenhar) {
+  async function gravarTempoReal(spec, aoProgresso, desenhar, narr) {
     if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) throw new Error('este navegador não grava vídeo. Tente pelo Chrome no computador.');
     const c = document.createElement('canvas'); c.width = spec.w; c.height = spec.h;
     c.style.cssText = 'position:fixed;left:-9999px;top:0;width:10px;height:12px;opacity:0;pointer-events:none';
@@ -406,7 +571,7 @@
     let ac = null, musica = null, faixas = [trilhaV];
     try {
       ac = new (window.AudioContext || window.webkitAudioContext)(); await ac.resume();
-      const dest = ac.createMediaStreamDestination(); musica = trilha(ac, dest, spec, 0); faixas = faixas.concat(dest.stream.getAudioTracks());
+      const dest = ac.createMediaStreamDestination(); musica = trilha(ac, dest, spec, 0, narr); faixas = faixas.concat(dest.stream.getAudioTracks());
     } catch (e) { /* sem som */ }
     const stream = new MediaStream(faixas);
     const tipos = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
@@ -629,51 +794,75 @@
   function renderVideo(r, box) {
     const { el, fmtData } = A();
     const spec = r.video, n = r.noticia || {}, vert = spec.h / spec.w > 1.5;
-    const nomeF = spec.formato === 'reels' ? 'Reels' : spec.formato === 'stories' ? 'Stories' : 'Vídeo do feed';
+    const nomeF = (spec.formato === 'reels' ? 'Reels' : spec.formato === 'stories' ? 'Stories' : 'Vídeo do feed') + (spec.versao === 2 ? ' 2.0' : '');
     const rel = el('div', { class: 'rel' });
     rel.append(el('div', { class: 'rel-cab' },
       el('div', {}, el('h2', {}, `🎬 ${nomeF} para o Instagram`),
         el('p', {}, `Feito por ${r.funcionario?.nome || 'Enzo'} em ${fmtData(r.criadoEm)} · ${vert ? '9:16' : '4:5'} · ${Math.round(spec.duracao)} s`),
-        el('div', { class: 'chips' }, el('span', { class: 'chip ok' }, '🎞️ Motion design'), spec.musica ? el('span', { class: 'chip ok' }, '🎵 Com música') : el('span', { class: 'chip' }, 'Sem música'),
-          r.leuArtigo ? el('span', { class: 'chip' }, '📖 Leu a notícia completa') : null, el('span', { class: 'chip' }, 'Fundo: ' + spec.fundo))),
-      el('div', { class: 'rel-bts' }, el('button', { class: 'bt peq perigo', onclick: () => A().apagarRel(r) }, '🗑️ Apagar'))));
+        el('div', { class: 'chips' }, el('span', { class: 'chip ok' }, '🎞️ Motion design'), el('span', { class: 'chip ok' }, '🎙️ Narrador'), spec.musica ? el('span', { class: 'chip ok' }, spec.musica.estilo === 'lofi' ? '🎵 Música lo-fi' : '🎵 Com música') : el('span', { class: 'chip' }, 'Sem música'),
+          el('span', { class: 'chip ok' }, '🔔 Efeitos sonoros'), r.leuArtigo ? el('span', { class: 'chip' }, '📖 Leu a notícia completa') : null, el('span', { class: 'chip' }, 'Fundo: ' + spec.fundo))),
+      el('div', { class: 'rel-bts' }, el('button', { class: 'bt peq', title: 'Mesmo tema, vídeo totalmente diferente', onclick: async e => { e.currentTarget.disabled = true; try { await fazer2(r); } catch (x) { A().toast('Não consegui fazer o 2.0: ' + x.message, { erro: true }); } e.currentTarget.disabled = false; } }, '✨ Fazer 2.0'),
+        el('button', { class: 'bt peq perigo', onclick: () => A().apagarRel(r) }, '🗑️ Apagar'))));
     const cv = el('canvas', { width: spec.w / 2, height: spec.h / 2, class: 'video-cv' + (vert ? ' vertical' : '') });
     const g = cv.getContext('2d');
+    // atual = o vídeo com os tempos ajustados à narração (quando a voz carrega)
+    let atual = spec, narr = null, tentouVoz = false, vozNav = null, roteiro = roteiroFala(spec), cenaFalada = -1;
     let tocando = true, t0 = performance.now(), pausadoEm = 0, som = false, ac = null, musica = null;
-    const tempo = () => (tocando ? ((performance.now() - t0) / 1000) : pausadoEm);
-    const pararSom = () => { musica && musica.parar(); musica = null; };
-    const tocarSom = () => { pararSom(); if (!som || !spec.musica) return; ac = ac || new (window.AudioContext || window.webkitAudioContext)(); ac.resume(); musica = trilha(ac, ac.destination, spec, tempo() % spec.duracao); };
-    const btPlay = el('button', { class: 'bt peq', onclick: () => { if (tocando) { pausadoEm = tempo() % spec.duracao; tocando = false; btPlay.textContent = '▶ Tocar'; pararSom(); } else { t0 = performance.now() - pausadoEm * 1000; tocando = true; btPlay.textContent = '⏸ Pausar'; tocarSom(); } } }, '⏸ Pausar');
-    const btDe = el('button', { class: 'bt peq', onclick: () => { t0 = performance.now(); pausadoEm = 0; tocando = true; btPlay.textContent = '⏸ Pausar'; tocarSom(); } }, '↺ Do começo');
-    const btSom = el('button', { class: 'bt peq', onclick: () => { som = !som; btSom.textContent = som ? '🔊 Som ligado' : '🔇 Ouvir música'; if (som) { t0 = performance.now(); pausadoEm = 0; tocando = true; btPlay.textContent = '⏸ Pausar'; } tocarSom(); } }, '🔇 Ouvir música');
     const status = el('small', { class: 'vazio' });
+    const tempo = () => (tocando ? ((performance.now() - t0) / 1000) : pausadoEm);
+    const pararSom = () => { musica && musica.parar(); musica = null; vozNav && vozNav.parar(); cenaFalada = -1; };
+    const tocarSom = () => { pararSom(); if (!som) return; ac = ac || new (window.AudioContext || window.webkitAudioContext)(); ac.resume(); musica = trilha(ac, ac.destination, atual, tempo() % atual.duracao, narr); };
+    async function prepararNarrador() {
+      if (narr || tentouVoz) return !!narr;
+      tentouVoz = true;
+      try {
+        status.textContent = '🎙️ Preparando o narrador…';
+        const res = await narrar(spec, s => { status.textContent = '🎙️ ' + s; });
+        atual = res.spec; narr = res.narr; roteiro = roteiroFala(atual);
+        status.textContent = '🎙️ Narrador pronto: voz, música e efeitos vão juntos no vídeo.';
+        return true;
+      } catch (e) {
+        console.warn('KWIK narrador', e); vozNav = vozNavegador();
+        status.textContent = vozNav ? '🎙️ A voz do narrador não carregou neste aparelho: a prévia usa a voz do navegador (o vídeo baixado sai com música e efeitos).' : '🎙️ Este aparelho não tem voz de narrador: o vídeo sai com música e efeitos.';
+        return false;
+      }
+    }
+    const btPlay = el('button', { class: 'bt peq', onclick: () => { if (tocando) { pausadoEm = tempo() % atual.duracao; tocando = false; btPlay.textContent = '▶ Tocar'; pararSom(); } else { t0 = performance.now() - pausadoEm * 1000; tocando = true; btPlay.textContent = '⏸ Pausar'; tocarSom(); } } }, '⏸ Pausar');
+    const btDe = el('button', { class: 'bt peq', onclick: () => { t0 = performance.now(); pausadoEm = 0; tocando = true; btPlay.textContent = '⏸ Pausar'; tocarSom(); } }, '↺ Do começo');
+    const btSom = el('button', { class: 'bt peq prim', onclick: async () => {
+      som = !som; btSom.textContent = som ? '🔊 Som ligado' : '🔊 Ouvir com narrador';
+      if (som) { btSom.disabled = true; await prepararNarrador(); btSom.disabled = false; t0 = performance.now(); pausadoEm = 0; tocando = true; btPlay.textContent = '⏸ Pausar'; }
+      tocarSom();
+    } }, '🔊 Ouvir com narrador');
     const btBaixar = el('button', {
       class: 'bt prim', onclick: async () => {
-        btBaixar.disabled = true; pararSom();
+        btBaixar.disabled = true; som = false; btSom.textContent = '🔊 Ouvir com narrador'; pararSom();
         try {
-          const blob = await gravarVideo(spec, k => { status.textContent = `Gravando o vídeo com música… ${Math.round(k * 100)}% (deixe esta tela aberta)`; });
+          const comVoz = await prepararNarrador();
+          const blob = await gravarVideo(atual, k => { status.textContent = `Gravando o vídeo ${comVoz ? 'com narrador, música e efeitos' : 'com música e efeitos'}… ${Math.round(k * 100)}% (deixe esta tela aberta)`; }, desenharQuadro, narr);
           await baixarArquivo(blob, nomeArq(n.titulo, blob.type.includes('mp4') ? 'mp4' : 'webm'), r.legenda, status);
         } catch (e) { status.textContent = '❌ ' + e.message; }
         btBaixar.disabled = false;
       },
     }, '⬇️ Baixar vídeo');
     rel.append(el('div', { class: 'video-grade' },
-      el('div', { class: 'video-col' }, cv, el('div', { class: 'video-bts' }, btPlay, btDe, spec.musica ? btSom : null, btBaixar), status, ...blocoLegenda(r)),
+      el('div', { class: 'video-col' }, cv, el('div', { class: 'video-bts' }, btSom, btPlay, btDe, btBaixar), status, ...blocoLegenda(r)),
       el('div', {},
         el('h3', {}, '📰 Notícia escolhida'),
         el('p', {}, el('a', { href: n.url, target: '_blank', rel: 'noopener', class: 'tit' }, n.titulo)),
         n.resumo ? el('p', { class: 'vazio' }, n.resumo) : null,
-        el('h3', { style: 'margin-top:18px' }, '🎞️ Roteiro'),
-        el('ol', { class: 'roteiro' }, spec.cenas.map(c => el('li', {}, el('b', {}, `${c.ini.toFixed(1)}s · `), c.tipo === 'pontos' || c.tipo === 'lista' ? c.itens.join(' / ') : c.tipo === 'fim' ? 'Encerramento com a marca KWIK' : semMarca(c.texto)))),
-        el('p', { class: 'vazio', style: 'font-size:12px' }, 'A música é criada pelo app e gravada junto no vídeo (sem direitos autorais). O vídeo é montado quadro a quadro (30 por segundo, sem travadas): deixe esta tela aberta até terminar.'))));
+        el('h3', { style: 'margin-top:18px' }, '🎞️ Roteiro e narração'),
+        el('ol', { class: 'roteiro' }, spec.cenas.map((c, i) => el('li', {}, el('b', {}, `${c.ini.toFixed(1)}s · `), c.tipo === 'pontos' || c.tipo === 'lista' ? c.itens.join(' / ') : c.tipo === 'fim' ? 'Encerramento com a marca KWIK' : semMarca(c.texto), roteiro[i] ? el('small', { class: 'fala' }, ` 🎙️ "${roteiro[i]}"`) : null))),
+        el('p', { class: 'vazio', style: 'font-size:12px' }, 'Narrador com voz neural em português (na 1ª vez o navegador baixa a voz, uns 60 MB, e guarda). A música e os efeitos são criados pelo app (sem direitos autorais). O som sai em AAC, que toca no celular, no WhatsApp e no Instagram. Deixe esta tela aberta até terminar.'))));
     box.append(rel);
     prepararFontes().then(() => {
       let voltas = 0;
       const passo = () => {
         if (!cv.isConnected) { pararSom(); return; }
-        const tt = tempo(), volta = Math.floor(tt / spec.duracao);
+        const tt = tempo(), volta = Math.floor(tt / atual.duracao), tl = tt % atual.duracao;
         if (tocando && volta !== voltas) { voltas = volta; if (som) tocarSom(); }
-        if (!KM.pausarCena) { g.setTransform(0.5, 0, 0, 0.5, 0, 0); desenharQuadro(g, spec, tt % spec.duracao); } // enquanto grava, a prévia descansa
+        if (som && tocando && vozNav) { const i = atual.cenas.findIndex(c => tl >= c.ini && tl < c.fim); if (i !== cenaFalada) { cenaFalada = i; vozNav.falar(roteiro[i]); } }
+        if (!KM.pausarCena) { g.setTransform(0.5, 0, 0, 0.5, 0, 0); desenharQuadro(g, atual, tl); } // enquanto grava, a prévia descansa
         requestAnimationFrame(passo);
       };
       requestAnimationFrame(passo);
@@ -698,5 +887,5 @@
     prepararFontes().then(() => desenharPost(cv.getContext('2d'), spec));
   }
 
-  Object.assign(KM.marketing, { trabalharVideo, trabalharPost, renderVideo, renderPost, desenharQuadro, desenharPost, montarVideo, montarPost, montarLegenda, gravarVideo, trilha, prepararFontes, frasesArtigo });
+  Object.assign(KM.marketing, { trabalharVideo, trabalharPost, renderVideo, renderPost, desenharQuadro, desenharPost, montarVideo, montarPost, montarLegenda, gravarVideo, trilha, prepararFontes, frasesArtigo, montarVideo2, roteiroFala, narrar, fazer2 });
 })();
