@@ -678,6 +678,7 @@
     : r.tipo === 'financas' ? `📈 ${r.titulo || 'Investimentos'}${r.aporte ? ` · ${brlCurto(r.aporte)}/mês` : ''}`
     : r.tipo === 'precificacao' ? `🧮 ${r.titulo || 'Precificação'}`
     : r.tipo === 'apresentacao' ? `📊 ${r.titulo || 'Apresentação'}`
+    : r.tipo === 'planilha' ? `📄 ${r.titulo || 'Relatório da planilha'}`
     : r.tipo === 'fiscal' ? `🧾 ${r.titulo || 'Fiscal'}`
     : r.tipo === 'folha' ? `👥 ${r.titulo || 'Folha'}`
     : r.tipo === 'contatos' ? `💬 Contatos em ${r.cidade || '—'}${r.uf ? '-' + r.uf : ''}` : `📰 Notícias de ${fmtDia(r.diaData)}`;
@@ -688,6 +689,7 @@
     : r.tipo === 'financas' ? '🏆 Ranking do dia + simulação de quanto você vai ganhar'
     : r.tipo === 'precificacao' ? '💜 Preços sugeridos com base no mercado de São Luís'
     : r.tipo === 'apresentacao' ? '📊 Slides no estilo KWIK · apresentar ou baixar em PDF'
+    : r.tipo === 'planilha' ? '📄 Relatório no padrão KWIK · HTML e PDF'
     : r.tipo === 'fiscal' ? `🔴 ${r.qVencido || 0} vencida(s) · 🟡 ${(r.prox || []).length} vencem em 5 dias`
     : r.tipo === 'folha' ? `✅ ${r.fechadas || 0}/${(r.empresas || []).length} folhas fechadas · 👥 ${r.ativos || 0} pessoas`
     : r.tipo === 'contatos' ? `💬 ${r.qtdContatos || 0} mensagens de primeiro contato` : `⭐ ${r.qtdPrincipais} principais · 📅 ${r.qtdDia} do dia`;
@@ -749,6 +751,7 @@
     if (r.tipo === 'financas') return KM.financas.renderRel(r, box);
     if (r.tipo === 'precificacao') return KM.precificacao.renderRel(r, box);
     if (r.tipo === 'apresentacao' && KM.apresentacao) return KM.apresentacao.renderRel(r, box);
+    if (r.tipo === 'planilha' && KM.relPlanilha) return KM.relPlanilha.renderRel(r, box);
     if (r.tipo === 'fiscal' || r.tipo === 'folha') return KM.setores.renderRel(r, box);
     const rel = el('div', { class: 'rel' });
     const chips = el('div', { class: 'chips' }, (r.fontes || []).map(f => el('span', { class: 'chip ' + (f.ok ? 'ok' : 'erro') }, `${f.ok ? '✓' : '✗'} ${f.nome}${f.ok ? ` · ${f.itens} lidas` : ' · falhou'}`)));
@@ -1138,6 +1141,7 @@
 
   // ------------------------------------------------------------------ abas
   function irPara(aba) {
+    if (KM.inicio && (document.body.classList.contains('app-aberto') || document.body.classList.contains('inicio-aberto'))) KM.inicio.fechar();
     $$('.abas button').forEach(b => b.classList.toggle('ativa', b.dataset.aba === aba));
     $$('.aba').forEach(s => s.classList.toggle('ativa', s.id === 'aba-' + aba));
     if (location.hash !== '#' + aba) history.replaceState(null, '', '#' + aba);
@@ -1200,31 +1204,13 @@
   // ------------------------------------------------------------------ PC: escritório em tela cheia, menu num "dock" de vidro
   const mqPC = window.matchMedia('(min-width: 761px)');
   const casa = {};
+  // O menu agora é um botão só (logo KWIK no canto, inicio.js) no PC e no celular: a barra de ações, as abas e os
+  // setores ficam escondidos (os botões continuam existindo e o menu único aciona cada um).
   function modoPC() {
-    const pc = mqPC.matches, nav = $('nav.abas'), acoes = $('.acoes'), setores = $('.acoes-setores');
+    const pc = mqPC.matches;
     document.body.classList.toggle('pc-cheia', pc);
-    if (!casa.nav) { casa.nav = [nav.parentNode, nav.nextSibling]; casa.acoes = acoes.parentNode; casa.setores = [setores.parentNode, setores.nextSibling]; }
-    let dock = $('#dock');
-    if (pc) {
-      if (!dock) {
-        const pop = el('div', { id: 'menuSetores', class: 'menu-setores' });
-        const bt = el('button', { class: 'dock-bt', id: 'btMenuSetores', title: 'Setores e atalhos', onclick: e => { e.stopPropagation(); pop.classList.toggle('on'); $('#menuAnim').classList.remove('on'); } }, el('i', {}, '🏢'), el('small', {}, 'Setores'));
-        dock = el('div', { id: 'dock' }, el('div', { class: 'dock-grupo acoes-slot' }), el('span', { class: 'sep' }), el('div', { class: 'dock-grupo', style: 'position:relative' }, bt, pop), el('span', { class: 'sep' }), el('div', { class: 'dock-grupo nav-slot' }));
-        document.body.append(dock);
-        document.addEventListener('click', e => { if (!e.target.closest('#menuSetores') && !e.target.closest('#btMenuSetores')) pop.classList.remove('on'); });
-        pop.addEventListener('click', e => { if (e.target.closest('.setor-bt')) setTimeout(() => pop.classList.remove('on'), 50); });
-      }
-      dock.querySelector('.acoes-slot').append(acoes);
-      dock.querySelector('.nav-slot').append(nav);
-      $('#menuSetores').append(setores);
-    } else if (dock) {
-      casa.setores[0].insertBefore(setores, casa.setores[1]);
-      casa.acoes.insertBefore(acoes, setores);
-      casa.nav[0].insertBefore(nav, casa.nav[1]);
-      dock.remove();
-      document.body.classList.remove('painel-aberto');
-      for (const p of ['width', 'height', 'left', 'top']) palco.style.removeProperty(p);
-    }
+    const dock = $('#dock'); if (dock) dock.remove();
+    if (!pc) { document.body.classList.remove('painel-aberto'); for (const p of ['width', 'height', 'left', 'top']) palco.style.removeProperty(p); }
     ajustarTela(true);
   }
   // no PC o palco cobre a janela: na diagonal (3D) o desenho acompanha a proporção da janela; de cima, o prédio inteiro cabe centralizado
@@ -1275,7 +1261,7 @@
   // 60 quadros/s enquanto você arrasta ou dá zoom, 30 parado, 15 com um painel aberto por cima,
   // nada quando o escritório não está na tela (outra aba no celular, app em segundo plano ou gravando vídeo).
   function ritmo(agora) {
-    if (document.hidden || KM.pausarCena || document.body.classList.contains('cidade-aberta')) return 0;
+    if (document.hidden || KM.pausarCena || ['cidade-aberta', 'inicio-aberto', 'app-aberto'].some(c => document.body.classList.contains(c))) return 0;
     if (!abaEsc.classList.contains('ativa') && !document.body.classList.contains('pc-cheia')) return 0;
     if (agora < interagindo) return 60;
     return document.body.classList.contains('painel-aberto') || document.querySelector('dialog[open]') ? 15 : 30;
@@ -1564,6 +1550,7 @@
     KM.clara.iniciar(); KM.maycon.iniciar(); KM.jogos.iniciar(); KM.rotinas.iniciar();
     KM.limpeza.iniciar(); KM.refeitorio.iniciar(); KM.reuniao.iniciar(); KM.pesquisa.iniciar(); KM.execucao.iniciar();
     KM.setores.iniciar(); KM.clientesFora.iniciar(); KM.rh.iniciar(); if (KM.ipog) KM.ipog.iniciar(); if (KM.ebook && KM.ebook.iniciar) KM.ebook.iniciar(); if (KM.fazenda) KM.fazenda.iniciar();
+    if (KM.inicio) KM.inicio.iniciar();
     const btEb = document.getElementById('btEbook'); if (btEb) btEb.addEventListener('click', () => { ativo(); KM.ebook.abrir(); });
     const btFz = document.getElementById('btFazenda'); if (btFz) btFz.addEventListener('click', () => { ativo(); KM.fazenda.abrir(); });
     $('#btFiscal').addEventListener('click', () => { ativo(); KM.setores.abrir('fiscal', 'check'); });

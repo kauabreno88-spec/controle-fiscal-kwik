@@ -141,8 +141,8 @@
 
   // ------------------------------------------------------------------ tela
   const estado = { mes: mesDe(), filtro: 'pendentes' };
-  function render(corpo, setor, db, rerender) {
-    const m = estado.mes, grupos = montar(setor, db, m);
+  function render(corpo, setor, db, rerender, soEmp) {
+    const m = estado.mes, grupos = montar(setor, db, m).filter(g => !soEmp || g.emp === soEmp);
     const its = grupos.flatMap(g => g.itens.filter(i => !i.info)), nOk = its.filter(i => i.ok).length;
     const pct = its.length ? Math.round(nOk / its.length * 100) : 0;
     const atras = its.filter(i => !i.ok && diasAte(i.d) < 0).length;

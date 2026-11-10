@@ -205,18 +205,20 @@
       const t0 = inicio(r).getTime(), falta = Math.round((t0 - agora) / 60000);
       if (falta <= (r.aviso || 15) && falta > 0 && !ja[r.id + '|aviso']) {
         marcar(r.id + '|aviso');
-        avisar(`⏰ Reunião ${textoFalta(falta)}`, `${r.titulo} · ${r.hora}${r.com ? ' com ' + r.com : ''}`, r);
+        if (KM.agenda) { const m = KM.agenda.mensagem(r, falta); avisar(m.titulo, m.corpo, r); }
+        else avisar(`⏰ Reunião ${textoFalta(falta)}`, `${r.titulo} · ${r.hora}${r.com ? ' com ' + r.com : ''}`, r);
       }
       if (falta <= 0 && falta > -10 && !ja[r.id + '|inicio']) {
         marcar(r.id + '|inicio');
-        avisar('🗓️ Reunião começando agora!', `${r.titulo}${r.com ? ' com ' + r.com : ''} · ${r.local || 'Sala de reunião'}`, r);
+        if (KM.agenda) { const m = KM.agenda.mensagem(r, 0); avisar(m.titulo, `${r.titulo}${r.com ? ' com ' + r.com : ''} · ${r.local || 'Sala de reunião'}`, r); }
+        else avisar('🗓️ Reunião começando agora!', `${r.titulo}${r.com ? ' com ' + r.com : ''} · ${r.local || 'Sala de reunião'}`, r);
         irParaReuniao(r);
       }
     }
   }
   function avisar(titulo, corpo, r) {
     KM.tocar('notif'); setTimeout(() => KM.tocar('notif'), 400);
-    A().toast(`${titulo}: ${corpo}`, { botao: ['Ver agenda', () => abrir(r.data)], ms: 15000 });
+    A().toast(`${titulo}: ${corpo}`, { botao: ['Ver agenda', () => (KM.inicio ? KM.inicio.abrirApp('reuniao') : abrir(r.data))], ms: 15000 });
     if (KM.clara) KM.clara.notificarSistema(titulo, corpo);
     const clara = Object.values(A().estado.pessoas).find(q => q.funcao === 'checklist');
     if (clara) A().falar(clara.id, `${titulo.replace(/^\S+\s/, '')} 🗓️`, 5000);

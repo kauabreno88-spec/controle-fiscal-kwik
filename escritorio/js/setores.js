@@ -215,7 +215,7 @@
   }
 
   // ------------------------------------------------------------------ diálogo dos setores
-  let abaAtual = 'check', setorAtual = 'fiscal', empFiltro = '';
+  let abaAtual = 'check', setorAtual = 'fiscal', empFiltro = '', alvo = null, travaEmp = false; // alvo: outra tela (app Fiscal/Folha por cliente) que redesenha
   function montar() {
     if ($('#dlgSetor')) return;
     const d = document.createElement('dialog');
@@ -229,6 +229,7 @@
     d.querySelectorAll('[data-s]').forEach(b => b.addEventListener('click', () => { abaAtual = b.dataset.s; render(); }));
   }
   async function abrir(k, aba, emp) {
+    alvo = null; travaEmp = false;
     montar();
     setorAtual = k; if (aba) abaAtual = aba; empFiltro = emp || '';
     const d = $('#dlgSetor');
@@ -240,6 +241,7 @@
     render();
   }
   function render() {
+    if (alvo) return alvo();
     const d = $('#dlgSetor'); if (!d) return;
     d.querySelectorAll('[data-s]').forEach(b => b.classList.toggle('ativa', b.dataset.s === abaAtual));
     const corpo = $('#setorCorpo'); corpo.innerHTML = '';
@@ -266,6 +268,7 @@
   };
   function tiles(lista) { const { el } = A(); return el('div', { class: 'setor-tiles' }, lista.map(([v, t, cls]) => el('div', { class: cls || '' }, el('b', {}, v), el('small', {}, t)))); }
   function filtroEmp(db, corpo) {
+    if (travaEmp) return;
     const { el } = A();
     const sel = el('select', { onchange: e => { empFiltro = e.target.value; render(); } }, el('option', { value: '' }, '🏢 Todas as empresas'),
       db.empresas.filter(e => empAtiva(db, e)).map(e => el('option', { value: e.id, selected: e.id === empFiltro }, nomeEmp(e))));
@@ -274,7 +277,7 @@
 
   function verFiscal(corpo, db) {
     const { el } = A(), R = resumoFiscal(db);
-    corpo.append(tiles([[brl(R.vencido), `vencido (${R.qVencido})`, R.qVencido ? 'mal' : 'bem'], [String(R.prox5.length), 'vencem em até 5 dias', R.prox5.length ? 'atencao' : ''],
+    if (!travaEmp) corpo.append(tiles([[brl(R.vencido), `vencido (${R.qVencido})`, R.qVencido ? 'mal' : 'bem'], [String(R.prox5.length), 'vencem em até 5 dias', R.prox5.length ? 'atencao' : ''],
       [brl(R.aVencer), 'a vencer'], [brl(R.pagoMes), 'pago neste mês', 'bem']]));
     filtroEmp(db, corpo);
     for (const x of R.porEmp.filter(x => !empFiltro || x.e.id === empFiltro)) {
@@ -332,7 +335,7 @@
 
   function verFolha(corpo, db) {
     const { el } = A(), R = resumoFolha(db);
-    corpo.append(tiles([[String(R.ativos), 'pessoas ativas'], [brl(R.folha), 'salários + pró-labores/mês'],
+    if (!travaEmp) corpo.append(tiles([[String(R.ativos), 'pessoas ativas'], [brl(R.folha), 'salários + pró-labores/mês'],
       [`${R.fechadas}/${R.porEmp.length}`, `folhas de ${fmtComp(R.comp)} fechadas`, R.fechadas === R.porEmp.length ? 'bem' : 'atencao'], [String(R.exp.length), 'experiências vencendo', R.exp.length ? 'atencao' : '']]));
     corpo.append(el('div', { class: 'se-prazos' }, el('b', {}, `📅 Prazos da folha de ${fmtComp(R.comp)}:`),
       R.prazos.map(p => el('span', { class: 'chip ' + (p.dias < 0 ? 's-ve' : p.dias <= 3 ? 's-av' : 's-az') }, `${p.t} ${fmtD(p.d).slice(0, 5)}`))));
@@ -480,5 +483,14 @@
     setTimeout(() => { carregar('fiscal').catch(() => {}); carregar('folha').catch(() => {}); }, 2500);
   }
 
-  KM.setores = { iniciar, abrir, carregar, dados, gravar, trabalhar, renderRel, resumoFiscal, resumoFolha, resumoParede, nomeEmp, digitos, FONTES, conf };
+  // desenha uma aba do setor dentro de outra tela, só de uma empresa (app Fiscal/Folha por cliente)
+  function pintar(corpo, k, aba, emp, redesenhar) {
+    setorAtual = k; abaAtual = aba; empFiltro = emp || ''; alvo = redesenhar; travaEmp = !!emp;
+    const c = dados(k); if (!c) return;
+    if (aba === 'check' && KM.obrigacoes) return KM.obrigacoes.render(corpo, k, c.db, redesenhar, emp);
+    if (k === 'fiscal') (aba === 'add' ? formFiscal : verFiscal)(corpo, c.db);
+    else (aba === 'add' ? formFolha : verFolha)(corpo, c.db);
+  }
+  const soltar = () => { alvo = null; travaEmp = false; empFiltro = ''; };
+  KM.setores = { pintar, soltar, abaAtual: () => abaAtual, barraOrigem: k => { setorAtual = k; return barraOrigem(dados(k)); }, pedirToken, empAtiva, iniciar, abrir, carregar, dados, gravar, trabalhar, renderRel, resumoFiscal, resumoFolha, resumoParede, nomeEmp, digitos, FONTES, conf };
 })();

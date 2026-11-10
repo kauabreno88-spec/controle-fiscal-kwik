@@ -53,7 +53,7 @@
       const s = situacao(t);
       ul.append(el('li', { class: 'tarefa ' + s.cls },
         el('label', { class: 'marca' }, el('input', { type: 'checkbox', checked: t.feita, onchange: e => marcar(t, e.target.checked) }), el('span')),
-        el('div', { class: 'tt' }, el('b', {}, t.texto), el('small', {}, (t.data ? `📅 ${fmtData(t.data)}${t.hora ? ' · ' + t.hora : ''} · ` : '') + s.txt)),
+        el('div', { class: 'tt' }, el('b', {}, (t.prioridade === 3 ? '🔴 ' : t.prioridade === 2 ? '🟡 ' : '') + t.texto), el('small', {}, (t.data ? `📅 ${fmtData(t.data)}${t.hora ? ' · ' + t.hora : ''} · ` : '') + s.txt)),
         el('button', { class: 'apagar', title: 'Apagar', onclick: () => apagar(t) }, '✕')));
     }
     document.querySelectorAll('#pranchetaFiltro button').forEach(b => b.classList.toggle('on', b.dataset.f === filtro));
@@ -207,7 +207,7 @@
   }
 
   KM.clara = {
-    trabalhar, resumo, verificar, ativarNotificacoes, notificarSistema,
+    trabalhar, resumo, verificar, ativarNotificacoes, notificarSistema, abrir, render,
     iniciar() {
       $('#formTarefa').addEventListener('submit', adicionar);
       $('#dlgPrancheta').addEventListener('close', fechou);
