@@ -378,6 +378,7 @@ dialog.ag-dlg { max-width: 640px; } .ag-form { display: grid; grid-template-colu
 .i2-at-ic { width: 46px; height: 46px; border-radius: 14px; background: #fff; display: grid; place-items: center; font-size: 22px; box-shadow: 0 4px 10px -4px rgba(17,26,25,.2); }
 .i2-at-t b { display: block; color: #176B37; font-size: 15px; font-weight: 800; } .i2-at-t small { display: block; color: #7f9a8c; font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .i2-at-t small.alerta { color: #d9480f; }
 .i2-at > i { font-style: normal; color: #28BE52; font-size: 24px; font-weight: 900; }
+.i2-at.c-criar { background: #FFF9DB; } .i2-at.c-criar:hover { background: #FFF3BF; }
 .i2-at.c-escritorio { background: #1E8A45; } .i2-at.c-escritorio b, .i2-at.c-escritorio > i { color: #fff; } .i2-at.c-escritorio small { color: #d7f5df; } .i2-at.c-escritorio:hover { background: #22A24A; }
 .i2-rodape { margin: 18px 24px 0; text-align: center; color: #7f9a8c; font-size: 12px; font-weight: 700; } .i2-rodape b { color: #28BE52; }
 @media (max-width: 1260px) { .i2-palco { grid-template-columns: 400px 380px; } .i2-atalhos { grid-column: 1 / -1; } .i2-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); } }

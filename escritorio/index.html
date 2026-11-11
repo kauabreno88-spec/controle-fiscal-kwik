@@ -1204,6 +1204,30 @@ body.fazenda-aberta #dock, body.fazenda-aberta .topo, body.fazenda-aberta nav.ab
 .faz-item { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 6px; align-items: center; background: #fff; border-radius: 12px; padding: 7px 9px; margin-bottom: 5px; border: 1px solid #f1e3c8; }
 .faz-item small { grid-column: 1; color: var(--cinza); font-size: 11.5px; } .faz-item span { font-weight: 800; } .faz-item em { color: #2b8a3e; font-weight: 800; font-style: normal; }
 @media (max-width: 700px) { .faz-topo > b { display: none; } .faz-energia { width: 70px; } .faz-palco canvas { width: 100%; } .faz-dica { font-size: 10.5px; } }
+/* Criar (Kauã) */
+dialog.cr-dlg { max-width: 920px; }
+.cr-passo { margin: 0 0 8px; font-weight: 700; } .cr-passo b { color: var(--verde-esc); }
+.cr-formatos { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
+.cr-fmt { border: 2px solid var(--linha); background: #fff; border-radius: 16px; padding: 10px 8px; display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; }
+.cr-fmt .ic { font-size: 24px; } .cr-fmt b { font-size: 14px; } .cr-fmt small { color: var(--cinza); font-size: 11px; font-weight: 600; text-align: center; }
+.cr-fmt:hover, .cr-fmt.on { border-color: var(--verde); background: #f1faf3; } .cr-fmt.on { box-shadow: 0 0 0 3px rgba(40,190,82,.2); }
+#crDesc { width: 100%; border: 2px solid var(--linha); border-radius: 14px; padding: 12px; font: inherit; font-size: 15px; resize: vertical; }
+#crDesc:focus { outline: none; border-color: var(--verde); }
+.cr-acoes { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin: 10px 0; } .cr-ia { font-weight: 700; font-size: 13px; color: var(--cinza); display: inline-flex; gap: 6px; align-items: center; }
+.cr-status { min-height: 18px; margin: 4px 0; font-weight: 700; color: var(--verde-esc); font-size: 13.5px; }
+.cr-res-cab { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; flex-wrap: wrap; border-top: 2px solid var(--linha); padding-top: 12px; }
+.cr-res-cab small { color: var(--verde-esc); font-weight: 800; font-size: 12px; } .cr-res-cab h3 { margin: 2px 0 8px; font-size: 19px; font-weight: 900; }
+.cr-bts { display: flex; gap: 6px; flex-wrap: wrap; }
+.cr-aviso { background: #fff9db; border-radius: 12px; padding: 8px 12px; font-size: 13px; font-weight: 600; color: #6b5a00; }
+.cr-prev { margin-top: 8px; } .cr-frame { width: 100%; height: 60vh; border: 1px solid var(--linha); border-radius: 14px; background: #fff; }
+.cr-texto { white-space: pre-wrap; background: var(--nevoa); border-radius: 14px; padding: 14px; font: inherit; font-size: 14px; line-height: 1.55; max-height: 55vh; overflow: auto; }
+.cr-img { width: min(100%, 420px); height: auto; border-radius: 12px; box-shadow: 0 10px 30px rgba(17,26,25,.18); display: block; }
+.cr-hist { margin-top: 16px; } .cr-hist h4 { margin: 0 0 6px; font-size: 13px; letter-spacing: 1px; color: var(--verde-esc); }
+.cr-h { display: flex; justify-content: space-between; gap: 8px; width: 100%; text-align: left; border: 1px solid var(--linha); background: #fff; border-radius: 12px; padding: 8px 10px; margin-bottom: 5px; font-weight: 700; cursor: pointer; }
+.cr-h small { color: var(--cinza); font-weight: 600; flex: none; } .cr-como { margin-top: 12px; } .cr-como summary { cursor: pointer; font-weight: 800; color: var(--cinza); }
+.config-atalhos .at-criar { border-color: var(--verde); background: #f1faf3; grid-column: 1 / -1; font-size: 16px; }
+.setor-bt.criar .ic { background: #fff9db; }
+@media (max-width: 700px) { .cr-formatos { grid-template-columns: repeat(2, minmax(0, 1fr)); } .cr-frame { height: 50vh; } }
 </style>
 <link rel="stylesheet" href="css/apps.css?v=18">
 </head>
@@ -1319,6 +1343,7 @@ body.fazenda-aberta #dock, body.fazenda-aberta .topo, body.fazenda-aberta nav.ab
           <button class="bt setor-bt folha" id="btFolha"><span class="ic">👥</span><span><b>Folha</b><small>Funcionários e fechamento</small></span></button>
           <button class="bt setor-bt rh" id="btRH"><span class="ic">🤝</span><span><b>RH</b><small>Contratar para os setores</small></span></button>
           <button class="bt setor-bt tarefas" id="btTarefasAtalho"><span class="ic">📋</span><span><b>Tarefas</b><small>Avaliar as entregas</small></span></button>
+          <button class="bt setor-bt criar" id="btCriar"><span class="ic">✨</span><span><b>Criar</b><small>Qualquer coisa da KWIK</small></span></button>
           <button class="bt setor-bt ebook" id="btEbook"><span class="ic">📘</span><span><b>E-book</b><small>Vendas e compradores</small></span></button>
           <button class="bt setor-bt fazenda" id="btFazenda"><span class="ic">🌾</span><span><b>Fazendinha</b><small>Mini jogo, salva sozinho</small></span></button>
           <button class="bt setor-bt apres" id="btApresentacao"><span class="ic">📊</span><span><b>Apresentação</b><small>Slides e propostas KWIK</small></span></button>
@@ -1464,6 +1489,7 @@ body.fazenda-aberta #dock, body.fazenda-aberta .topo, body.fazenda-aberta nav.ab
         <div class="card pers" style="margin-top:18px">
           <h2>🧭 Atalhos</h2>
           <div class="config-atalhos">
+            <button id="atCriar" class="at-criar">✨ Criar com o Kauã<small>Texto, vídeo, imagem, Excel, PDF, Word, HTML ou Numbers</small></button>
             <button id="atAgenda">🗓️ Agenda de reuniões<small>Marcar e ver as reuniões</small></button>
             <button id="atRespostas">📊 Respostas da pesquisa<small>Notas, comentários e média</small></button>
             <button id="atNotif">🔔 Ativar notificações<small>Prazos, reuniões e respostas</small></button>
@@ -1572,6 +1598,7 @@ body.fazenda-aberta #dock, body.fazenda-aberta .topo, body.fazenda-aberta nav.ab
 <script src="js/ipog.js?v=18"></script>
 <script src="js/ebook.js?v=18"></script>
 <script src="js/fazenda.js?v=18"></script>
+<script src="js/criar.js?v=18"></script>
 <script src="js/apresentacao.js?v=18"></script>
 <script src="js/inicio.js?v=18"></script>
 <script src="js/tarefas.js?v=18"></script>

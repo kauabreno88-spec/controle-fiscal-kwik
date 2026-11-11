@@ -445,6 +445,7 @@
       el('h4', {}, 'AGORA'), el('div', { class: 'ficha-agora', id: 'fichaAgora' }),
       el('div', { class: 'ficha-bts' },
         el('button', { class: 'bt prim', onclick: () => { trabalhar(); } }, rotuloTrabalho(f)),
+        f.id === 'f1' && KM.criar ? el('button', { class: 'bt ouro', title: 'Criar texto, vídeo, imagem, Excel, PDF, Word, HTML ou Numbers no estilo da KWIK', onclick: () => KM.criar.abrir() }, '✨ Criar') : null,
         KM.rh && setor && KM.rh.SETOR[setor] ? el('button', { class: 'bt', onclick: () => KM.rh.trabalhar(f) }, f.contratado ? '📋 Dar tarefa' : '📋 Delegar tarefa') : null),
       el('h4', {}, 'ÚLTIMAS AÇÕES'), el('ul', { class: 'ficha-log', id: 'fichaLog' }));
     desenharAvatar(cv, { boca: 'sorriso', bracos: 'aceno' }, 0, f.id);
@@ -1057,6 +1058,7 @@
         equipe.length ? el('div', {}, el('h4', { class: 'perfil-h' }, `Equipe do setor (${equipe.length})`), el('div', { class: 'perfil-eq' }, equipe.map(x => { const c = el('canvas', { width: 30, height: 46 }); desenharAvatar(c, { boca: 'sorriso' }, 0, x.id); return el('div', {}, c, el('b', {}, x.nome.split(' ')[0]), el('small', {}, (x.cargo || '').replace(/^Assistente (de |do |da )?/, ''))); }))) : null,
         el('div', { class: 'ficha-bts' },
           el('button', { class: 'bt prim', onclick: () => { d.close(); irPara('escritorio'); selecionar(f.id); trabalhar(); } }, rotuloTrabalho(f)),
+          f.id === 'f1' && KM.criar ? el('button', { class: 'bt ouro', onclick: () => { d.close(); KM.criar.abrir(); } }, '✨ Criar') : null,
           el('button', { class: 'bt', onclick: () => { d.close(); irPara('escritorio'); selecionar(f.id); } }, '📍 Ver no escritório'))));
     d.showModal(); anima();
   }
@@ -1551,6 +1553,8 @@
     KM.limpeza.iniciar(); KM.refeitorio.iniciar(); KM.reuniao.iniciar(); KM.pesquisa.iniciar(); KM.execucao.iniciar();
     KM.setores.iniciar(); KM.clientesFora.iniciar(); KM.rh.iniciar(); if (KM.ipog) KM.ipog.iniciar(); if (KM.ebook && KM.ebook.iniciar) KM.ebook.iniciar(); if (KM.fazenda) KM.fazenda.iniciar();
     if (KM.inicio) KM.inicio.iniciar();
+    const btCr = document.getElementById('btCriar'); if (btCr) btCr.addEventListener('click', () => { ativo(); KM.criar.abrir(); });
+    const atCr = document.getElementById('atCriar'); if (atCr) atCr.addEventListener('click', () => { ativo(); KM.criar.abrir(); });
     const btEb = document.getElementById('btEbook'); if (btEb) btEb.addEventListener('click', () => { ativo(); KM.ebook.abrir(); });
     const btFz = document.getElementById('btFazenda'); if (btFz) btFz.addEventListener('click', () => { ativo(); KM.fazenda.abrir(); });
     $('#btFiscal').addEventListener('click', () => { ativo(); KM.setores.abrir('fiscal', 'check'); });

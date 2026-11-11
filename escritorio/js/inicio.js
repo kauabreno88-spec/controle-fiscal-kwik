@@ -123,6 +123,9 @@
       let r = null; try { r = id === 'escritorio' ? resumoEscritorio() : ap && ap.resumo ? ap.resumo() : null; } catch (e) { r = null; }
       g.append(el('button', { class: 'i2-at c-' + id, style: `--i:${i}`, onclick: () => (id === 'escritorio' ? irEscritorio() : abrirApp(id)) },
         el('span', { class: 'i2-at-ic' }, c.ic), el('span', { class: 'i2-at-t' }, el('b', {}, c.nome), el('small', { class: r && r.alerta ? 'alerta' : '' }, r && r.txt ? r.txt : c.desc)), el('i', {}, '›')));
+      // botão "✨ Criar" do Kauã logo depois do Escritório
+      if (id === 'escritorio' && KM.criar) g.append(el('button', { class: 'i2-at c-criar', style: `--i:${i}`, onclick: () => KM.criar.abrir() },
+        el('span', { class: 'i2-at-ic' }, '✨'), el('span', { class: 'i2-at-t' }, el('b', {}, 'Criar'), el('small', {}, 'Texto, vídeo, imagem, Excel, PDF, Word, HTML, Numbers')), el('i', {}, '›')));
     });
   }
   function renderCalendario() {
@@ -211,7 +214,7 @@
     const noEsc = fn => () => { if (atual || !$('#inicio').hidden) irEscritorio(); setTimeout(fn, 60); };
     return [
       ['Ir para', [
-        ['🏠', 'Início', abrirInicio], ['🏢', 'Escritório', () => irEscritorio()], ['✅', 'Tarefas', () => abrirApp('tarefas')], ['🧾', 'Fiscal', () => abrirApp('fiscal')],
+        ['🏠', 'Início', abrirInicio], ['🏢', 'Escritório', () => irEscritorio()], ['✨', 'Criar', () => { fecharMenu(); if (KM.criar) KM.criar.abrir(); }], ['✅', 'Tarefas', () => abrirApp('tarefas')], ['🧾', 'Fiscal', () => abrirApp('fiscal')],
         ['👥', 'Folha', () => abrirApp('folha')], ['🗓️', 'Reunião', () => abrirApp('reuniao')], ['🎯', 'Meta', () => abrirApp('meta')], ['📄', 'Relatório', () => abrirApp('relatorio')]]],
       ['No escritório', [
         ['▶️', 'Trabalhar', noEsc(clicar('btTrabalhar')), 'prim'], ['👤', 'Escolher', noEsc(clicar('btSelecionar'))], ['✨', 'Animar', () => mostrarAnimacoes()], ['🎮', 'Jogar', noEsc(clicar('btSalaJogos'))],
