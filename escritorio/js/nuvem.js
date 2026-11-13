@@ -47,6 +47,9 @@
     apagar(id) { return this.req('DELETE', '/api/relatorios/' + id); },
     salvarRelatorio(rel) { return this.req('POST', '/api/relatorios', rel); },
     async lerTexto() { return null; },
+    // cópias de segurança que o servidor do PC guarda sozinho (pasta dados/copias)
+    async copias() { return ((await this.req('GET', '/api/copias')).copias || []).filter(c => c.tipo === 'config').map(c => ({ id: c.nome, quando: c.quando, resumo: c.resumo, motivo: c.motivo, origem: 'pc' })); },
+    async copia(id) { return (await this.req('GET', '/api/copias/' + id)).dados; },
   };
 
   // ------------------------------------------------------------------ GitHub (celular)
@@ -131,6 +134,12 @@
       return { config, relatorios: relatorios || [] };
     },
     salvarConfig(cfg) { return this.gravarJson('nuvem/config.json', cfg, 'Personalização do escritório'); },
+    // o GitHub guarda TODAS as versões da configuração (histórico de commits)
+    async copias() {
+      const l = await this.req('GET', '/commits?path=nuvem/config.json&per_page=60&sha=' + encodeURIComponent(this.conf().branch));
+      return (l || []).map(c => ({ id: c.sha, quando: c.commit.author.date, motivo: c.commit.message, origem: 'github' }));
+    },
+    async copia(sha) { const t = await this.req('GET', '/contents/nuvem/config.json?ref=' + sha, null, true); return t == null ? null : JSON.parse(t); },
     async iniciar(ped) {
       await this.gravarJson('nuvem/pedidos/' + ped.id + '.json', ped, ped.tipo === 'financas' ? `Pedido: análise de investimentos (${ped.funcionario.nome})` : `Pedido: notícias contábeis (${ped.funcionario.nome})`);
       return ped.id;

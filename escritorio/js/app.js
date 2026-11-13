@@ -199,8 +199,10 @@
   let BK = null, online = false;
   let timerSalvar = null, salvando = Promise.resolve();
   function salvar(imediato) {
+    if (!cfg || !cfg.funcionarios || !cfg.funcionarios.length) return; // nunca grava uma configuração vazia por cima dos dados
     cfg.salvoEm = Date.now();
     localStorage.setItem('kwik-mini-config', JSON.stringify(cfg));
+    if (KM.copias) KM.copias.aoSalvar(cfg); // cópia de segurança neste aparelho (e aviso se alguma lista sumir)
     clearTimeout(timerSalvar);
     if (!online) return;
     timerSalvar = setTimeout(() => {
@@ -1332,6 +1334,7 @@
       cfg.economia.caixa = 0; for (const f of cfg.funcionarios) f.ganhos = 0; mudou(); animarCaixa();
     });
     $('#btRestaurar').addEventListener('click', () => {
+      if (KM.copias) KM.copias.guardar(cfg, 'antes de restaurar ao padrão', true);
       if (!confirm('Voltar o escritório, os funcionários e o caixa ao padrão? (Os relatórios e a prancheta continuam salvos.)')) return;
       const lista = cfg.checklist;
       cfg = clone(PADRAO); cfg.checklist = lista; sincronizarPessoas(); mudou(); montarCampos(); preencherCampos(); animarCaixa();
@@ -1599,12 +1602,23 @@
     cfg.funcionarios.forEach((f, i) => setTimeout(() => falar(f.id, APRESENTA[f.funcao] || 'Oi! 👋', 3400), 700 + i * 1500));
   }
 
+  // troca a configuração por outra (cópia de segurança restaurada) e redesenha tudo
+  function restaurarConfig(novo) {
+    cfg = mesclar(PADRAO, novo);
+    cfg.salvoEm = Date.now();
+    sincronizarPessoas(); mudou(true); montarCampos(); preencherCampos();
+    try { aplicarLayout(); } catch (e) { /* ok */ }
+    estado.caixa = cfg.economia.caixa; animarCaixa();
+    salvar(true);
+    if (KM.inicio && document.body.classList.contains('inicio-aberto')) KM.inicio.renderInicio();
+  }
+
   // API para os módulos (Clara, Maycon, jogos, filmes).
   KM.app = {
     el, toast, salvar, mudou, cfg: () => cfg, estado, func, pessoaDe, pagar, concluir, falar, irPara, brl, fmtData,
     BK: () => BK, online: () => online, abrirConexao, carregarRelatorios, abrirRelatorio, animarCaixa, atualizarBotoes, atualizarFuncionario,
     iniciarPainelTarefa, callbacksTarefa, esperarLivre, apagarRel: r => apagarRel(r), desenharAvatar, obterRelatorio, escolher, perguntar,
-    todosComemoram, renderClientes, aplicarLayout: () => aplicarLayout(), sincronizar: () => sincronizarPessoas(), registrar, atualizarFicha: () => renderFicha(), selecionar,
+    todosComemoram, renderClientes, restaurarConfig, aplicarLayout: () => aplicarLayout(), sincronizar: () => sincronizarPessoas(), registrar, atualizarFicha: () => renderFicha(), selecionar,
   };
   iniciar();
 })();

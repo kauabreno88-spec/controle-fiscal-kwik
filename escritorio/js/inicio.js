@@ -222,7 +222,7 @@
         ['📊', 'Apresentação', clicar('btApresentacao')], ['🌃', 'Clientes 3D', noEsc(clicar('btClientesAtalho'))], ['🤝', 'RH', clicar('btRH')], ['📘', 'E-book', clicar('btEbook')], ['🌾', 'Fazendinha', clicar('btFazenda')]]],
       ['Telas', [
         ['📋', 'Tarefas da equipe', () => irEscritorio('tarefas'), '', () => (KM.tarefasPendentes ? KM.tarefasPendentes() : 0)], ['📑', 'Relatórios', () => irEscritorio('relatorios')],
-        ['👥', 'Equipe', () => irEscritorio('equipe')], ['🎨', 'Visual', () => irEscritorio('personalizar')], ['⚙️', 'Config.', () => irEscritorio('config')]]],
+        ['👥', 'Equipe', () => irEscritorio('equipe')], ['🎨', 'Visual', () => irEscritorio('personalizar')], ['⚙️', 'Config.', () => irEscritorio('config')], ['🛟', 'Cópias', () => KM.copias && KM.copias.abrir()]]],
     ];
   }
   function renderMenu(sub) {
