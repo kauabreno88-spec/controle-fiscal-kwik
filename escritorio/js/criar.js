@@ -1,8 +1,9 @@
 /* KWIK Mini Escritório · botão "✨ Criar" do Kauã.
    1) Você escolhe o formato: texto, vídeo, imagem, Excel, PDF, Word, HTML ou Numbers.
    2) Descreve o que quer. 3) O Kauã entrega o arquivo no estilo da KWIK (verde #28BE52 e grafite #111A19).
-   O conteúdo é escrito pelo Claude (Action "Criar (Kauã)" no GitHub, com a chave ANTHROPIC_API_KEY nos segredos).
-   Sem a chave ou sem GitHub, usa o "modo rápido" (modelos prontos da KWIK montados com a sua descrição).
+   Sem IA escrevendo: o Kauã PESQUISA o assunto (Wikipédia em português, direto daqui; e, se marcado, o Gemini do
+   Google pesquisando na web pela Action "Criar (pesquisa)", com a chave GEMINI_API_KEY nos segredos), monta o
+   conteúdo nos modelos da KWIK com o que achou e lista as FONTES no fim de cada arquivo.
    Os arquivos são montados aqui mesmo: Word (.docx), Excel (.xlsx, que o Numbers do iPhone abre), PDF, HTML,
    imagem PNG (post 4:5), vídeo (o mesmo motor do Enzo, com narrador e música) e texto. */
 (function () {
@@ -31,23 +32,129 @@
   const whatsLink = () => { const n = String((cfg().marketing || {}).whats || '').replace(/\D/g, ''); return n ? `https://wa.me/${n.startsWith('55') ? n : '55' + n}` : ''; };
   const nomeArq = (s, ext) => `KWIK - ${semMarca(s || 'Criação').slice(0, 50).replace(/[\\/:*?"<>|]/g, '').trim()}.${ext}`;
 
-  // ------------------------------------------------------------------ IA (Claude, pela Action do GitHub)
-  async function pedirIA(formato, descricao, aviso) {
-    const g = gh(), id = 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-    const dono = (cfg().funcionarios.find(f => f.id === 'f1') || {}).nome || 'Kauã';
-    await g.gravarJson(`nuvem/criar/pedidos/${id}.json`, { id, formato, descricao, dono, whats: whats(), criadoEm: new Date().toISOString() }, `Criar: ${F(formato).nome}`);
-    aviso('📨 Pedido enviado. O Claude está escrevendo (leva de 1 a 3 minutos)…');
+  // ------------------------------------------------------------------ pesquisa (com fontes)
+  // 1) Wikipédia em português (direto daqui, sem chave). 2) Opcional: Gemini (Google) pesquisando na web, pela Action
+  // "Criar (pesquisa)" no GitHub, com a chave GEMINI_API_KEY nos segredos. O texto final é montado aqui, nos modelos
+  // da KWIK, com o que as pesquisas trouxeram, e sempre com a lista de fontes no fim.
+  const sem = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const PARADAS = new Set(('quero preciso faca faz crie cria monte gere fazer fazendo gostaria um uma uns umas o a os as de da do das dos e em no na nos nas por para pra pro com sem sobre que qual quais como quando onde ' +
+    'eu me meu minha voce seu sua nosso nossa isso isto esse essa este esta ele ela eles elas ao aos mais menos muito muita bem ja tambem so ou se nao sim ser ter tem estar esta sao foi ' +
+    'post posts video videos reels stories story imagem imagens planilha planilhas excel numbers pdf word docx documento documentos html pagina site texto mensagem legenda arquivo ' +
+    'explicando explicar mostrando falando divulgar divulgando chamando chamar instagram whatsapp kwik contabilidade cliente clientes nossos pessoas pessoa quem ai la aqui vai vamos ' +
+    'controle lista modelo simples-de pronto pronta bonito bonita curto curta rapido completo completa').split(' '));
+  // assuntos comuns da KWIK → título exato da Wikipédia (a busca acerta mais)
+  const ASSUNTOS = [[/\bmei\b|microempreendedor/, 'Microempreendedor individual'], [/simples nacional|\bdas\b/, 'Simples Nacional'], [/lucro presumido/, 'Lucro presumido'], [/lucro real/, 'Lucro real'],
+    [/imposto de renda|\birpf\b|declaracao de ir/, 'Imposto de Renda de Pessoa Física'], [/reforma tributaria|\bibs\b|\bcbs\b/, 'Reforma tributária do Brasil'], [/\bfgts\b|fundo de garantia/, 'Fundo de Garantia do Tempo de Serviço'],
+    [/esocial/, 'eSocial'], [/nota fiscal|\bnf-?e\b|nfs-?e/, 'Nota fiscal eletrônica'], [/\binss\b|previdencia/, 'Instituto Nacional do Seguro Social'], [/decimo terceiro|13o salario|13º/, 'Décimo terceiro salário'],
+    [/ferias/, 'Férias'], [/\bicms\b/, 'Imposto sobre Circulação de Mercadorias e Serviços'], [/\biss\b|imposto sobre servico/, 'Imposto sobre Serviços'], [/\bcnpj\b/, 'Cadastro Nacional da Pessoa Jurídica'],
+    [/abr\w* (uma |a )?empresa|abertura de empresa/, 'Empresa'], [/fluxo de caixa/, 'Fluxo de caixa'], [/\bbpo\b/, 'Terceirização de processos de negócios'], [/contrato de presta/, 'Contrato de prestação de serviços'],
+    [/certificado digital/, 'Certificado digital'], [/\bpix\b/, 'Pix (sistema de pagamento)'], [/planejamento tributario/, 'Planejamento tributário'], [/contabil|contador/, 'Contabilidade']];
+  const termos = desc => [...new Set(sem(desc).replace(/[^a-z0-9\s-]/g, ' ').split(/\s+/).filter(w => w.length > 2 && !PARADAS.has(w) && !/^\d+$/.test(w)))];
+  const wiki = q => fetch('https://pt.wikipedia.org/w/api.php?' + new URLSearchParams({ ...q, format: 'json', origin: '*' }), { cache: 'no-store' }).then(r => r.json());
+  const LIXO = /^(ver tamb[ée]m|refer[êe]ncias|liga[çc][õo]es externas|notas|bibliografia|leitura adicional|fontes|galeria|cronologia|portugal|angola|mo[çc]ambique|cabo verde|espanha|estados unidos|fran[çc]a|it[áa]lia|outros pa[íi]ses|no mundo|cr[íi]ticas|pol[êe]micas?)$/i;
+  const sentencas = t => String(t || '').replace(/\[\d+\]/g, '').replace(/\s+/g, ' ').split(/(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9"“])/).map(s => s.trim()).filter(s => s.length > 25);
+  async function pesquisarWiki(desc) {
+    const d = sem(desc), ts = termos(desc);
+    const fixo = (ASSUNTOS.find(([re]) => re.test(d)) || [])[1];
+    const buscas = [ts.slice(0, 4).join(' '), ts.slice(0, 2).join(' '), ts[0]].filter(Boolean);
+    let ids = [];
+    if (fixo) { const j = await wiki({ action: 'query', titles: fixo, redirects: 1 }); ids = Object.values(j.query.pages || {}).filter(p => !p.missing && p.pageid).map(p => p.pageid); }
+    for (const q of buscas) {
+      if (ids.length >= (fixo ? 1 : 2)) break; // com o assunto certo, fica só na página dele (a busca traz coisas soltas)
+      const j = await wiki({ action: 'query', list: 'search', srsearch: q, srlimit: 3, srnamespace: 0 });
+      // só aceita página que tenha a ver com o pedido (palavra do pedido no título; ou, na falta de tudo, várias no resumo)
+      const temNo = (t, n) => ts.filter(w => new RegExp('(^|[^a-z0-9])' + w.replace(/[^a-z0-9]/g, '')).test(sem(t).replace(/<[^>]+>/g, ''))).length >= n;
+      for (const r of (j.query && j.query.search) || []) if (!ids.includes(r.pageid) && ids.length < 2 && (temNo(r.title, fixo ? 2 : 1) || (!ids.length && temNo(r.snippet, 2)))) ids.push(r.pageid);
+    }
+    const paginas = [];
+    for (const id of ids) {
+      const j = await wiki({ action: 'query', prop: 'extracts|info', inprop: 'url', explaintext: 1, exsectionformat: 'wiki', pageids: id });
+      const p = Object.values(j.query.pages)[0]; if (!p || !p.extract) continue;
+      const partes = p.extract.split(/\n(==+)\s*(.+?)\s*\1\n/); // [intro, '==', título, texto, '==', título, texto…]
+      const secs = [];
+      for (let i = 1; i < partes.length; i += 3) if (partes[i] === '==' && !LIXO.test(partes[i + 1])) secs.push({ titulo: partes[i + 1], texto: partes[i + 2] || '' });
+      paginas.push({ titulo: p.title, url: p.fullurl, intro: partes[0], secs });
+    }
+    return paginas;
+  }
+  // encurta uma frase para caber num post/cena: corta numa vírgula (depois de 6 palavras) ou põe "…"
+  const encurtar = (s, n = 16) => {
+    const w = semMarca(s).replace(/\s*\([^)]*\)/g, '').split(/\s+/).filter(Boolean);
+    if (w.length <= n) return w.join(' ').replace(/[.;:]$/, '');
+    for (let i = Math.min(n, w.length) - 1; i >= 5; i--) if (/[,;:]$/.test(w[i])) return w.slice(0, i + 1).join(' ').replace(/[,;:]$/, '');
+    return w.slice(0, n).join(' ').replace(/[,;:]$/, '') + '…';
+  };
+  function blocosWiki(paginas) {
+    const secoes = [];
+    paginas.forEach((p, k) => {
+      const intro = sentencas(p.intro);
+      secoes.push({ titulo: k ? p.titulo : `O que é: ${p.titulo}`, texto: intro.slice(0, k ? 2 : 3).join(' '), itens: [], fonte: p.titulo });
+      if (k) return;
+      for (const s of p.secs.slice(0, 8)) {
+        if (secoes.length >= 5) break;
+        const linhas = s.texto.split('\n').map(l => l.trim()).filter(Boolean);
+        const lista = linhas.filter(l => l.length < 160 && !/[.!?]$/.test(l) || /;$/.test(l)).slice(0, 6).map(l => l.replace(/;$/, ''));
+        const txt = sentencas(linhas.filter(l => !lista.includes(l.replace(/;$/, ''))).join(' ')).slice(0, 2).join(' ');
+        if (!txt && lista.length < 2) continue;
+        secoes.push({ titulo: s.titulo, texto: txt, itens: lista.length >= 2 ? lista : [], fonte: p.titulo });
+      }
+    });
+    return secoes;
+  }
+  // Gemini (Google), pela Action do GitHub: devolve { resumo, secoes, fontes }
+  async function pedirGemini(formato, descricao, aviso) {
+    const g = gh(), id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    await g.gravarJson(`nuvem/criar/pedidos/${id}.json`, { id, formato, descricao, gemini: true, criadoEm: new Date().toISOString() }, `Criar: pesquisa (${F(formato).nome})`);
+    aviso('📨 Pedido enviado. O Gemini está pesquisando na internet (leva de 1 a 3 minutos)…');
     const ini = Date.now();
     while (Date.now() - ini < 5 * 60000) {
       await new Promise(r => setTimeout(r, 6000));
-      const s = Math.round((Date.now() - ini) / 1000);
-      aviso(`✍️ O Claude está escrevendo no estilo da KWIK… ${s}s`);
+      aviso(`🔎 O Gemini está pesquisando e juntando as fontes… ${Math.round((Date.now() - ini) / 1000)}s`);
       let r = null; try { r = await g.lerJson(`nuvem/criar/respostas/${id}.json`); } catch (e) { /* tenta de novo */ }
       if (!r) continue;
-      if (r.ok && r.conteudo) return r.conteudo;
+      if (r.ok && r.pesquisa) return r.pesquisa;
       const e = new Error(r.mensagem || 'falhou'); e.codigo = r.erro; throw e;
     }
     const e = new Error('demorou demais'); e.codigo = 'tempo'; throw e;
+  }
+  // junta a pesquisa ao modelo KWIK do formato escolhido
+  function aplicarPesquisa(c, formato, desc, wikiPags, gem) {
+    const hoje = new Date().toLocaleDateString('pt-BR');
+    const fontes = [];
+    const addFonte = (titulo, url, origem) => { if (url && !fontes.some(f => f.url === url)) fontes.push({ titulo, url, origem }); };
+    for (const f of (gem && gem.fontes) || []) addFonte(f.titulo || f.url, f.url, 'Gemini (Google)');
+    for (const p of wikiPags) addFonte(`Wikipédia: ${p.titulo}`, p.url, 'Wikipédia');
+    let blocos = [...((gem && gem.secoes) || []).map(s => ({ titulo: s.titulo, texto: s.texto || '', itens: s.itens || [], fonte: 'Gemini' })), ...blocosWiki(wikiPags)].filter(s => s.texto || s.itens.length);
+    if (!blocos.length) return c;
+    // sem resumo do Gemini, o resumo são as 2 primeiras frases da pesquisa (e saem do 1º bloco, para não repetir)
+    let resumoWiki = '';
+    if (!(gem && gem.resumo)) { const fr = sentencas(blocos[0].texto); resumoWiki = fr.slice(0, 2).join(' '); blocos[0] = { ...blocos[0], texto: fr.slice(2).join(' ') }; blocos = blocos.filter(s => s.texto || s.itens.length); }
+    const manterPedido = /propost|contrat|comunicad|aviso/.test(sem(desc));
+    let secoes = c.secoes.filter(s => !(s.titulo === 'Sobre o pedido' && !manterPedido) && s.titulo !== 'Pontos principais');
+    const ins = Math.min(manterPedido ? 1 : 0, secoes.length);
+    secoes.splice(ins, 0, ...blocos.map(({ fonte, ...s }) => s));
+    secoes.push({ titulo: 'Fontes', texto: `Pesquisa feita em ${hoje}. Confira as fontes antes de publicar: leis e valores mudam.`, itens: fontes.map(f => `${f.titulo} — ${f.url}`) });
+    const frasesP = [...sentencas((gem && gem.resumo) || resumoWiki), ...blocos.flatMap(b => sentencas(b.texto))];
+    const resumo = (gem && gem.resumo) || resumoWiki || c.resumo;
+    const pontos = frasesP.slice(0, 4).map(s => encurtar(s, 15));
+    const nomeF = f => f.origem === 'Wikipédia' ? f.titulo : f.titulo.replace(/^https?:\/\/(www\.)?/, '').split('/')[0];
+    const linhaFontes = 'Fontes: ' + fontes.slice(0, 4).map(nomeF).join(' · ');
+    const out = { ...c, secoes, resumo, fontes, pesquisa: true, rapido: false, pesquisadoEm: hoje, comGemini: !!(gem && gem.secoes && gem.secoes.length) };
+    out.subtitulo = encurtar(frasesP[0] || c.subtitulo, 16);
+    if (formato === 'excel' || formato === 'numbers') {
+      const tipoTabela = c.tabela && c.tabela.titulo;
+      if (!tipoTabela || tipoTabela === 'Checklist') out.tabela = { titulo: 'O que a pesquisa encontrou', colunas: ['Tópico', 'O que diz', 'Fonte'],
+        linhas: [['Resumo', resumo, fontes[0] ? fontes[0].titulo : ''], ...blocos.flatMap(b => (b.itens.length ? b.itens.map(i => [b.titulo, i]) : [[b.titulo, sentencas(b.texto).slice(0, 2).join(' ') || b.texto]]).map(l => [...l, b.fonte === 'Gemini' ? 'Gemini (Google)' : `Wikipédia: ${b.fonte}`])).slice(0, 39)], totais: false };
+    }
+    if (pontos.length) {
+      const comLista = blocos.find(b => b.itens.length >= 3);
+      out.cenas = [{ tipo: 'gancho', texto: c.cenas[0].texto }, ...pontos.slice(0, 3).map(t => ({ tipo: 'ponto', texto: t })),
+        comLista ? { tipo: 'lista', texto: encurtar(comLista.titulo, 4).toUpperCase(), itens: comLista.itens.slice(0, 3).map(i => encurtar(i, 6)) } : null, { tipo: 'cta', texto: 'Dúvida? Chama a *KWIK*.' }].filter(Boolean);
+    }
+    const w = whats();
+    out.legenda = `${semMarca(c.cenas[0].texto)}\n\n${pontos.slice(0, 3).map(p => '✅ ' + p).join('\n')}\n\nFale com a KWIK${w ? ' 👉 WhatsApp ' + w : ''}\n\n📚 ${linhaFontes}\n\n#contabilidade #kwikcontabilidade #empreendedorismo #saoluis`;
+    out.texto = [semMarca(c.titulo), '', resumo, '', ...secoes.flatMap(s => [s.titulo.toUpperCase(), s.texto, ...(s.itens || []).map(i => '• ' + i), '']).filter(v => v != null), `Fale com a KWIK${w ? ' 👉 WhatsApp ' + w : ''}`].join('\n').replace(/\n{3,}/g, '\n\n');
+    return out;
   }
 
   // ------------------------------------------------------------------ modo rápido (sem IA): modelos da KWIK
@@ -57,7 +164,8 @@
   const cap = s => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
   function gerarLocal(formato, desc) {
     const d = desc.trim(), l = d.toLowerCase(), fs = frases(d), w = whats();
-    let titulo = cap((fs[0] || 'Criação KWIK').replace(/^(eu\s+)?(quero|preciso de|faça|faz|crie|cria|monte|gere|fazer)\s+((uma|um|o|a)\s+)?/i, '')).replace(/[.!?]$/, '');
+    let titulo = cap((fs[0] || 'Criação KWIK').replace(/^(eu\s+)?(quero|preciso de|faça|faz|crie|cria|monte|gere|fazer)\s+((uma|um|o|a)\s+)?/i, '')
+      .replace(/^((um|uma)\s+)?(post|reels?|v[íi]deo|stories|story|imagem|planilha|pdf|documento|texto|p[áa]gina|material|arquivo|mensagem|apresenta[çc][ãa]o)(\s+(sobre|de|do|da|dos|das|explicando|com|para|falando de|mostrando))?\s+((o|a|os|as)\s+)?/i, '')).replace(/[.!?]$/, '');
     if (titulo.length > 70) titulo = titulo.slice(0, 67).replace(/\s+\S*$/, '') + '…';
     const tipo = /propost/.test(l) ? 'proposta' : /contrat/.test(l) ? 'contrato' : /or[çc]amento|honor[áa]ri|pre[çc]o/.test(l) ? 'precos' : /checklist|documentos|lista/.test(l) ? 'checklist'
       : /cliente/.test(l) ? 'clientes' : /despesa|gasto|fluxo de caixa|financeiro/.test(l) ? 'caixa' : /comunicad|aviso|informe/.test(l) ? 'comunicado' : 'geral';
@@ -168,7 +276,12 @@
       const r = 5 + linhas.length, ult = r - 1;
       rows.push(`<row r="${r}">${cols.map((t, i) => (i === 0 ? `<c r="A${r}" t="inlineStr" s="7"><is><t>Total</t></is></c>` : linhas.some(l => num(l[i]) != null) ? `<c r="${colL(i)}${r}" s="${ehDinheiro(t) ? 6 : 7}"><f>SUM(${colL(i)}5:${colL(i)}${ult})</f></c>` : `<c r="${colL(i)}${r}" s="7"/>`)).join('')}</row>`);
     }
-    const larg = cols.map((t, i) => Math.min(60, Math.max(12, String(t).length + 4, ...linhas.map(l => String(l[i] ?? '').length + 2))));
+    if (c.fontes && c.fontes.length) { // fontes da pesquisa embaixo da tabela
+      let r = 5 + linhas.length + (tb.totais && linhas.length ? 1 : 0) + 1;
+      rows.push(`<row r="${r}">${cel('A' + r, `Fontes da pesquisa (${c.pesquisadoEm || ''})`, 7)}</row>`);
+      for (const fo of c.fontes) { r++; rows.push(`<row r="${r}">${cel('A' + r, fo.titulo, 0)}${cel('B' + r, fo.url, 0)}</row>`); }
+    }
+    const larg = cols.map((t, i) => Math.min(60,Math.max(12, String(t).length + 4, ...linhas.map(l => String(l[i] ?? '').length + 2))));
     const sheet = `${REL}<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0" showGridLines="0"><pane ySplit="4" topLeftCell="A5" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${larg.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join('')}</cols><sheetData>${rows.join('')}</sheetData></worksheet>`;
     const estilos = `${REL}<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="&quot;R$&quot; #,##0.00"/></numFmts>
 <fonts count="4"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><b/><sz val="16"/><color rgb="FF1E8A45"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>
@@ -193,7 +306,8 @@
   function pdf(c) {
     const W = 595, H = 842, M = 50, med = document.createElement('canvas').getContext('2d');
     const larg = (s, t, b) => { med.font = `${b ? 'bold ' : ''}${t}px Helvetica, Arial, sans-serif`; return med.measureText(s).width; };
-    const quebrar = (s, t, b, mw) => { const out = []; for (const par of String(s).split('\n')) { let l = ''; for (const w of par.split(/\s+/).filter(Boolean)) { const tt = l ? l + ' ' + w : w; if (larg(tt, t, b) > mw && l) { out.push(l); l = w; } else l = tt; } out.push(l); } return out; };
+    const partir = (w, t, b, mw) => { if (larg(w, t, b) <= mw) return [w]; const out = []; let p = ''; for (const ch of w) { if (larg(p + ch, t, b) > mw && p) { out.push(p); p = ch; } else p += ch; } if (p) out.push(p); return out; }; // links compridos
+    const quebrar = (s, t, b, mw) => { const out = []; for (const par of String(s).split('\n')) { let l = ''; for (const w of par.split(/\s+/).filter(Boolean).flatMap(w0 => partir(w0, t, b, mw))) { const tt = l ? l + ' ' + w : w; if (larg(tt, t, b) > mw && l) { out.push(l); l = w; } else l = tt; } out.push(l); } return out; };
     const cor = h => [1, 3, 5].map(i => (parseInt(h.slice(i, i + 2), 16) / 255).toFixed(3)).join(' ');
     const paginas = []; let ops = null, y = 0;
     const escrever = (s, xx, yy, t, b, c0) => ops.push(`BT /${b ? 'F2' : 'F1'} ${t} Tf ${cor(c0 || GRAFITE)} rg ${xx.toFixed(1)} ${yy.toFixed(1)} Td (${pdfTxt(s)}) Tj ET`);
@@ -255,7 +369,7 @@
 
   // ------------------------------------------------------------------ HTML (página KWIK)
   function html(c) {
-    const destaque = t => x(t).replace(/\*([^*]+)\*/g, '<mark>$1</mark>'), wl = whatsLink();
+    const destaque = t => x(t).replace(/\*([^*]+)\*/g, '<mark>$1</mark>').replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>'), wl = whatsLink();
     const tb = c.tabela && c.tabela.colunas && c.tabela.colunas.length ? `<section class="card"><h2>${destaque(c.tabela.titulo || 'Tabela')}</h2><div class="tab"><table><thead><tr>${c.tabela.colunas.map(t => `<th>${x(t)}</th>`).join('')}</tr></thead><tbody>${(c.tabela.linhas || []).map(l => `<tr>${c.tabela.colunas.map((_, i) => `<td>${x(typeof l[i] === 'number' ? l[i].toLocaleString('pt-BR', { minimumFractionDigits: Number.isInteger(l[i]) ? 0 : 2 }) : l[i] ?? '')}</td>`).join('')}</tr>`).join('')}</tbody></table></div></section>` : '';
     return `<!DOCTYPE html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${x(semMarca(c.titulo))} · KWIK Contabilidade</title>
@@ -268,7 +382,7 @@ main{max-width:980px;margin:-36px auto 40px;padding:0 5vw;display:grid;gap:16px}
 h2{margin:0 0 10px;font-size:21px;color:#1E8A45}ul{padding-left:0;list-style:none}li{padding:6px 0 6px 28px;position:relative}li::before{content:"";position:absolute;left:4px;top:13px;width:10px;height:10px;border-radius:3px;background:#28BE52}
 .tab{overflow:auto}table{border-collapse:collapse;width:100%;font-size:14px}th{background:#111A19;color:#fff;text-align:left;padding:10px}td{padding:9px 10px;border-bottom:1px solid #dde5dc}tr:nth-child(even) td{background:#f6faf6}
 .cta{display:block;text-align:center;background:#28BE52;color:#111A19;font-weight:900;font-size:19px;padding:18px;border-radius:18px;text-decoration:none;box-shadow:0 6px 0 #1E8A45}
-footer{text-align:center;color:#6b7774;font-size:13px;padding:10px 0 40px}
+footer{text-align:center;color:#6b7774;font-size:13px;padding:10px 0 40px}main a:not(.cta){color:#1E8A45;word-break:break-all}
 </style></head><body>
 <header><div class="marca">KWIK<span>CONTABILIDADE</span></div>${c.tag ? `<div class="tag">${x(c.tag)}</div>` : ''}<h1>${destaque(c.titulo || '')}</h1>${c.subtitulo ? `<p class="sub">${x(c.subtitulo)}</p>` : ''}</header>
 <main>${c.resumo ? `<section class="card"><p style="font-size:18px;margin:0">${destaque(c.resumo)}</p></section>` : ''}
@@ -307,9 +421,13 @@ ${c.cta ? `<a class="cta" ${wl ? `href="${x(wl)}"` : ''} target="_blank" rel="no
   }
   function entregar(formato, c, box) {
     box.innerHTML = '';
-    const f = F(formato), cab = el('div', { class: 'cr-res-cab' }, el('div', {}, el('small', {}, `${f.ic} ${f.nome}${c.rapido ? ' · modo rápido (sem IA)' : ' · escrito pelo Claude'}`), el('h3', {}, semMarca(c.titulo || 'Criação KWIK'))));
+    const origem = c.pesquisa ? ` · com pesquisa${c.comGemini ? ' (Wikipédia + Gemini)' : ' (Wikipédia)'} e fontes` : c.rapido ? ' · modelos da KWIK' : '';
+    const f = F(formato), cab = el('div', { class: 'cr-res-cab' }, el('div', {}, el('small', {}, `${f.ic} ${f.nome}${origem}`), el('h3', {}, semMarca(c.titulo || 'Criação KWIK'))));
     const bts = el('div', { class: 'cr-bts' }); cab.append(bts); box.append(cab);
-    if (c.rapido) box.append(el('p', { class: 'cr-aviso' }, '⚡ Feito com os modelos prontos da KWIK. Para textos escritos sob medida pela IA, ligue o Claude (veja "Como ligar a IA" lá embaixo).'));
+    if (!c.pesquisa) box.append(el('p', { class: 'cr-aviso' }, '⚡ Não encontrei pesquisa sobre esse assunto, então montei com os modelos prontos da KWIK. Tente descrever com o nome do tema (ex.: "MEI", "Simples Nacional", "FGTS").'));
+    const fontesBox = !(c.fontes && c.fontes.length) ? null : (el('div', { class: 'cr-fontes' }, el('b', {}, `📚 Fontes da pesquisa (${c.pesquisadoEm || ''})`),
+      el('ol', {}, c.fontes.map(fo => el('li', {}, el('a', { href: fo.url, target: '_blank', rel: 'noopener' }, fo.titulo), el('small', {}, ' · ' + fo.origem)))),
+      el('small', {}, 'Confira as fontes antes de publicar: leis, prazos e valores mudam.')));
     const copiar = (t, msg) => el('button', { class: 'bt peq', onclick: async () => { try { await navigator.clipboard.writeText(t); A().toast(msg || '📋 Copiado'); } catch (e) { A().toast('Não consegui copiar', { erro: true }); } } }, '📋 Copiar');
     const prev = el('div', { class: 'cr-prev' }); box.append(prev);
     if (formato === 'texto') {
@@ -336,6 +454,7 @@ ${c.cta ? `<a class="cta" ${wl ? `href="${x(wl)}"` : ''} target="_blank" rel="no
       if (formato === 'numbers') box.append(el('p', { class: 'cr-aviso' }, '🍏 O formato .numbers só é gravado pelo próprio Numbers da Apple. O arquivo vem em .xlsx: no iPhone ou Mac, toque nele e escolha "Abrir no Numbers" — ele abre com as cores e as fórmulas.'));
       if (ext === 'xlsx' || ext === 'docx') prev.prepend(el('p', { class: 'cr-aviso' }, `A prévia mostra o conteúdo; o arquivo .${ext} sai com o mesmo texto${ext === 'xlsx' ? ', a tabela com cabeçalho grafite, R$ formatado e total com fórmula' : ', o cabeçalho KWIK e as cores da marca'}.`));
     }
+    if (fontesBox) box.append(fontesBox); // as fontes vêm depois do resultado
   }
 
   // ------------------------------------------------------------------ tela
@@ -353,25 +472,26 @@ ${c.cta ? `<a class="cta" ${wl ? `href="${x(wl)}"` : ''} target="_blank" rel="no
     box.append(el('p', { class: 'cr-passo' }, el('b', {}, '1.'), ' É um arquivo, um texto ou um vídeo? Escolha o formato:'));
     box.append(el('div', { class: 'cr-formatos' }, FORMATOS.map(f => el('button', { class: 'cr-fmt' + (formato === f.k ? ' on' : ''), onclick: () => { formato = f.k; render(); setTimeout(() => $('#crDesc') && $('#crDesc').focus(), 30); } }, el('span', { class: 'ic' }, f.ic), el('b', {}, f.nome), el('small', {}, f.desc)))));
     if (!formato) { box.append(historico()); return; }
-    const f = F(formato), ia = conectado() && (cfg().criar || {}).ia !== false;
+    const f = F(formato), gem = conectado() && (cfg().criar || {}).gemini === true;
     const ta = el('textarea', { id: 'crDesc', rows: 5, placeholder: f.ex });
-    const chk = el('input', { type: 'checkbox', checked: ia, disabled: !conectado() });
+    const chk = el('input', { type: 'checkbox', checked: gem, disabled: !conectado() });
     const status = el('p', { class: 'cr-status' }), res = el('div', { class: 'cr-res' });
     const bt = el('button', { class: 'bt prim', onclick: async () => {
       const desc = ta.value.trim(); if (!desc) return ta.focus();
-      const c0 = cfg(); c0.criar = c0.criar || {}; c0.criar.ia = chk.checked;
+      const c0 = cfg(); c0.criar = c0.criar || {}; c0.criar.gemini = chk.checked; delete c0.criar.ia;
       bt.disabled = true; res.innerHTML = '';
-      const p = A().estado.pessoas.f1; if (p) { A().falar('f1', `Deixa comigo! Criando ${f.nome.toLowerCase()} da KWIK ✨`, 3000); p.digitando = true; }
-      let c = null;
-      if (chk.checked && conectado()) {
-        try { c = await pedirIA(formato, desc, t => { status.textContent = t; }); }
-        catch (e) {
-          const msg = e.codigo === 'sem_chave' ? 'A IA ainda não está ligada (falta a chave do Claude no GitHub). Fiz no modo rápido.' : e.codigo === 'chave_invalida' ? 'A chave do Claude no GitHub está inválida. Fiz no modo rápido.'
-            : e.codigo === 'tempo' ? 'O GitHub demorou para responder. Fiz no modo rápido (a resposta da IA pode aparecer em "Criados recentemente" depois).' : `A IA não conseguiu (${e.message}). Fiz no modo rápido.`;
-          A().toast('⚠️ ' + msg, { ms: 8000 }); status.textContent = '⚠️ ' + msg;
-        }
-      }
-      if (!c) { c = gerarLocal(formato, desc); if (!status.textContent.startsWith('⚠️')) status.textContent = ''; } else status.textContent = '✅ Pronto!';
+      const p = A().estado.pessoas.f1; if (p) { A().falar('f1', `Deixa comigo! Vou pesquisar e criar ${f.nome.toLowerCase()} da KWIK 🔎`, 3000); p.digitando = true; }
+      status.textContent = '🔎 Pesquisando na Wikipédia…';
+      let avisos = [];
+      const pWiki = pesquisarWiki(desc).catch(e => { avisos.push(`a Wikipédia não respondeu (${e.message})`); return []; });
+      const pGem = chk.checked && conectado() ? pedirGemini(formato, desc, t => { status.textContent = t; }).catch(e => {
+        avisos.push(e.codigo === 'sem_chave' ? 'o Gemini ainda não está ligado (falta a chave GEMINI_API_KEY no GitHub)' : e.codigo === 'chave_invalida' ? 'a chave do Gemini no GitHub está inválida'
+          : e.codigo === 'tempo' ? 'o GitHub demorou para responder o Gemini' : `o Gemini não conseguiu (${e.message})`);
+        return null; }) : Promise.resolve(null);
+      const [wikiPags, gemRes] = await Promise.all([pWiki, pGem]);
+      const c = aplicarPesquisa(gerarLocal(formato, desc), formato, desc, wikiPags, gemRes);
+      status.textContent = avisos.length ? `⚠️ ${avisos.join('; ')}. Usei o que deu para pesquisar.` : c.pesquisa ? `✅ Pronto! ${c.fontes.length} fonte${c.fontes.length === 1 ? '' : 's'} no fim.` : '';
+      if (avisos.length) A().toast('⚠️ ' + avisos.join('; '), { ms: 8000 });
       if (p) p.digitando = false;
       salvarHist(formato, desc, c);
       entregar(formato, c, res); bt.disabled = false;
@@ -380,7 +500,8 @@ ${c.cta ? `<a class="cta" ${wl ? `href="${x(wl)}"` : ''} target="_blank" rel="no
       res.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } }, `✨ Criar ${f.nome}`);
     box.append(el('p', { class: 'cr-passo' }, el('b', {}, '2.'), ` Descreva o que você quer (${f.ic} ${f.nome}):`), ta,
-      el('div', { class: 'cr-acoes' }, bt, el('label', { class: 'cr-ia', title: conectado() ? 'Usa o Claude pela Action "Criar (Kauã)" no GitHub' : 'Conecte o app ao GitHub (🔗 no topo) para usar a IA' }, chk, ' Escrever com a IA (Claude)')),
+      el('div', { class: 'cr-acoes' }, bt, el('label', { class: 'cr-ia', title: conectado() ? 'O Gemini (Google) pesquisa na internet pela Action "Criar (pesquisa)" no GitHub e devolve as fontes' : 'Conecte o app ao GitHub (🔗 no topo) para pesquisar também com o Gemini' }, chk, ' Pesquisar também com o Gemini (Google)')),
+      el('p', { class: 'cr-dica' }, '🔎 O Kauã pesquisa o assunto (Wikipédia e, se marcado, Gemini na web), monta no estilo da KWIK e lista as fontes no fim. O conteúdo vem das fontes pesquisadas.'),
       status, res, historico());
   }
   function salvarHist(formato, descricao, conteudo) {
@@ -395,11 +516,12 @@ ${c.cta ? `<a class="cta" ${wl ? `href="${x(wl)}"` : ''} target="_blank" rel="no
       for (const h of lista) box.append(el('button', { class: 'cr-h', onclick: () => { formato = h.formato; render(); const res = $('#crCorpo .cr-res'); $('#crDesc').value = h.descricao; entregar(h.formato, h.conteudo, res); } }, `${F(h.formato).ic} ${semMarca(h.conteudo.titulo || h.descricao).slice(0, 70)}`, el('small', {}, new Date(h.quando).toLocaleString('pt-BR').slice(0, 16))));
     }
     const repo = conectado() ? gh().conf().repo : 'kauabreno88-spec/KWIK-MINI-ESCRITORIO';
-    box.append(el('details', { class: 'cr-como' }, el('summary', {}, '🔑 Como ligar a IA (Claude)'), el('div', { class: 'passos', html: `<ol>
-      <li>Crie uma chave em <a href="https://platform.claude.com/settings/keys" target="_blank" rel="noopener">platform.claude.com → API Keys</a> (precisa de créditos na conta da Anthropic).</li>
-      <li>No GitHub, abra <a href="https://github.com/${repo}/settings/secrets/actions" target="_blank" rel="noopener">Settings → Secrets and variables → Actions</a> e crie o segredo <b>ANTHROPIC_API_KEY</b> com essa chave.</li>
-      <li>Pronto: cada pedido roda a Action <a href="https://github.com/${repo}/actions/workflows/criar.yml" target="_blank" rel="noopener">"Criar (Kauã)"</a> e a resposta volta para cá em 1 a 3 minutos.</li></ol>
-      <small>A chave fica só no GitHub (o app não vê). Usa o modelo Claude Opus 5.5; se ele recusar algum pedido, a própria API tenta outro modelo. Cada criação gasta alguns centavos de dólar da sua conta da Anthropic.</small>` })));
+    box.append(el('details', { class: 'cr-como' }, el('summary', {}, '🔑 Como ligar a pesquisa com o Gemini (Google)'), el('div', { class: 'passos', html: `<ol>
+      <li>Sem fazer nada, o Kauã já pesquisa na Wikipédia e cita as fontes.</li>
+      <li>Para pesquisar também na web com o Gemini: crie uma chave em <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio → Get API key</a>.</li>
+      <li>No GitHub, abra <a href="https://github.com/${repo}/settings/secrets/actions" target="_blank" rel="noopener">Settings → Secrets and variables → Actions</a> e crie o segredo <b>GEMINI_API_KEY</b> com essa chave.</li>
+      <li>Marque "Pesquisar também com o Gemini". Cada pedido roda a Action <a href="https://github.com/${repo}/actions/workflows/criar.yml" target="_blank" rel="noopener">"Criar (pesquisa)"</a> e volta em 1 a 3 minutos, com os links das páginas que o Gemini usou.</li></ol>
+      <small>A chave fica só no GitHub (o app não vê). A API do Gemini tem uso gratuito com limite; acima dele, o Google cobra na conta dele.</small>` })));
     return box;
   }
   function iniciar() {}

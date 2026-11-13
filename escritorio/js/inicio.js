@@ -10,7 +10,7 @@
   const $ = s => document.querySelector(s);
   const el = (...a) => A().el(...a);
   const apps = {};
-  const ORDEM = ['escritorio', 'tarefas', 'fiscal', 'folha', 'reuniao', 'meta', 'relatorio'];
+  const ORDEM = ['escritorio', 'tarefas', 'fiscalfolha', 'reuniao', 'meta', 'relatorio']; // Fiscal e Folha juntos numa tela só
   let atual = null, raf = 0;
 
   function registrar(id, def) { apps[id] = def; }
@@ -50,6 +50,7 @@
     tarefas: { ic: '✅', nome: 'Tarefas', desc: 'Suas tarefas, listas e prazos' },
     fiscal: { ic: '🧾', nome: 'Fiscal', desc: 'Clientes, guias, checklist e anexos' },
     folha: { ic: '👥', nome: 'Folha', desc: 'Clientes, funcionários e fechamento' },
+    fiscalfolha: { ic: '🧾', nome: 'Fiscal e Folha', desc: 'Painel, clientes e guias do mês' },
     reuniao: { ic: '🗓️', nome: 'Reunião', desc: 'Calendário e avisos' },
     meta: { ic: '🎯', nome: 'Meta', desc: 'Painel dos clientes e crescimento' },
     relatorio: { ic: '📄', nome: 'Gerar relatório', desc: 'Cole a planilha e receba HTML e PDF' },
@@ -214,8 +215,8 @@
     const noEsc = fn => () => { if (atual || !$('#inicio').hidden) irEscritorio(); setTimeout(fn, 60); };
     return [
       ['Ir para', [
-        ['🏠', 'Início', abrirInicio], ['🏢', 'Escritório', () => irEscritorio()], ['✨', 'Criar', () => { fecharMenu(); if (KM.criar) KM.criar.abrir(); }], ['✅', 'Tarefas', () => abrirApp('tarefas')], ['🧾', 'Fiscal', () => abrirApp('fiscal')],
-        ['👥', 'Folha', () => abrirApp('folha')], ['🗓️', 'Reunião', () => abrirApp('reuniao')], ['🎯', 'Meta', () => abrirApp('meta')], ['📄', 'Relatório', () => abrirApp('relatorio')]]],
+        ['🏠', 'Início', abrirInicio], ['🏢', 'Escritório', () => irEscritorio()], ['✨', 'Criar', () => { fecharMenu(); if (KM.criar) KM.criar.abrir(); }], ['✅', 'Tarefas', () => abrirApp('tarefas')], ['🧾', 'Fiscal e Folha', () => abrirApp('fiscalfolha')],
+        ['🗓️', 'Reunião', () => abrirApp('reuniao')], ['🎯', 'Meta', () => abrirApp('meta')], ['📄', 'Relatório', () => abrirApp('relatorio')]]],
       ['No escritório', [
         ['▶️', 'Trabalhar', noEsc(clicar('btTrabalhar')), 'prim'], ['👤', 'Escolher', noEsc(clicar('btSelecionar'))], ['✨', 'Animar', () => mostrarAnimacoes()], ['🎮', 'Jogar', noEsc(clicar('btSalaJogos'))],
         ['📊', 'Apresentação', clicar('btApresentacao')], ['🌃', 'Clientes 3D', noEsc(clicar('btClientesAtalho'))], ['🤝', 'RH', clicar('btRH')], ['📘', 'E-book', clicar('btEbook')], ['🌾', 'Fazendinha', clicar('btFazenda')]]],

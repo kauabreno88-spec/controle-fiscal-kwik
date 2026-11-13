@@ -389,3 +389,80 @@ dialog.ag-dlg { max-width: 640px; } .ag-form { display: grid; grid-template-colu
   .i2-lista { grid-template-columns: 1fr; } .i2-dia { width: 36px; height: 36px; font-size: 14px; } .i2-cal { padding: 20px 14px 0; }
   .i2-rodape-verde { border-radius: 0 0 36px 36px; padding: 96px 24px 26px; } .i2-cal-card { border-radius: 36px; }
 }
+
+/* ---------------------------------------------------------------- Fiscal e Folha (painel no estilo financeiro) */
+.appv-corpo.zf-corpo { padding: 0; background: #F4F7F6; }
+.zf { display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: 100%; }
+.zf-lado { background: #EEF4F1; border-right: 1px solid #E1E8E5; padding: 18px 12px 30px; display: flex; flex-direction: column; gap: 2px; position: sticky; top: 0; align-self: start; min-height: calc(100vh - 70px); }
+.zf-marca { display: flex; flex-direction: column; padding: 0 10px 14px; } .zf-marca b { font-size: 22px; font-weight: 900; color: #111A19; letter-spacing: .5px; } .zf-marca small { color: #1E8A45; font-weight: 800; font-size: 13px; }
+.zf-sec { color: #1E8A45; font-weight: 700; font-size: 12px; padding: 14px 10px 4px; }
+.zf-item { display: flex; align-items: center; gap: 10px; border: 0; background: transparent; padding: 9px 10px; border-radius: 10px; font: inherit; font-size: 14px; font-weight: 600; color: #2B3634; cursor: pointer; text-align: left; }
+.zf-item span { width: 22px; text-align: center; } .zf-item:hover { background: #E3EEE8; } .zf-item.on { background: #fff; color: #111A19; font-weight: 800; box-shadow: 0 2px 8px rgba(17,26,25,.06); }
+.zf-item em { margin-left: auto; font-style: normal; background: #EE8E6E; color: #fff; font-size: 11px; font-weight: 800; border-radius: 99px; padding: 1px 7px; } .zf-item em.am { background: #F5C451; color: #5c4400; }
+.zf-fontes { margin-top: auto; padding-top: 18px; display: grid; gap: 4px; } .zf-fonte { border: 0; background: transparent; text-align: left; font: inherit; font-size: 12px; font-weight: 700; color: #6B7472; padding: 4px 10px; cursor: pointer; } .zf-fonte.ok { cursor: default; }
+.zf-main { padding: 14px 22px 90px; min-width: 0; }
+.zf-topo { position: sticky; top: 0; z-index: 3; background: #F4F7F6; padding: 4px 0 12px; }
+.zf-busca { width: 100%; border: 1px solid #E1E8E5; background: #fff; border-radius: 10px; padding: 12px 16px; font: inherit; font-size: 14px; box-shadow: 0 1px 3px rgba(17,26,25,.04); }
+.zf-busca:focus { outline: none; border-color: #28BE52; }
+.zf-cab { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin: 6px 0 14px; } .zf-cab h2 { margin: 0; font-size: 22px; font-weight: 900; } .zf-cab small { color: #6B7472; font-weight: 600; }
+.zf-grade { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.zf-card { background: #fff; border-radius: 8px; padding: 18px 18px 16px; box-shadow: 0 1px 4px rgba(17,26,25,.06); display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; min-height: 250px; animation: iniSobe .35s both; }
+.zf-card h3 { margin: 0 0 6px; font-size: 13.5px; font-weight: 600; color: #2B3634; }
+.zf-num { font-size: 32px; font-weight: 300; letter-spacing: -.5px; color: #111A19; } .zf-num.mal { color: #c2410c; } .zf-num.m { font-size: 24px; font-weight: 500; }
+.zf-sub { color: #8C9997; font-size: 12.5px; font-weight: 500; margin: 0; }
+.zf-ilu { width: 120px; height: 80px; margin: 8px 0; }
+.zf-chip { margin-top: auto; font-size: 12px; font-weight: 600; color: #4B5654; } .zf-chip.mal { color: #c92a2a; } .zf-chip.bem { color: #1B9440; }
+.zf-graf { width: 100%; height: auto; max-width: 340px; } .zf-graf text { font-size: 10px; fill: #6B7472; font-family: inherit; }
+.zf-leg { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; font-size: 11.5px; font-weight: 600; color: #6B7472; } .zf-leg i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+.zf-anelbox svg { width: 96px; height: 96px; } .zf-anel text { font-size: 15px; font-weight: 800; fill: #111A19; font-family: inherit; }
+.zf-lista { width: 100%; display: grid; gap: 2px; text-align: left; }
+.zf-li { display: flex; justify-content: space-between; gap: 10px; padding: 8px 6px; border-bottom: 1px solid #F0F3F2; font: inherit; background: transparent; border-left: 0; border-right: 0; border-top: 0; width: 100%; text-align: left; }
+.zf-li:first-child { background: #EAF7EE; border-radius: 6px; } .zf-li.bt-li { cursor: pointer; } .zf-li.bt-li:hover { background: #F1FAF4; }
+.zf-li b { display: block; font-size: 13px; font-weight: 700; color: #111A19; } .zf-li small { display: block; font-size: 11.5px; color: #8C9997; font-weight: 600; }
+.zf-li.mal b { color: #c92a2a; } .zf-li.am .zf-dir b { color: #b7791f; } .zf-dir { text-align: right; flex: none; }
+.zf-con { margin: auto 0; } .zf-con p { color: #6B7472; font-size: 13px; }
+.zf-comp { display: flex; align-items: center; gap: 8px; background: #fff; border-radius: 12px; padding: 4px 6px; box-shadow: 0 1px 3px rgba(17,26,25,.06); } .zf-comp b { min-width: 160px; text-align: center; }
+.zf-prog { display: flex; align-items: center; gap: 6px 12px; margin-bottom: 12px; flex-wrap: wrap; } .zf-prog > div { flex: 1 1 200px;height: 8px; background: #E3EAE7; border-radius: 99px; overflow: hidden; } .zf-prog i { display: block; height: 100%; background: linear-gradient(90deg, #F5C451, #28BE52); } .zf-prog small { color: #4B5654; font-weight: 700; font-size: 12.5px; }
+.zf-zona { margin-bottom: 14px; padding: 16px 14px; }
+.zf-tab { background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(17,26,25,.06); overflow: hidden; }
+.zf-tr { display: grid; grid-template-columns: minmax(170px, 1.3fr) repeat(4, minmax(0, 1fr)); border-bottom: 1px solid #EEF1F0; }
+.zf-tr > div { padding: 10px; min-width: 0; } .zf-tr.ok { background: #FAFEFB; } .zf-tr.atual { box-shadow: inset 4px 0 0 #28BE52; }
+.zf-th { background: #111A19; color: #fff; font-size: 12.5px; font-weight: 700; } .zf-th > div { padding: 10px; }
+.zf-tcli { display: flex; flex-direction: column; gap: 2px; } .zf-tcli small { color: #8C9997; font-size: 11.5px; font-weight: 600; }
+.zf-clin { border: 0; background: transparent; padding: 0; font: inherit; text-align: left; cursor: pointer; } .zf-clin b { color: #111A19; } .zf-clin:hover b { color: #1E8A45; text-decoration: underline; }
+.zf-cel { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; border-left: 1px solid #F3F5F4; transition: .12s; }
+.zf-cel.alvo { background: #EAF7EE; outline: 2px dashed #28BE52; outline-offset: -4px; }
+.zf-g { display: flex; align-items: center; max-width: 100%; background: #EAF7EE; border-radius: 8px; }
+.zf-gnome { border: 0; background: transparent; font: inherit; font-size: 12px; font-weight: 700; color: #176B37; padding: 4px 6px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; text-align: left; }
+.zf-gx { border: 0; background: transparent; color: #8C9997; cursor: pointer; font-size: 15px; padding: 0 6px; } .zf-gx:hover { color: #c92a2a; }
+.zf-add { border: 1px dashed #C9D6D1; background: #fff; color: #4B5654; border-radius: 8px; padding: 4px 9px; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.zf-cel.falta .zf-add { border-color: #F0A35E; color: #b45309; background: #FFF8EF; } .zf-add:hover { border-color: #28BE52; color: #1E8A45; }
+.zf-cel.na .zf-add { opacity: .45; } .zf-cel.na:hover .zf-add { opacity: 1; }
+.zf-cst { color: #1B9440; font-size: 11px; font-weight: 700; }
+.zf-lanc { font-size: 11px; font-weight: 600; color: #6B7472; } .zf-lanc.bem { color: #1B9440; } .zf-lanc.mal { color: #c92a2a; }
+.zf-pend { background: #FFF9DB; border-radius: 12px; padding: 12px; margin-bottom: 14px; } .zf-pend h4 { margin: 0 0 8px; }
+.zf-pl { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding: 6px 0; border-top: 1px solid #F2E6B0; } .zf-pl b { flex: 1 1 200px; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zf-pl select { border: 1px solid #E1E5E4; border-radius: 8px; padding: 5px; font: inherit; font-size: 13px; }
+.zf-arq { background: #fff; border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(17,26,25,.05); } .zf-arq summary { cursor: pointer; display: flex; gap: 10px; align-items: baseline; } .zf-arq summary small { color: #8C9997; font-weight: 600; }
+.zf-setor { background: #fff; border-radius: 10px; padding: 12px; box-shadow: 0 1px 3px rgba(17,26,25,.05); }
+@media (max-width: 1100px) { .zf-grade { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) {
+  .zf { grid-template-columns: minmax(0, 1fr); }
+  .zf-lado { position: sticky; top: 0; z-index: 4; flex-direction: row; overflow-x: auto; min-height: 0; padding: 8px 10px; gap: 4px; border-right: 0; border-bottom: 1px solid #E1E8E5; }
+  .zf-marca, .zf-sec, .zf-fontes { display: none; } .zf-item { white-space: nowrap; flex: none; padding: 8px 10px; }
+  .zf-main { padding: 10px 12px 90px; } .zf-topo { top: 52px; }
+  .zf-grade { grid-template-columns: minmax(0, 1fr); } .zf-card { min-height: 0; }
+  .zf-th { display: none; } .zf-tr { grid-template-columns: 1fr 1fr; } .zf-tr > .zf-tcli { grid-column: 1 / -1; background: #F7FAF8; }
+  .zf-cel::before { content: attr(data-rot); font-size: 11px; font-weight: 800; color: #6B7472; } .zf-cel { border-left: 0; border-top: 1px solid #F3F5F4; }
+  .zf-comp b { min-width: 0; }
+}
+
+/* Criar: fontes da pesquisa */
+.cr-fontes { margin-top: 14px; background: #F1FAF4; border-left: 4px solid #28BE52; border-radius: 12px; padding: 12px 14px; font-size: 13.5px; }
+.cr-fontes ol { margin: 6px 0; padding-left: 20px; } .cr-fontes li { margin: 3px 0; word-break: break-word; } .cr-fontes a { color: #1E8A45; font-weight: 700; } .cr-fontes small { color: #6B7472; font-weight: 600; }
+.cr-dica { font-size: 12.5px; color: #6B7472; font-weight: 600; margin: 0 0 6px; }
+/* Dona Iva: pesquisar o serviço */
+.iva-pesq { margin: 8px 0 12px; } .iva-busca { width: 100%; border: 2px solid #E1E5E4; border-radius: 12px; padding: 10px 12px; font: inherit; font-size: 15px; } .iva-busca:focus { outline: none; border-color: #9B7BEA; }
+.iva-achados { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 6px; margin-top: 8px; }
+.iva-achado { text-align: left; border: 1px solid #E5DEFA; background: #FBF9FF; border-radius: 12px; padding: 8px 10px; cursor: pointer; font: inherit; display: flex; flex-direction: column; gap: 2px; }
+.iva-achado b { font-size: 13.5px; } .iva-achado small { color: #6B7472; font-size: 11.5px; font-weight: 600; } .iva-achado:hover, .iva-achado.on { border-color: #9B7BEA; background: #F3EEFF; box-shadow: 0 0 0 3px rgba(155,123,234,.18); }

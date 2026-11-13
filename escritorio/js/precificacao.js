@@ -194,20 +194,48 @@
       const etapa2 = el('div', { class: 'iva-entendi', hidden: true });
       const botao = el('button', { class: 'bt prim', type: 'button' }, '💜 Dona Iva, entenda o caso');
       const corpo = el('div', { class: 'dlg-corpo' },
-        el('p', { class: 'sub', style: 'margin-top:0' }, `Conte tudo para ${eu}: o serviço, quantos (declarações, funcionários, horas…) e a situação do cliente (desempregado, pouca condição, indicação, urgência, pendências…).`),
+        el('p', { class: 'sub', style: 'margin-top:0' }, `Conte tudo para ${eu}: o serviço, quantos (declarações, funcionários, horas…) e a situação do cliente (desempregado, pouca condição, indicação, urgência, pendências…). Se preferir, deixe em branco e toque no botão para pesquisar o serviço.`),
         ta, el('div', { style: 'margin-top:10px' }, botao), etapa2);
       d.append(el('div', { class: 'dlg-topo' }, el('h2', {}, `✍️ O que ${eu} vai precificar?`), el('button', { type: 'button', onclick: () => d.close() }, '×')), corpo);
       botao.addEventListener('click', () => {
-        if (!ta.value.trim()) return ta.focus();
-        const ent = entender(ta.value);
+        const ent = entender(ta.value); // sem texto também dá: aí é só pesquisar o serviço
         etapa2.hidden = false; etapa2.innerHTML = '';
         const selServ = el('select', {}, el('option', { value: '' }, '— escolha o serviço —'), Object.values(GRUPOS).map(g => el('optgroup', { label: g.nome }, g.itens.map(i => el('option', { value: i[0], selected: i[0] === ent.servico }, `${i[0]} (${i[1]})`)))));
         const qtd = el('input', { type: 'number', min: 1, max: 200, value: ent.qtd });
         const selSit = el('select', {}, Object.entries(SITUACOES).map(([k, s]) => el('option', { value: k, selected: k === ent.sit }, s.nome)));
         const chk = (k, txt) => el('label', { class: 'iva-chk' }, el('input', { type: 'checkbox', checked: !!ent[k], 'data-k': k }), txt);
+        // 🔎 pesquisar o serviço na tabela (nome, unidade, observação e os mesmos sinônimos que a Dona Iva entende)
+        const busca = el('input', { type: 'search', class: 'iva-busca', placeholder: '🔎 Pesquisar o serviço (ex.: alvará, rescisão, imposto de renda, BPO)', autocomplete: 'off' });
+        const achados = el('div', { class: 'iva-achados' });
+        const marcar = nome => { selServ.value = nome; achados.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.n === nome)); const u = sem((item(nome) || [])[1]); if (/funcionario/.test(u) && +qtd.value < 1) qtd.value = 1; };
+        const pesquisarServ = () => {
+          const q = sem(busca.value).replace(/[^a-z0-9\s]/g, ' ').trim(); achados.innerHTML = '';
+          if (q.length < 2) return;
+          const ws = q.split(/\s+/).filter(w => w.length > 1 && !['de', 'do', 'da', 'para', 'com', 'um', 'uma', 'o', 'a', 'e'].includes(w));
+          const viaRegra = (REGRAS.find(([re]) => re.test(q)) || [])[1];
+          const pontos = Object.values(GRUPOS).flatMap(g => g.itens.map(i => {
+            const alvo = sem([i[0], i[1], i[7], g.nome].join(' '));
+            let p = ws.filter(w => alvo.includes(w)).length * 2 + (sem(i[0]).includes(q) ? 3 : 0) + (i[0] === viaRegra ? 4 : 0);
+            return { i, g, p };
+          })).filter(x => x.p > 0).sort((a, b) => b.p - a.p).slice(0, 8);
+          if (!pontos.length) {
+            achados.append(el('p', { class: 'sub' }, 'Não achei esse serviço na minha tabela, meu bem. Escolha o mais parecido na lista abaixo ou veja quanto cobram por aí: '),
+              el('a', { class: 'bt peq', href: 'https://www.google.com/search?q=' + encodeURIComponent(`quanto custa ${busca.value} contador São Luís MA 2026`), target: '_blank', rel: 'noopener' }, '🌐 Pesquisar o preço na internet'));
+            return;
+          }
+          for (const { i, g } of pontos) {
+            const s = sugerir(i);
+            achados.append(el('button', { type: 'button', class: 'iva-achado' + (selServ.value === i[0] ? ' on' : ''), 'data-n': i[0], onclick: () => marcar(i[0]) },
+              el('b', {}, `${g.ic} ${i[0]}`), el('small', {}, [i[1], s.v != null ? `~${brl0(s.v)}` : null, i[7]].filter(Boolean).join(' · '))));
+          }
+          if (pontos.length === 1) marcar(pontos[0].i[0]);
+        };
+        busca.addEventListener('input', pesquisarServ);
+        busca.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); const b = achados.querySelector('button'); if (b) b.click(); } });
         etapa2.append(
           el('h3', {}, '💜 O que eu entendi, meu bem'),
-          el('p', { class: 'sub' }, ent.servico ? 'Confere se está certo; dá para mudar qualquer coisa antes de eu calcular.' : 'Não achei o serviço no texto: escolha o mais parecido.'),
+          el('p', { class: 'sub' }, ent.servico ? 'Confere se está certo; dá para mudar qualquer coisa antes de eu calcular.' : 'Não achei o serviço no texto: pesquise ou escolha o mais parecido.'),
+          el('div', { class: 'iva-pesq' }, busca, achados),
           el('div', { class: 'iva-grade' },
             el('label', {}, el('span', {}, 'Serviço'), selServ), el('label', {}, el('span', {}, 'Quantidade'), qtd), el('label', {}, el('span', {}, 'Situação do cliente'), selSit)),
           el('div', { class: 'iva-chks' }, chk('amigo', 'Indicação / família / cliente antigo'), chk('complexo', 'Caso trabalhoso (pendências, malha, atraso)'), chk('urgente', 'Urgente'), chk('idoso', 'Aposentado(a) / idoso(a)')),
@@ -216,6 +244,7 @@
             valor = { texto: ta.value.trim(), ent: { ...ent, servico: selServ.value, qtd: Math.max(1, parseInt(qtd.value, 10) || 1), sit: selSit.value, ...Object.fromEntries([...etapa2.querySelectorAll('[data-k]')].map(c => [c.dataset.k, c.checked])) } };
             d.close();
           } }, '🧮 Calcular o preço'));
+        if (!ent.servico) setTimeout(() => busca.focus(), 50);
       });
       d.onclose = () => res(valor);
       d.showModal(); setTimeout(() => ta.focus(), 60);
@@ -226,7 +255,7 @@
     if (p.trabalhando || U().semConexao()) return;
     const eu = f.nome.split(' ')[0];
     const opcoes = [{ v: 'tudo', ic: '📋', nome: 'Tabela completa', desc: 'Todos os serviços dos cartazes, com mercado de São Luís e sugestão' },
-      { v: 'pedido', ic: '✍️', nome: 'Descrever o que quero precificar', desc: 'Você conta o caso e a situação do cliente; ela entende e dá o preço' }];
+      { v: 'pedido', ic: '✍️', nome: 'Descrever ou pesquisar o serviço', desc: 'Você conta o caso (ou pesquisa o serviço na tabela) e a situação do cliente; ela dá o preço' }];
     const preset = presetTexto; presetTexto = null;
     const grupo = preset ? 'pedido' : await A().escolher(`🧮 O que ${eu} vai precificar?`, opcoes);
     if (!grupo) return;

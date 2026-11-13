@@ -194,7 +194,7 @@
   }
   KM.inicio.registrar('fiscal', criar('fiscal'));
   KM.inicio.registrar('folha', criar('folha'));
-  KM.anexos = { anexosDe, enviar, pegar, tirar };
+  KM.anexos = { anexosDe, enviar, pegar, tirar, tela: telaAnexos };
   // carrega os dados em segundo plano para os números da tela inicial
   setTimeout(() => { for (const k of ['fiscal', 'folha']) S().carregar(k).then(() => { if (!document.getElementById('inicio')?.hidden) KM.inicio.renderInicio(); }).catch(() => {}); }, 2500);
 })();
