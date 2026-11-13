@@ -386,7 +386,7 @@
     c.clientes.push({ nome: n.t, telefone: tel, valor, status: 'ativo', desde: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`, obsidian: n.c });
     A().salvar(true); toast('🎯 ' + n.t + ' entrou nos clientes do Meta');
   }
-  // pastas (até 4 níveis abaixo da pasta dos clientes) cujo nome lembra o cliente, ex.: Mensais/MORAESTRATAMENTOS
+  // pastas (até 4 níveis abaixo da pasta dos clientes) cujo nome lembra o cliente (ex.: a pasta mensal com o nome da empresa)
   const cachePastas = new Map();
   async function listarPasta(c) { if (!cachePastas.has(c)) cachePastas.set(c, api('GET', '/api/obsidian/pasta?' + q({ c })).catch(() => ({ itens: [] }))); return cachePastas.get(c); }
   async function pastasDoCliente(n) {
