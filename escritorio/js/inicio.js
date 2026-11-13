@@ -10,7 +10,7 @@
   const $ = s => document.querySelector(s);
   const el = (...a) => A().el(...a);
   const apps = {};
-  const ORDEM = ['escritorio', 'tarefas', 'fiscalfolha', 'reuniao', 'meta', 'relatorio']; // Fiscal e Folha juntos numa tela só
+  const ORDEM = ['escritorio', 'tarefas', 'infoclientes', 'fiscalfolha', 'reuniao', 'meta', 'relatorio', 'obsidian']; // Fiscal e Folha juntos numa tela só
   let atual = null, raf = 0;
 
   function registrar(id, def) { apps[id] = def; }
@@ -54,6 +54,8 @@
     reuniao: { ic: '🗓️', nome: 'Reunião', desc: 'Calendário e avisos' },
     meta: { ic: '🎯', nome: 'Meta', desc: 'Painel dos clientes e crescimento' },
     relatorio: { ic: '📄', nome: 'Gerar relatório', desc: 'Cole a planilha e receba HTML e PDF' },
+    infoclientes: { ic: '📇', nome: 'Informações de clientes', desc: 'Tudo do cliente, ligado ao seu Obsidian' },
+    obsidian: { ic: '📓', nome: 'Obsidian', desc: 'Suas notas, pastas, busca e tarefas' },
   };
   const DIAS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
   const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -216,7 +218,8 @@
     return [
       ['Ir para', [
         ['🏠', 'Início', abrirInicio], ['🏢', 'Escritório', () => irEscritorio()], ['✨', 'Criar', () => { fecharMenu(); if (KM.criar) KM.criar.abrir(); }], ['✅', 'Tarefas', () => abrirApp('tarefas')], ['🧾', 'Fiscal e Folha', () => abrirApp('fiscalfolha')],
-        ['🗓️', 'Reunião', () => abrirApp('reuniao')], ['🎯', 'Meta', () => abrirApp('meta')], ['📄', 'Relatório', () => abrirApp('relatorio')]]],
+        ['🗓️', 'Reunião', () => abrirApp('reuniao')], ['🎯', 'Meta', () => abrirApp('meta')], ['📄', 'Relatório', () => abrirApp('relatorio')],
+        ['📇', 'Info. clientes', () => abrirApp('infoclientes')], ['📓', 'Obsidian', () => abrirApp('obsidian')]]],
       ['No escritório', [
         ['▶️', 'Trabalhar', noEsc(clicar('btTrabalhar')), 'prim'], ['👤', 'Escolher', noEsc(clicar('btSelecionar'))], ['✨', 'Animar', () => mostrarAnimacoes()], ['🎮', 'Jogar', noEsc(clicar('btSalaJogos'))],
         ['📊', 'Apresentação', clicar('btApresentacao')], ['🌃', 'Clientes 3D', noEsc(clicar('btClientesAtalho'))], ['🤝', 'RH', clicar('btRH')], ['📘', 'E-book', clicar('btEbook')], ['🌾', 'Fazendinha', clicar('btFazenda')]]],
@@ -266,18 +269,25 @@
       if (!cv.isConnected) return;
       const k = Math.floor((performance.now() - t0) / 250);
       g.clearRect(0, 0, 30, 46);
-      g.drawImage(KM.sprite(KM.aparenciaDe(A().cfg(), f.id), { bracos: k % 8 < 4 ? 'aceno' : 'baixo', aceno: k % 2, boca: 'sorriso', piscar: k % 14 === 0 }), 0, 0);
-      setTimeout(desenhar, 250);
+      // a pose pode vir da Clara "viva" (clarapet.js): est._ap troca detalhes da aparência (sobrancelha brava, bochechas)
+      let est = box._est ? box._est(k) : { bracos: k % 8 < 4 ? 'aceno' : 'baixo', aceno: k % 2, boca: 'sorriso', piscar: k % 14 === 0 };
+      let ap = KM.aparenciaDe(A().cfg(), f.id);
+      if (est._ap) { ap = Object.assign({}, ap, est._ap); est = Object.assign({}, est); delete est._ap; }
+      g.save(); if (box._esp) { g.translate(30, 0); g.scale(-1, 1); }
+      g.drawImage(KM.sprite(ap, est), 0, 0); g.restore();
+      setTimeout(desenhar, box._ms || 250);
     };
     box = el('div', { id: 'claraMini', class: 'clara-mini entra' }, el('div', { class: 'clara-balao' }, texto), cv);
-    box.addEventListener('click', () => { const r = KM.tarefasApp && KM.tarefasApp.falaResumo ? KM.tarefasApp.falaResumo() : ''; if (r) falarClara(r); });
+    if (!KM.claraPet) box.addEventListener('click', () => { const r = KM.tarefasApp && KM.tarefasApp.falaResumo ? KM.tarefasApp.falaResumo() : ''; if (r) falarClara(r); });
     document.body.append(box); desenhar();
+    if (KM.claraPet) KM.claraPet.ligar(box); // toque, arrasto com física, irritação, birra e o beijo
     if (alvoCanto) setTimeout(() => { box.classList.remove('entra'); box.classList.add('canto'); setTimeout(() => { const b = box.querySelector('.clara-balao'); if (b) b.classList.add('some'); }, 2600); }, 1900);
     return box;
   }
   function falarClara(texto) {
     const box = $('#claraMini'); if (!box) return claraMini(texto);
     const b = box.querySelector('.clara-balao'); b.textContent = texto; b.classList.remove('some');
+    const pet = KM.claraPet && KM.claraPet.estado(); if (pet && pet.box === box) KM.claraPet.posBalao(box, pet.x);
     clearTimeout(falarClara._t); falarClara._t = setTimeout(() => b.classList.add('some'), 4200);
   }
 

@@ -644,6 +644,7 @@
     } else linhas.append(el('div', { class: 'rua-bloco' }, el('b', {}, '👥 Folha'), el('p', {}, 'Sem cadastro no KWIK Folha.'), el('button', { class: 'bt peq', onclick: () => S().abrir('folha', 'add') }, 'Abrir o setor de Folha')));
     if (c.valor) linhas.append(el('div', { class: 'rua-bloco' }, el('b', {}, '💰 Honorário'), el('p', {}, `${brl(c.valor)} por mês`)));
     box.append(linhas);
+    if (KM.obsidian) KM.obsidian.blocoNaFicha(c.nome, linhas); // nota do cliente no Obsidian (só no PC)
     // portais
     box.append(el('div', { class: 'rua-portais' }, el('b', {}, '🔐 Entrar nos portais com o certificado desta empresa'),
       el('div', { class: 'rua-links' }, PORTAIS.map(([t, u]) => el('a', { class: 'bt peq', href: u, target: '_blank', rel: 'noopener' }, t)),
