@@ -1,9 +1,9 @@
 /* KWIK Mini Escritório — deixa o app abrir sem internet.
    Arquivos do app: rede primeiro (pega atualizações), cache se estiver offline. A API do GitHub nunca passa pelo cache.
    O Three.js (visão diagonal em 3D) vem do jsDelivr numa versão fixa: fica guardado depois da primeira vez. */
-const CACHE = 'kwik-mini-v21';
+const CACHE = 'kwik-mini-v22';
 const APP = ['./', './index.html', './manifest.webmanifest', './js/cena.js', './js/festas.js', './js/cena3d.js', './js/boneco.js', './js/efeitos.js', './js/nuvem.js', './js/clara.js', './js/maycon.js', './js/filmes.js', './js/gatinhos.js', './js/jogos.js', './js/marketing.js', './js/enzo.js', './js/relacionamento.js', './js/rotinas.js',
-  './js/limpeza.js', './js/refeitorio.js', './js/reuniao.js', './js/meta.js', './js/pesquisa.js', './js/familia.js', './js/execucao.js', './js/financas.js', './js/precificacao.js', './js/obrigacoes.js', './js/setores.js', './js/clientes.js', './js/cidade3d.js', './js/recepcao.js', './js/rh.js', './js/ipog.js', './js/ebook.js', './js/fazenda.js', './js/criar.js', './js/apresentacao.js', './js/inicio.js', './js/tarefas.js', './js/clarapet.js', './js/obsidian.js', './js/clientesapp.js', './js/fiscalfolha.js', './js/agenda.js', './js/painelmeta.js', './js/relplanilha.js', './css/apps.css', './js/copias.js', './js/app.js', './pesquisa.html',
+  './js/limpeza.js', './js/refeitorio.js', './js/reuniao.js', './js/meta.js', './js/pesquisa.js', './js/familia.js', './js/execucao.js', './js/financas.js', './js/precificacao.js', './js/obrigacoes.js', './js/setores.js', './js/clientes.js', './js/cidade3d.js', './js/recepcao.js', './js/rh.js', './js/ipog.js', './js/ebook.js', './js/fazenda.js', './js/criar.js', './js/apresentacao.js', './js/inicio.js', './js/tarefas.js', './js/clarapet.js', './js/obsidian.js', './js/biblioteca-dados.js', './js/biblioteca.js', './css/biblioteca.css','./js/clientesapp.js', './js/fiscalfolha.js', './js/agenda.js', './js/painelmeta.js', './js/relplanilha.js', './css/apps.css', './js/copias.js', './js/app.js', './pesquisa.html',
   './assets/kwik-simbolo.svg', './assets/kwik-simbolo.png', './assets/icone-192.png', './assets/icone-512.png', './assets/apple-touch-icon.png',
   './assets/fontes/Montserrat-Medium.ttf', './assets/fontes/Montserrat-Bold.ttf', './assets/fontes/Montserrat-ExtraBold.ttf', './assets/fontes/Montserrat-Black.ttf'];
 

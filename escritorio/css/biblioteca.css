@@ -1,0 +1,97 @@
+/* KWIK Mini Escritório · 📚 Biblioteca (js/biblioteca.js) — estante escura, prateleiras com a pilha de livros e a capa em cima */
+.appv-corpo.bb-corpo { background: #1c2124; color: #e9eef0; padding: 0 0 100px; }
+.bb-barra { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #15191b; border-bottom: 1px solid #2c3337; }
+.bb-casa { border: 0; background: none; color: #e9eef0; font-size: 20px; cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 2px 4px; }
+.bb-casa span { font-size: 16px; color: #8d999e; }
+.bb-onde { flex: 1; text-align: center; font-weight: 700; font-size: 14px; color: #cfd8dc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+b.bb-onde { color: #fff; font-weight: 900; }
+.bb-busca { width: 190px; border: 1px solid #39434a; background: #232a2e; color: #fff; border-radius: 10px; padding: 7px 10px; font: inherit; font-size: 13px; }
+.bb-busca::placeholder { color: #7e8a90; }
+.bb-ordem { border: 0; background: none; color: #e9eef0; font-size: 20px; cursor: pointer; padding: 2px 6px; }
+.bb-aviso { margin: 10px 14px 0; padding: 8px 12px; border-radius: 10px; background: #3a3320; color: #ffe08a; font-size: 12.5px; font-weight: 600; }
+.bb-carregando { color: #9aa6ab; font-weight: 600; padding: 18px; }
+.bb-vazio { color: #9aa6ab; padding: 8px 18px; }
+.bb-link { border: 0; background: none; color: #5fe08a; font-weight: 800; cursor: pointer; font: inherit; }
+.bb-sec { margin: 26px 16px 10px; font-size: 15px; font-weight: 900; letter-spacing: .3px; color: #fff; }
+
+/* prateleiras */
+.bb-prats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 26px 18px; padding: 22px 16px 6px; }
+.bb-prat { border: 0; background: none; color: inherit; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; font: inherit; padding: 0; min-width: 0; }
+.bb-prat-arte { position: relative; width: 100%; aspect-ratio: 1 / 1.05; display: flex; align-items: flex-end; justify-content: center; padding-right: 22px; }
+.bb-prat-lado { position: absolute; right: 0; top: 0; bottom: 0; width: 20px; background: #3b4247; border-radius: 3px; color: #c9d1d5; font-size: 11px; font-weight: 700;
+  writing-mode: vertical-rl; transform: rotate(180deg); display: flex; align-items: center; justify-content: center; white-space: nowrap; }
+.bb-pilha { position: absolute; left: 6%; right: 30px; bottom: 0; height: 34%; }
+.bb-pilha i { position: absolute; left: 0; right: 0; height: 33%; border-radius: 3px 6px 6px 3px; box-shadow: inset -7px 0 0 #f2efe6, inset -8px 0 0 #b9b3a3; }
+.bb-pilha .l1 { bottom: 0; background: #c0362c; left: 4%; right: -2%; }
+.bb-pilha .l2 { bottom: 33%; background: #2d5f8f; left: -2%; right: 6%; }
+.bb-pilha .l3 { bottom: 66%; background: #c0362c; left: 6%; right: 2%; }
+.bb-prat-arte .bb-capa.bb-topo { position: relative; z-index: 1; width: 58%; margin-bottom: 30%; box-shadow: 0 8px 18px rgba(0,0,0,.55); transform: rotate(-2deg); transition: transform .2s; }
+.bb-prat:hover .bb-capa.bb-topo { transform: rotate(0) translateY(-4px) scale(1.04); }
+.bb-prat-nome { max-width: 100%; background: #4b7d92; color: #fff; border: 1px solid #6fa0b5; border-radius: 3px; padding: 3px 10px; font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bb-prat-media { color: #ffd34d; font-weight: 800; font-size: 12px; margin-top: -4px; }
+
+/* capa */
+.bb-capa { position: relative; width: 100%; aspect-ratio: 2 / 3; border-radius: 3px 6px 6px 3px; overflow: hidden; background: #2b3236; }
+.bb-capa img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.bb-capa.sem { display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 10px; text-align: center; background: linear-gradient(160deg, #2E8B45, #134d2a); color: #fff; }
+.bb-capa.sem b { font-size: 13px; line-height: 1.2; overflow-wrap: anywhere; } .bb-capa.sem small { font-size: 10.5px; opacity: .8; }
+.bb-capa.bb-topo.sem { padding: 6px; } .bb-capa.bb-topo.sem b { font-size: 11px; } .bb-capa.bb-topo.sem small { font-size: 9px; }
+
+/* livros */
+.bb-livros { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 22px 16px; padding: 16px; }
+.bb-livro { display: flex; flex-direction: column; align-items: center; text-align: center; min-width: 0; }
+.bb-livro-capa { position: relative; width: 100%; border: 0; padding: 0; background: none; cursor: pointer; border-radius: 3px 6px 6px 3px; box-shadow: 0 6px 16px rgba(0,0,0,.5); transition: transform .2s; }
+.bb-livro-capa:hover { transform: translateY(-4px); }
+.bb-selo { position: absolute; left: 6px; top: 6px; background: #28BE52; color: #0d1a14; font-style: normal; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 6px; text-transform: uppercase; }
+.bb-livro-t { margin-top: 9px; font-size: 13px; line-height: 1.25; color: #fff; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.bb-livro-a { font-size: 11px; color: #94a1a7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+
+/* estrelas */
+.bb-estrelas { display: flex; justify-content: center; gap: 1px; margin-top: 4px; }
+.bb-estrelas button { border: 0; background: none; cursor: pointer; padding: 1px; font-size: 19px; line-height: 1; color: #4a5358; transition: transform .1s, color .1s; }
+.bb-estrelas button.on { color: #ffc93b; text-shadow: 0 0 8px rgba(255,201,59,.35); }
+@media (hover: hover) { .bb-estrelas:hover button { color: #ffc93b; } .bb-estrelas button:hover ~ button { color: #4a5358; text-shadow: none; } }
+.bb-estrelas button:active { transform: scale(1.3); }
+.bb-estrelas.grande { justify-content: flex-start; margin: 10px 0 4px; } .bb-estrelas.grande button { font-size: 30px; }
+
+/* janelas */
+.bb-fundo { position: fixed; inset: 0; z-index: 90; background: rgba(5,8,9,.72); display: flex; align-items: center; justify-content: center; padding: 16px; animation: appEntra .2s ease-out; }
+.bb-janela { width: min(760px, 100%); max-height: calc(100vh - 32px); overflow: auto; background: #20272a; color: #e9eef0; border-radius: 16px; border: 1px solid #344047; box-shadow: 0 30px 80px rgba(0,0,0,.6); }
+.bb-janela > header { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #171c1e; border-bottom: 2px solid #28BE52; }
+.bb-janela > header b { flex: 1; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bb-x { border: 0; background: none; color: #fff; font-size: 26px; line-height: 1; cursor: pointer; }
+.bb-det { display: grid; grid-template-columns: 210px 1fr; gap: 20px; padding: 18px; }
+.bb-det-capa .bb-capa { box-shadow: 0 10px 26px rgba(0,0,0,.55); }
+.bb-det-info h2 { margin: 0; font-size: 22px; font-weight: 900; color: #fff; }
+.bb-det-autor { margin: 4px 0 0; color: #9fb0b6; font-weight: 700; }
+.bb-det-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; } .bb-det-tags span { background: #2e383d; border-radius: 8px; padding: 3px 8px; font-size: 12px; font-weight: 700; }
+.bb-det-info h4 { margin: 14px 0 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .6px; color: #5fe08a; }
+.bb-sobre p { margin: 0 0 10px; line-height: 1.55; font-size: 14px; color: #dce3e6; }
+.bb-det-acoes { display: flex; flex-wrap: wrap; gap: 8px; padding: 6px 0 4px; }
+.bb-janela > .bb-det-acoes { padding: 12px 16px 16px; }
+.bb-bt { border: 1px solid #3d4950; background: #2a3337; color: #fff; border-radius: 10px; padding: 9px 13px; font: inherit; font-weight: 800; font-size: 13px; cursor: pointer; text-decoration: none; }
+.bb-bt:hover { border-color: #28BE52; } .bb-bt.prim { background: #28BE52; border-color: #28BE52; color: #0d1a14; } .bb-bt.perigo:hover { border-color: #e5484d; color: #ff8f8f; }
+.bb-form { display: grid; gap: 8px; padding: 16px 16px 6px; }
+.bb-linha { display: flex; gap: 8px; padding: 0 16px 14px; } .bb-form .bb-linha { padding: 0; } .bb-linha > * { flex: 1; min-width: 0; } .bb-linha > .bb-bt { flex: none; }
+.bb-campo { width: 100%; border: 1px solid #3d4950; background: #171c1e; color: #fff; border-radius: 10px; padding: 10px 12px; font: inherit; font-size: 14px; }
+.bb-achados { display: grid; gap: 8px; padding: 6px 16px; }
+.bb-achado { display: flex; gap: 12px; align-items: flex-start; text-align: left; border: 2px solid #344047; background: #1a2023; color: inherit; border-radius: 12px; padding: 10px; cursor: pointer; font: inherit; }
+.bb-achado.on { border-color: #28BE52; background: #1b2a21; }
+.bb-achado img, .bb-achado-sem { width: 56px; aspect-ratio: 2 / 3; object-fit: cover; border-radius: 3px; flex: none; background: #2b3236; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+.bb-achado b { display: block; font-size: 14px; color: #fff; } .bb-achado small { display: block; color: #9fb0b6; font-size: 12px; margin-top: 2px; }
+.bb-achado p { margin: 6px 0 0; font-size: 12.5px; line-height: 1.45; color: #cdd6da; }
+.bb-edicoes { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 14px; padding: 16px; }
+.bb-edicao { position: relative; border: 2px solid transparent; background: none; color: #cfd8dc; cursor: pointer; padding: 4px; border-radius: 10px; font: inherit; display: flex; flex-direction: column; gap: 5px; }
+.bb-edicao:hover, .bb-edicao.atual { border-color: #28BE52; }
+.bb-edicao img { width: 100%; aspect-ratio: 2 / 3; object-fit: cover; border-radius: 3px; background: #2b3236; }
+.bb-edicao small { font-size: 11px; line-height: 1.3; }
+.bb-edicao em { position: absolute; top: 8px; left: 8px; background: #28BE52; color: #0d1a14; font-style: normal; font-weight: 900; font-size: 10px; padding: 1px 5px; border-radius: 5px; }
+
+@media (max-width: 760px) {
+  .bb-barra { flex-wrap: wrap; } .bb-busca { order: 9; width: 100%; }
+  .bb-prats { grid-template-columns: repeat(3, 1fr); gap: 20px 12px; padding: 16px 10px 4px; }
+  .bb-prat-nome { font-size: 11.5px; padding: 2px 6px; } .bb-prat-lado { width: 17px; font-size: 10px; } .bb-prat-arte { padding-right: 19px; }
+  .bb-livros { grid-template-columns: repeat(3, 1fr); gap: 18px 10px; padding: 12px 10px; }
+  .bb-estrelas button { font-size: 16px; padding: 0; }
+  .bb-det { grid-template-columns: 1fr; } .bb-det-capa { width: 150px; margin: 0 auto; }
+}
