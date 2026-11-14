@@ -18,7 +18,7 @@
 
   // ------------------------------------------------------------------ servidor
   // os dados vêm do cofre (pasta de clientes trancada com senha), não do Obsidian
-  const api = (met, url) => KM.cofre.api(met, url);
+  const api = (met, url, corpo) => KM.cofre.api(met, url, corpo);
   const q = o => Object.entries(o).map(([k, v]) => k + '=' + encodeURIComponent(v)).join('&');
   const urlArquivo = c => '#anexo-' + encodeURIComponent(c); // anexos ficam só no Obsidian do PC
 
@@ -175,7 +175,7 @@
     if (aberta && aberta.sujo) await salvarAberta();
     box.innerHTML = '<p class="ob-carrega">Abrindo a nota…</p>';
     let j; try { j = await api('GET', '/api/obsidian/nota?' + q({ c })); } catch (e) { box.innerHTML = ''; box.append(el('p', { class: 'ob-vazio' }, '❌ ' + e.message)); return; }
-    aberta = { c: j.c, t: j.t, texto: j.texto, m: j.m, gravavel: j.gravavel, sujo: false, box, editando: !!opc.editar, opc };
+    aberta = { c: j.c, t: j.t, texto: j.texto, m: j.m, gravavel: j.gravavel, app: j.app, sujo: false, box, editando: !!opc.editar, opc };
     pintarNota();
   }
   function pintarNota() {
@@ -188,7 +188,7 @@
         N.editando ? el('button', { class: 'bt peq prim', onclick: async () => { await salvarAberta(); N.editando = false; pintarNota(); } }, '✓ Concluir')
           : el('button', { class: 'bt peq', disabled: !N.gravavel, onclick: () => { N.editando = true; pintarNota(); } }, '✏️ Editar'),
         el('a', { class: 'bt peq', href: linkObsidian(N.c), title: 'Abrir esta nota no app do Obsidian' }, '📓 No Obsidian'))));
-    box.append(el('div', { class: 'ob-status', id: 'obStatus' }, N.gravavel ? `🔗 Ligada ao arquivo do Obsidian · alterada ${quandoTxt(N.m)}` : `🔒 Só consulta · da pasta de clientes, alterada ${quandoTxt(N.m)}`));
+    box.append(el('div', { class: 'ob-status', id: 'obStatus' }, N.gravavel ? `🔐 Trancado com a sua senha · alterado ${quandoTxt(N.m)}${N.app ? ' (no app)' : ''}` : `🔒 Só consulta · da pasta de clientes, alterada ${quandoTxt(N.m)}`));
     // propriedades
     const pk = Object.entries(props); const tags = (Array.isArray(props.tags) ? props.tags : props.tags ? [props.tags] : n.tags || []);
     if (pk.length || tags.length) {
@@ -200,14 +200,14 @@
     if (N.editando) {
       const ta = el('textarea', { class: 'ob-editor', spellcheck: 'true' }); ta.value = N.texto;
       ta.addEventListener('input', () => { N.texto = ta.value; N.sujo = true; status('✏️ Editando… salva sozinho'); clearTimeout(N._t); N._t = setTimeout(salvarAberta, 1500); });
-      box.append(ta, el('p', { class: 'ob-dica' }, 'Dica: é o mesmo texto do Obsidian (Markdown). O que estiver entre as linhas --- do topo são as propriedades.'));
+      box.append(ta, el('p', { class: 'ob-dica' }, 'Dica: é texto em Markdown, como no Obsidian. O que estiver entre as linhas --- do topo são as propriedades. Fica salvo no app, trancado; o arquivo do computador não muda.'));
       setTimeout(() => ta.focus(), 30);
       return;
     }
     // anotar rápido
     if (N.gravavel) {
       const inp = el('input', { type: 'text', class: 'ob-anotar-in', placeholder: N.opc.placeholder || 'Anotar algo nesta nota… (entra com a data de hoje)' });
-      const ir = async () => { const v = inp.value.trim(); if (!v) return; N.texto = inserirAnotacao(N.texto, v); N.sujo = true; inp.value = ''; await salvarAberta('anotação pelo Mini Escritório'); pintarNota(); toast('📝 Anotado no Obsidian'); };
+      const ir = async () => { const v = inp.value.trim(); if (!v) return; N.texto = inserirAnotacao(N.texto, v); N.sujo = true; inp.value = ''; await salvarAberta('anotação pelo Mini Escritório'); pintarNota(); toast('📝 Anotado (trancado)'); };
       inp.addEventListener('keydown', e => { if (e.key === 'Enter') ir(); });
       box.append(el('div', { class: 'ob-anotar' }, inp, el('button', { class: 'bt peq prim', onclick: ir }, '＋ Anotar')));
     }
@@ -235,7 +235,7 @@
     try {
       const r = await api('PUT', '/api/obsidian/nota', { c: N.c, texto: N.texto, base: N.m, motivo: motivo || 'edição pelo Mini Escritório', forcar: !!forcar });
       N.m = r.m; N.sujo = false; N.conflito = false; S.carregadoEm = 0;
-      status('✓ Salvo no Obsidian ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }), 'ok');
+      status('✓ Salvo (trancado) ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }), 'ok');
       return true;
     } catch (e) {
       if (e.status === 409 && e.dados && e.dados.texto != null) { conflito(e.dados); return false; }
@@ -248,7 +248,7 @@
     const N = aberta; if (!N || !N.box.isConnected) return;
     N.conflito = true; N.box.querySelectorAll('.ob-conflito').forEach(x => x.remove());
     const bar = el('div', { class: 'ob-conflito' },
-      el('b', {}, '⚠️ Esta nota foi alterada no Obsidian enquanto você mexia aqui.'),
+      el('b', {}, '⚠️ Esta nota foi alterada em outro aparelho enquanto você mexia aqui.'),
       el('p', {}, 'Escolha qual versão fica. A outra é guardada nas cópias (dados/copias-obsidian), nada se perde.'),
       el('div', {}, el('button', { class: 'bt peq', onclick: () => { N.texto = d.texto; N.m = d.m; N.sujo = false; N.conflito = false; pintarNota(); toast('Ficou a versão do Obsidian'); } }, '📓 Ficar com a do Obsidian'),
         el('button', { class: 'bt peq prim', onclick: async () => { if (await salvarAberta('versão do Mini Escritório escolhida no conflito', true)) pintarNota(); } }, '💾 Ficar com a minha')));
@@ -266,7 +266,10 @@
     acoes.innerHTML = '';
     corpo.innerHTML = '<p class="ob-carrega" style="padding:24px">🔐 Abrindo os dados dos clientes…</p>';
     if (!(await KM.cofre.tentarAuto())) { if (corpoApp === corpo) { corpo.innerHTML = ''; semPC(corpo, acoes); } return; }
-    acoes.append(el('button', { class: 'appv-bt', title: 'Esquecer a senha neste aparelho', onclick: () => { KM.cofre.trancar(); S.notas = []; S.assinatura = ''; toast('🔒 Clientes trancados neste aparelho'); abrirApp(corpo, acoes, visao); } }, '🔒 Trancar'));
+    acoes.append(el('button', { class: 'appv-bt', title: 'Esquecer a senha neste aparelho', onclick: () => { KM.cofre.trancar(); S.notas = []; S.assinatura = ''; toast('🔒 Clientes trancados neste aparelho'); abrirApp(corpo, acoes, visao); } }, '🔒 Trancar'),
+      el('button', { class: 'appv-bt prim', onclick: () => { visao = 'clientes'; render(); setTimeout(novoCliente, 30); } }, '＋ Cliente'));
+    await KM.cofre.recarregarEdicoes(); // anotações que chegaram de outro aparelho
+    if (KM.cofre.aviso()) toast('⚠️ ' + KM.cofre.aviso(), { erro: true });
     try { await carregar(true); } catch (e) { return semVault(corpo, e); }
     render();
     if (pendente) { const c = pendente; pendente = null; abrirCliente(c); }
@@ -275,7 +278,7 @@
   async function atualizar(forcar) {
     if (!corpoApp || !corpoApp.isConnected) return sairApp();
     let mudou = false; try { mudou = await carregar(true); } catch (e) { return; }
-    if (forcar) toast('🔄 Obsidian lido de novo');
+    if (forcar) toast('🔄 Clientes lidos de novo');
     if (aberta && aberta.box.isConnected) {
       const n = S.porC.get(aberta.c);
       if (n && n.m !== aberta.m && !aberta.sujo && !aberta.editando) { const opc = aberta.opc; await abrirNota(aberta.box, aberta.c, opc); toast('🔄 Atualizado com o que você mudou no Obsidian'); }
@@ -308,7 +311,7 @@
   }
   function semVault(corpo, e) {
     corpo.innerHTML = '';
-    corpo.append(el('div', { class: 'ob-aviso' }, el('h2', {}, '📓 Não consegui abrir o Obsidian'), el('p', {}, e.message),
+    corpo.append(el('div', { class: 'ob-aviso' }, el('h2', {}, '📇 Não consegui abrir os clientes'), el('p', {}, e.message),
       e.status === 404 ? el('p', {}, 'Se o seu vault mudou de lugar, abra o servidor com: python servidor.py --vault "C:\\caminho\\do\\vault"') : el('p', {}, 'Feche e abra de novo o ABRIR-ESCRITORIO.bat (o servidor foi atualizado).'),
       el('button', { class: 'bt prim', onclick: () => abrirApp(corpo, document.getElementById('appAcoes') || el('div'), visao) }, 'Tentar de novo')));
   }
@@ -319,8 +322,8 @@
     lado.append(el('div', { class: 'zf-marca' }, el('b', {}, '📇 Clientes'), el('small', {}, KM.cofre.geradoEm() ? 'atualizado em ' + KM.cofre.geradoEm().split('-').reverse().join('/') : S.vault)));
     const item = k => el('button', { class: 'zf-item' + (visao === k ? ' on' : ''), onclick: () => { visao = k; aberta = null; render(); } }, el('span', {}, VISOES[k][0]), VISOES[k][1], cont[k] != null ? el('em', { class: 'zf-cont' }, String(cont[k])) : null);
     lado.append(el('div', { class: 'zf-sec' }, 'Informações de clientes'), item('clientes'), item('empresas'), item('pessoas'),
-      el('div', { class: 'zf-sec' }, 'Todo o Obsidian'), item('pastas'), item('busca'), item('tarefas'), item('recentes'),
-      el('div', { class: 'ob-sinc' }, el('i'), `Sincronizado com o Obsidian · ${S.notas.length} notas`, el('small', {}, 'O que você muda aqui vai para o arquivo .md na hora; o que muda no Obsidian aparece aqui em até 5 s.')));
+      el('div', { class: 'zf-sec' }, 'Todas as notas'), item('pastas'), item('busca'), item('tarefas'), item('recentes'),
+      el('div', { class: 'ob-sinc' }, el('i'), `🔐 Trancado com senha · ${S.notas.length} notas`, el('small', {}, 'O que você anota ou cria aqui fica salvo no app, trancado com a sua senha, e aparece nos outros aparelhos. Os arquivos do computador não mudam.')));
   }
   function render(manterBusca) {
     if (!corpoApp) return;
@@ -454,7 +457,7 @@
     const st = el('select', { id: 'obN_status' }, ['Convertido', 'Em negociação', 'Proposta enviada', 'Lead'].map(s => el('option', {}, s)));
     const meta = el('input', { type: 'checkbox', id: 'obN_meta', checked: true });
     const form = el('div', { class: 'ob-form' },
-      el('h3', {}, '＋ Novo cliente (vira uma nota no Obsidian)'),
+      el('h3', {}, '＋ Novo cliente (fica salvo no app, trancado com a senha)'),
       el('div', { class: 'ob-form-g' }, campo('nome', 'Nome do cliente *', 'Ex.: Maria Silva - Estética'), campo('doc', 'CPF ou CNPJ', '000.000.000-00'), campo('tel', 'Telefone / WhatsApp', '(98) 9 0000-0000'),
         campo('email', 'E-mail', 'email@exemplo.com', 'email'), el('label', {}, el('small', {}, 'Status'), st), campo('valor', 'Valor (mensalidade ou potencial)', 'Ex.: 300')),
       el('label', {}, el('small', {}, 'Observações'), el('textarea', { id: 'obN_obs', rows: 3, placeholder: 'O que o cliente precisa, combinados, serviços…' })),
@@ -483,7 +486,7 @@
     await carregar(true);
     const n = S.porC.get(c);
     if (n && document.getElementById('obN_meta') && document.getElementById('obN_meta').checked && !noMeta(n)) porNoMeta(n, v('tel'));
-    toast('📓 Cliente criado no Obsidian: ' + nome); KM.tocar && KM.tocar('sucesso');
+    toast('📇 Cliente criado: ' + nome); KM.tocar && KM.tocar('sucesso');
     abrirCliente(c);
   }
 
@@ -523,7 +526,7 @@
     setTimeout(() => inp.focus(), 30);
   }
   function vBusca(main) {
-    const busca = el('input', { class: 'zf-busca', type: 'search', placeholder: '🔎 Buscar em todas as notas do Obsidian…', value: ultimaBusca });
+    const busca = el('input', { class: 'zf-busca', type: 'search', placeholder: '🔎 Buscar em todas as notas dos clientes…', value: ultimaBusca });
     const res = el('div', { class: 'ob-res' }), nota = el('section', { class: 'ob-painel' });
     let t = 0;
     const ir = async () => {
@@ -539,7 +542,7 @@
     if (ultimaBusca) ir(); setTimeout(() => busca.focus(), 30);
   }
   async function vTarefas(main) {
-    main.append(el('div', { class: 'zf-cab' }, el('div', {}, el('h2', {}, '☑️ Tarefas abertas no Obsidian'), el('small', {}, 'As caixinhas “- [ ]” de todas as notas. Marcar aqui marca no Obsidian.'))));
+    main.append(el('div', { class: 'zf-cab' }, el('div', {}, el('h2', {}, '☑️ Tarefas abertas'), el('small', {}, 'As caixinhas “- [ ]” de todas as notas. Marcar aqui marca no Obsidian.'))));
     const box = el('div', { class: 'ob-tars' }, el('p', { class: 'ob-carrega' }, 'Juntando as tarefas…')); main.append(box);
     const j = cacheTar || await api('GET', '/api/obsidian/tarefas').catch(e => ({ tarefas: [], erro: e.message })); cacheTar = j;
     box.innerHTML = '';
@@ -561,7 +564,7 @@
       const j = await api('GET', '/api/obsidian/nota?' + q({ c: t.c }));
       const L = j.texto.split('\n'); let k = t.linha;
       if (!(L[k] || '').includes(t.texto)) k = L.findIndex(l => /^\s*[-*] \[ \]/.test(l) && l.includes(t.texto));
-      if (k < 0) throw new Error('A tarefa mudou no Obsidian; leia de novo (🔄)');
+      if (k < 0) throw new Error('A tarefa mudou; leia de novo (🔄)');
       L[k] = L[k].replace('[ ]', '[x]');
       await api('PUT', '/api/obsidian/nota', { c: t.c, texto: L.join('\n'), base: j.m, motivo: 'tarefa marcada pelo Mini Escritório' });
       ch.closest('.ob-tar').classList.add('feita'); KM.tocar && KM.tocar('sucesso'); cacheTar = null; S.carregadoEm = 0;
@@ -569,7 +572,7 @@
   }
   function vRecentes(main) {
     const nota = el('section', { class: 'ob-painel' }), lista = el('div', { class: 'ob-res' });
-    main.append(el('div', { class: 'zf-cab' }, el('div', {}, el('h2', {}, '🕘 Editadas recentemente'), el('small', {}, 'No Obsidian ou aqui'))), el('div', { class: 'ob-duas' }, lista, nota));
+    main.append(el('div', { class: 'zf-cab' }, el('div', {}, el('h2', {}, '🕘 Editadas recentemente'), el('small', {}, 'Na pasta ou aqui no app'))), el('div', { class: 'ob-duas' }, lista, nota));
     [...S.notas].sort((a, b) => b.m.localeCompare(a.m)).slice(0, 40).forEach(n => lista.append(el('button', { class: 'ob-rel-it', onclick: () => (ehCliente(n) ? abrirCliente(n.c) : abrirNota(nota, n.c, {})) }, el('b', {}, n.t), el('small', {}, `${quandoTxt(n.m)} · ${n.c.split('/').slice(0, -1).pop() || S.vault}`))));
     nota.append(el('p', { class: 'ob-vazio' }, '← Escolha uma nota'));
   }

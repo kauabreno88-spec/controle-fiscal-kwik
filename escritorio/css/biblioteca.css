@@ -15,20 +15,36 @@ b.bb-onde { color: #fff; font-weight: 900; }
 .bb-sec { margin: 26px 16px 10px; font-size: 15px; font-weight: 900; letter-spacing: .3px; color: #fff; }
 
 /* prateleiras */
-.bb-prats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 26px 18px; padding: 22px 16px 6px; }
-.bb-prat { border: 0; background: none; color: inherit; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; font: inherit; padding: 0; min-width: 0; }
-.bb-prat-arte { position: relative; width: 100%; aspect-ratio: 1 / 1.05; display: flex; align-items: flex-end; justify-content: center; padding-right: 22px; }
-.bb-prat-lado { position: absolute; right: 0; top: 0; bottom: 0; width: 20px; background: #3b4247; border-radius: 3px; color: #c9d1d5; font-size: 11px; font-weight: 700;
-  writing-mode: vertical-rl; transform: rotate(180deg); display: flex; align-items: center; justify-content: center; white-space: nowrap; }
-.bb-pilha { position: absolute; left: 6%; right: 30px; bottom: 0; height: 34%; }
+.bb-prats { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 22px 18px; padding: 18px 16px 6px; }
+.bb-prat { border: 0; background: none; color: inherit; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; font: inherit; padding: 0; min-width: 0; }
+.bb-prat-arte { position: relative; width: 100%; aspect-ratio: 1 / 1.05; display: flex; align-items: flex-end; justify-content: center; padding-right: 30px; }
+/* quantidade: pequena, na horizontal, ao lado da pilha */
+.bb-prat-qtd { position: absolute; right: 0; bottom: 6%; background: #343c41; color: #e3e9ec; border-radius: 6px; padding: 2px 5px; font-size: 11px; font-weight: 900; line-height: 1.2; white-space: nowrap; }
+.bb-prat-qtd small { font-size: 9px; font-weight: 700; color: #a9b5ba; }
+.bb-pilha { position: absolute; left: 6%; right: 34px; bottom: 0; height: 34%; }
 .bb-pilha i { position: absolute; left: 0; right: 0; height: 33%; border-radius: 3px 6px 6px 3px; box-shadow: inset -7px 0 0 #f2efe6, inset -8px 0 0 #b9b3a3; }
 .bb-pilha .l1 { bottom: 0; background: #c0362c; left: 4%; right: -2%; }
 .bb-pilha .l2 { bottom: 33%; background: #2d5f8f; left: -2%; right: 6%; }
 .bb-pilha .l3 { bottom: 66%; background: #c0362c; left: 6%; right: 2%; }
 .bb-prat-arte .bb-capa.bb-topo { position: relative; z-index: 1; width: 58%; margin-bottom: 30%; box-shadow: 0 8px 18px rgba(0,0,0,.55); transform: rotate(-2deg); transition: transform .2s; }
 .bb-prat:hover .bb-capa.bb-topo { transform: rotate(0) translateY(-4px) scale(1.04); }
-.bb-prat-nome { max-width: 100%; background: #4b7d92; color: #fff; border: 1px solid #6fa0b5; border-radius: 3px; padding: 3px 10px; font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.bb-prat-media { color: #ffd34d; font-weight: 800; font-size: 12px; margin-top: -4px; }
+/* categoria: pequena, embaixo */
+.bb-prat-nome { max-width: 100%; color: #b9c9cf; font-size: 11px; font-weight: 700; letter-spacing: .2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bb-prat:hover .bb-prat-nome { color: #fff; }
+.bb-prat-media { color: #ffd34d; font-weight: 800; font-size: 11px; margin-top: -4px; }
+
+/* lista de desejos (no topo) */
+.bb-desejos { display: flex; align-items: center; gap: 14px; width: calc(100% - 32px); margin: 16px 16px 0; padding: 12px 14px; border: 1px solid #3a4a52; border-radius: 14px;
+  background: linear-gradient(120deg, #2a2340, #1f2a30); color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.bb-desejos:hover { border-color: #b18cff; }
+.bb-desejos-tit { display: flex; flex-direction: column; gap: 2px; min-width: 0; } .bb-desejos-tit b { font-size: 15px; color: #fff; } .bb-desejos-tit small { color: #b6a9d6; font-size: 12px; }
+.bb-desejos-capas { margin-left: auto; display: flex; } .bb-desejos-capas .bb-capa.mini { width: 34px; flex: none; margin-left: -8px; box-shadow: 0 3px 8px rgba(0,0,0,.5); border: 1px solid #1c2124; }
+.bb-desejos-capas .bb-capa.mini.sem { padding: 2px; } .bb-desejos-capas .bb-capa.mini.sem b { font-size: 7px; } .bb-desejos-capas .bb-capa.mini.sem small { display: none; }
+.bb-desejos > i { font-style: normal; font-size: 20px; color: #b18cff; }
+.bb-mini { margin-top: 6px; border: 1px solid #3d4950; background: #232b2f; color: #dfe7ea; border-radius: 8px; padding: 4px 8px; font: inherit; font-size: 11px; font-weight: 800; cursor: pointer; }
+.bb-mini:hover { border-color: #28BE52; }
+.bb-vazio.grande { padding: 30px 18px; text-align: center; }
+.bb-dica { margin: 0; color: #9fb0b6; font-size: 13px; }
 
 /* capa */
 .bb-capa { position: relative; width: 100%; aspect-ratio: 2 / 3; border-radius: 3px 6px 6px 3px; overflow: hidden; background: #2b3236; }
@@ -42,7 +58,16 @@ b.bb-onde { color: #fff; font-weight: 900; }
 .bb-livro { display: flex; flex-direction: column; align-items: center; text-align: center; min-width: 0; }
 .bb-livro-capa { position: relative; width: 100%; border: 0; padding: 0; background: none; cursor: pointer; border-radius: 3px 6px 6px 3px; box-shadow: 0 6px 16px rgba(0,0,0,.5); transition: transform .2s; }
 .bb-livro-capa:hover { transform: translateY(-4px); }
-.bb-selo { position: absolute; left: 6px; top: 6px; background: #28BE52; color: #0d1a14; font-style: normal; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 6px; text-transform: uppercase; }
+.bb-selo { position: absolute; left: 6px; top: 6px; background: #28BE52; color: #0d1a14; font-style: normal; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 6px; text-transform: uppercase; box-shadow: 0 2px 6px rgba(0,0,0,.4); }
+.bb-selo.s-lido { background: #28BE52; color: #0d1a14; } .bb-selo.s-lendo { background: #3d8bfd; color: #fff; }
+.bb-selo.s-desistiu { background: #6b7378; color: #fff; } .bb-selo.s-desejo { background: #b18cff; color: #1d1530; }
+.bb-livro:has(.s-desistiu) .bb-livro-capa img { filter: grayscale(.7) brightness(.8); }
+/* etiquetas na janela do livro */
+.bb-status { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 0; }
+.bb-status button { border: 1.5px solid #3d4950; background: #1a2023; color: #cfd8dc; border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 12.5px; font-weight: 800; cursor: pointer; }
+.bb-status button.s-lido.on { background: #28BE52; border-color: #28BE52; color: #0d1a14; }
+.bb-status button.s-lendo.on { background: #3d8bfd; border-color: #3d8bfd; color: #fff; }
+.bb-status button.s-desistiu.on { background: #6b7378; border-color: #6b7378; color: #fff; }
 .bb-livro-t { margin-top: 9px; font-size: 13px; line-height: 1.25; color: #fff; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .bb-livro-a { font-size: 11px; color: #94a1a7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 
@@ -90,7 +115,8 @@ b.bb-onde { color: #fff; font-weight: 900; }
 @media (max-width: 760px) {
   .bb-barra { flex-wrap: wrap; } .bb-busca { order: 9; width: 100%; }
   .bb-prats { grid-template-columns: repeat(3, 1fr); gap: 20px 12px; padding: 16px 10px 4px; }
-  .bb-prat-nome { font-size: 11.5px; padding: 2px 6px; } .bb-prat-lado { width: 17px; font-size: 10px; } .bb-prat-arte { padding-right: 19px; }
+  .bb-prat-nome { font-size: 10px; } .bb-prat-qtd { font-size: 10px; padding: 1px 4px; } .bb-prat-qtd small { font-size: 8px; } .bb-prat-arte { padding-right: 26px; } .bb-pilha { right: 28px; }
+  .bb-desejos { width: calc(100% - 20px); margin: 12px 10px 0; padding: 10px 12px; } .bb-desejos-capas .bb-capa.mini { width: 26px; }
   .bb-livros { grid-template-columns: repeat(3, 1fr); gap: 18px 10px; padding: 12px 10px; }
   .bb-estrelas button { font-size: 16px; padding: 0; }
   .bb-det { grid-template-columns: 1fr; } .bb-det-capa { width: 150px; margin: 0 auto; }

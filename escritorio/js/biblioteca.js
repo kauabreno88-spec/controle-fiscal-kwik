@@ -1,71 +1,54 @@
-/* KWIK Mini Escritório · 📚 Biblioteca (atalho na tela inicial).
-   - Prateleiras = subpastas de "04 - Hobbies/Livros" no Obsidian. No PC (servidor ligado) lê a pasta ao vivo;
-     sem servidor usa o catálogo js/biblioteca-dados.js (gerado por biblioteca-gerar.ps1).
-   - Capas: procura sozinha a capa da edição em português mais recente (Google Livros; reserva: Open Library).
-     Tocar no livro → "Trocar capa" mostra as edições encontradas para escolher.
-   - ＋ Livro: digite o título (e o autor, se quiser) → o app acha o livro, a capa e o resumo do que é. No PC grava a nota
-     no Obsidian, na prateleira escolhida; fora do PC fica guardado no app.
-   - ★★★★★ embaixo de cada livro: sua avaliação (tocar na mesma estrela de novo apaga). No PC também vai para "nota:" da nota. */
+/* KWIK Mini Escritório · 📚 Biblioteca (atalho na tela inicial). Funciona SEM o Obsidian.
+   - Os livros vêm do catálogo js/biblioteca-dados.js (foto da pasta "04 - Hobbies/Livros", gerado por biblioteca-gerar.ps1).
+     Prateleira = subpasta. Tudo o que você faz aqui (estrelas, etiqueta, capa, livros novos, lista de desejos) fica salvo
+     na configuração do app (cfg.biblioteca), que vai para todos os aparelhos. Nada é gravado no Obsidian.
+   - Etiquetas: lendo · lido · desistiu (tocar no livro para trocar).
+   - Capas: procura sozinha a capa da edição em português mais recente (Google Livros; reserva: Open Library) e guarda.
+     "Trocar capa" mostra as edições encontradas para escolher.
+   - ＋ Livro: digite o título (e o autor) → o app acha o livro, a capa e o resumo do que é.
+   - 💭 Lista de desejos (no topo): livros que você quer ler. "Comecei a ler" leva o livro para uma prateleira.
+   - ★★★★★ embaixo de cada livro: sua avaliação (tocar na mesma estrela de novo apaga). */
 (function () {
   const KM = window.KM;
   const A = () => KM.app;
   const el = (...a) => A().el(...a);
   const toast = (m, o) => A().toast(m, o);
-  const PASTA_PADRAO = '04 - Hobbies/Livros';
   const ORDEM_PRAT = ['Finanças e Desenvolvimento Pessoal', 'Suspense e Terror', 'Sherlock Holmes', 'Ficção Científica e Distopia', 'Infantojuvenil e Mangá', 'Clássicos', 'Psicologia', 'Contabilidade'];
+  const STATUS = { lendo: ['📖', 'Lendo'], lido: ['✓', 'Lido'], desistiu: ['✕', 'Desistiu'] };
+  const DESEJOS = '__desejos';
   const semAcento = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
   const chave = t => semAcento(t).replace(/[^a-z0-9]+/g, ' ').trim();
-  const LS_CAPAS = 'kwik-bib-capas'; // capas achadas automaticamente (cache deste aparelho)
 
-  // ------------------------------------------------------------------ dados guardados no app
+  // ------------------------------------------------------------------ dados guardados no app (cfg.biblioteca)
   function D() {
     const c = A().cfg();
     if (!c.biblioteca || typeof c.biblioteca !== 'object') c.biblioteca = {};
     const b = c.biblioteca;
-    for (const k of ['notas', 'capas', 'resumos']) if (!b[k] || typeof b[k] !== 'object' || Array.isArray(b[k])) b[k] = {};
-    if (!Array.isArray(b.extras)) b.extras = [];
+    for (const k of ['notas', 'capas', 'capasAuto', 'resumos', 'status']) if (!b[k] || typeof b[k] !== 'object' || Array.isArray(b[k])) b[k] = {};
+    for (const k of ['extras', 'desejos']) if (!Array.isArray(b[k])) b[k] = [];
+    // capas que este aparelho já tinha achado (versão antiga guardava só aqui): passam para o app, para todos os aparelhos
+    if (!b._capasMigradas) {
+      try { const velho = JSON.parse(localStorage.getItem('kwik-bib-capas') || '{}'); for (const [k, v] of Object.entries(velho)) if (v && v.url && !b.capasAuto[k]) b.capasAuto[k] = v; } catch (e) { /* ok */ }
+      b._capasMigradas = 1;
+    }
     return b;
   }
-  const lerCache = () => { try { return JSON.parse(localStorage.getItem(LS_CAPAS) || '{}'); } catch (e) { return {}; } };
-  const gravarCache = c => { try { localStorage.setItem(LS_CAPAS, JSON.stringify(c)); } catch (e) { /* cheio */ } };
+  const salvar = () => A().salvar();
 
-  // ------------------------------------------------------------------ servidor (Obsidian)
-  async function api(met, url, corpo) {
-    const r = await fetch(KM.ponte.base() + url, { method: met, cache: 'no-store', headers: corpo ? { 'Content-Type': 'application/json', 'X-Kwik': '1' } : {}, body: corpo ? JSON.stringify(corpo) : undefined });
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok) { const e = new Error(j.erro || 'Erro ' + r.status); e.status = r.status; throw e; }
-    return j;
-  }
-  const S = { livros: [], fonte: '', vault: '', pasta: PASTA_PADRAO, carregado: 0 };
-  async function carregar() {
+  const S = { livros: [] };
+  function carregar() {
     const emb = window.KM_BIBLIOTECA || { livros: [] };
-    S.pasta = emb.pasta || PASTA_PADRAO;
-    const porC = new Map((emb.livros || []).map(l => [l.c, l]));
-    let base = null;
-    if (await KM.ponte.checar(true)) {
-      try {
-        const j = await api('GET', '/api/obsidian/indice');
-        S.vault = j.vault || '';
-        const pre = S.pasta + '/';
-        base = j.notas.filter(n => n.c.startsWith(pre) && n.c.slice(pre.length).includes('/')).map(n => {
-          const p = n.props || {}, e = porC.get(n.c) || {}, partes = n.c.slice(pre.length).split('/');
-          const nota = parseInt(p.nota, 10);
-          return { c: n.c, t: n.t, autor: str(p.autor), prateleira: partes[0], capa: str(p.capa), status: str(p.status), ordem: str(p['ordem-de-leitura']), nota: nota >= 1 && nota <= 5 ? nota : 0, sobre: e.sobre || '', obs: true };
-        });
-        S.fonte = 'obsidian';
-      } catch (e) { base = null; }
-    }
-    if (!base) { base = (emb.livros || []).map(l => Object.assign({}, l, { obs: false })); S.fonte = 'app'; }
+    const base = (emb.livros || []).map(l => Object.assign({}, l));
     const vistos = new Set(base.map(l => chave(l.t)));
     for (const x of D().extras) if (!vistos.has(chave(x.t))) base.push(Object.assign({ extra: true }, x));
-    S.livros = base; S.carregado = Date.now();
+    S.livros = base;
   }
-  const str = v => (Array.isArray(v) ? v.join(', ') : String(v || '')).trim();
 
   // valores finais de um livro (o que você mudou no app vale mais)
   const notaDe = l => { const n = D().notas[chave(l.t)]; return n != null ? n : (l.nota || 0); };
-  const capaDe = l => D().capas[chave(l.t)] || (lerCache()[chave(l.t)] || {}).url || l.capa || '';
+  const capaDe = l => D().capas[chave(l.t)] || (D().capasAuto[chave(l.t)] || {}).url || l.capa || '';
   const sobreDe = l => l.sobre || D().resumos[chave(l.t)] || '';
+  const statusDe = l => { const s = D().status[chave(l.t)]; const v = s != null ? s : semAcento(l.status); return STATUS[v] ? v : ''; };
 
   // ------------------------------------------------------------------ busca na internet
   const limpaHtml = s => String(s || '').replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n\n').replace(/<[^>]+>/g, '').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/\n{3,}/g, '\n\n').trim();
@@ -94,8 +77,8 @@
     const j = await r.json(), out = [];
     for (const d of j.docs || []) {
       const ed = (d.editions && d.editions.docs) || [];
-      for (const e of ed) if (e.cover_i) out.push({ fonte: 'Open Library', t: e.title || d.title, titulo: e.title || d.title, autor: (d.author_name || []).join(', '), ano: (String(e.publish_date || '').match(/\d{4}/) || [''])[0], editora: (e.publisher || [])[0] || '', lang: (e.language || [])[0] || '', capa: `https://covers.openlibrary.org/b/id/${e.cover_i}-L.jpg`, sobre: '', work: d.key });
-      if (d.cover_i) out.push({ fonte: 'Open Library', t: d.title, titulo: d.title, autor: (d.author_name || []).join(', '), ano: String(d.first_publish_year || ''), editora: '', lang: '', capa: `https://covers.openlibrary.org/b/id/${d.cover_i}-L.jpg`, sobre: '', work: d.key });
+      for (const e of ed) if (e.cover_i) out.push({ fonte: 'Open Library', t: e.title || d.title, titulo: e.title || d.title, autor: (d.author_name || []).join(', '), ano: (String(e.publish_date || '').match(/\d{4}/) || [''])[0], editora: (e.publisher || [])[0] || '', lang: (e.language || [])[0] || '', capa: `https://covers.openlibrary.org/b/id/${e.cover_i}-L.jpg`, sobre: '' });
+      if (d.cover_i) out.push({ fonte: 'Open Library', t: d.title, titulo: d.title, autor: (d.author_name || []).join(', '), ano: String(d.first_publish_year || ''), editora: '', lang: '', capa: `https://covers.openlibrary.org/b/id/${d.cover_i}-L.jpg`, sobre: '' });
     }
     const vistos = new Set(); return out.filter(x => !vistos.has(x.capa) && vistos.add(x.capa));
   }
@@ -121,6 +104,10 @@
     }
     return reserva;
   }
+  async function resumoOnline(titulo, autor) {
+    try { const g = (await googleLivros(titulo, autor, 10)).filter(x => x.sobre && parecido(x.titulo, titulo)); if (g.length) return g.sort((a, b) => b.sobre.length - a.sobre.length)[0].sobre; } catch (e) { /* tenta a Wikipédia */ }
+    try { return await wikipedia(titulo, autor); } catch (e) { return ''; }
+  }
   // edições com capa, a mais nova primeiro (em português antes das outras)
   async function edicoes(titulo, autor) {
     let lista = [], erros = [];
@@ -131,16 +118,16 @@
     return { lista, erros };
   }
 
-  // procura sozinha a capa mais recente de cada livro (uma de cada vez, guarda por 30 dias neste aparelho)
+  // procura sozinha a capa mais recente de cada livro (uma de cada vez; guarda no app por 30 dias)
   let filaRodando = false;
   async function atualizarCapas(aoMudar) {
     if (filaRodando || !navigator.onLine) return;
     filaRodando = true;
     try {
-      for (const l of S.livros) {
-        const k = chave(l.t), cache = lerCache();
+      for (const l of [...S.livros, ...D().desejos]) {
+        const k = chave(l.t);
         if (D().capas[k]) continue;
-        const c = cache[k];
+        const c = D().capasAuto[k];
         if (c && Date.now() - c.em < (c.url ? 30 : 1) * 864e5) continue;
         let url = '';
         try {
@@ -149,63 +136,17 @@
           url = g.length ? g[0].capa : '';
         } catch (e) { if (/cota/.test(e.message)) break; } // sem cota hoje: tenta de novo outro dia
         if (!url && !l.capa) { try { const o = await openLibrary(l.t, l.autor); url = o.length ? o[0].capa : ''; } catch (e) { /* ok */ } }
-        const novo = lerCache(); novo[k] = { url, em: Date.now() }; gravarCache(novo);
+        D().capasAuto[k] = { url: url || (c && c.url) || '', em: Date.now() }; salvar();
         if (url) aoMudar(l);
         await new Promise(r => setTimeout(r, 700));
       }
     } finally { filaRodando = false; }
   }
 
-  // ------------------------------------------------------------------ gravar no Obsidian (só no PC)
-  async function mudarProp(l, props) {
-    if (!l.obs || !KM.ponte.ligado()) return false;
-    const j = await api('GET', '/api/obsidian/nota?c=' + encodeURIComponent(l.c));
-    let txt = j.texto;
-    if (!txt.startsWith('---\n')) txt = '---\n---\n' + txt;
-    const fim = txt.indexOf('\n---', 4);
-    let fm = txt.slice(4, fim), corpo = txt.slice(fim);
-    for (const [k, v] of Object.entries(props)) {
-      const re = new RegExp('^' + k + ':.*$', 'm');
-      if (re.test(fm)) fm = fm.replace(re, `${k}: ${v}`.trimEnd()); else fm = (fm ? fm + '\n' : '') + `${k}: ${v}`.trimEnd();
-      if (k === 'capa' && v) corpo = corpo.replace(/!\[capa(\|\d+)?\]\([^)]*\)/, m => m.replace(/\]\([^)]*\)/, `](${v})`));
-    }
-    const novo = '---\n' + fm.replace(/^\n+/, '') + corpo;
-    await api('PUT', '/api/obsidian/nota', { c: l.c, texto: novo, base: j.m, motivo: 'Biblioteca do Mini Escritório' });
-    return true;
-  }
-  function notaObsidian(l) {
-    const capa = l.capa || '';
-    return `---
-tags:
-  - livro
-autor: ${l.autor || ''}
-categoria: ${l.prateleira}
-status: ${l.status || 'quero ler'}
-nota:${l.nota ? ' ' + l.nota : ''}
-capa: ${capa}
----
-# ${l.t}
-${capa ? `\n![capa|220](${capa})\n` : ''}
-> [!info] Ficha
-> **Autor:** ${l.autor || '—'}${l.ano ? ' · **Ano:** ' + l.ano : ''}${l.editora ? ' · **Editora:** ' + l.editora : ''}
-
-## Sobre o que é
-
-${l.sobre || ''}
-
-## Minha interpretação
-
-
-## Melhores momentos
-
-
----
-← [[Estante]]
-`;
-  }
-
   // ------------------------------------------------------------------ tela
-  let corpoAtual = null, vista = { prat: null, busca: '', ordem: 'padrao' };
+  let corpoAtual = null, acoesAtual = null;
+  const vista = { prat: null, busca: '', ordem: 'padrao' };
+  const ordenarLivros = ls => ls.slice().sort((a, b) => (parseInt(a.ordem, 10) || 999) - (parseInt(b.ordem, 10) || 999) || a.t.localeCompare(b.t, 'pt-BR'));
   const prateleiras = () => {
     const m = new Map();
     for (const l of S.livros) { if (!m.has(l.prateleira)) m.set(l.prateleira, []); m.get(l.prateleira).push(l); }
@@ -216,7 +157,6 @@ ${l.sobre || ''}
     else lista.sort((a, b) => pos(a.nome) - pos(b.nome) || a.nome.localeCompare(b.nome, 'pt-BR'));
     return lista;
   };
-  const ordenarLivros = ls => ls.slice().sort((a, b) => (parseInt(a.ordem, 10) || 999) - (parseInt(b.ordem, 10) || 999) || a.t.localeCompare(b.t, 'pt-BR'));
 
   function estrelas(l, grande) {
     const n = notaDe(l), box = el('div', { class: 'bb-estrelas' + (grande ? ' grande' : ''), role: 'radiogroup', 'aria-label': 'Sua avaliação' });
@@ -226,17 +166,17 @@ ${l.sobre || ''}
     }
     return box;
   }
-  let timersNota = {};
   function avaliar(l, n) {
     const k = chave(l.t);
-    D().notas[k] = n; A().salvar();
-    document.querySelectorAll(`.bb-estrelas[data-k="${CSS.escape(k)}"], [data-k="${CSS.escape(k)}"] .bb-estrelas`).forEach(b => [...b.children].forEach((s, i) => s.classList.toggle('on', i < n)));
+    D().notas[k] = n; salvar();
+    document.querySelectorAll(`[data-k="${CSS.escape(k)}"] .bb-estrelas`).forEach(b => [...b.children].forEach((s, i) => s.classList.toggle('on', i < n)));
     if (KM.tocar) KM.tocar('clique');
-    if (l.obs) {
-      clearTimeout(timersNota[k]);
-      timersNota[k] = setTimeout(() => mudarProp(l, { nota: n ? String(n) : '' }).then(() => { l.nota = n; }).catch(e => toast('⚠️ A nota não foi para o Obsidian: ' + e.message, { erro: true })), 800);
-    }
   }
+  function mudarStatus(l, s) {
+    D().status[chave(l.t)] = s; salvar();
+    toast(s ? `${STATUS[s][0]} ${l.t}: ${STATUS[s][1].toLowerCase()}` : 'Etiqueta tirada');
+  }
+  const selo = l => { const s = statusDe(l); return s ? el('em', { class: 'bb-selo s-' + s }, STATUS[s][1]) : null; };
   function imgCapa(l, cls) {
     const url = capaDe(l);
     const box = el('div', { class: 'bb-capa ' + (cls || '') });
@@ -247,48 +187,80 @@ ${l.sobre || ''}
   }
   function cartaoLivro(l) {
     return el('div', { class: 'bb-livro', 'data-k': chave(l.t) },
-      el('button', { class: 'bb-livro-capa', title: 'Ver ' + l.t, onclick: () => detalhe(l) }, imgCapa(l), l.status && l.status !== 'lido' ? el('em', { class: 'bb-selo' }, l.status) : null),
+      el('button', { class: 'bb-livro-capa', title: 'Ver ' + l.t, onclick: () => detalhe(l) }, imgCapa(l), selo(l)),
       el('b', { class: 'bb-livro-t' }, l.t), el('small', { class: 'bb-livro-a' }, l.autor || ' '), estrelas(l));
+  }
+  function cartaoDesejo(d) {
+    return el('div', { class: 'bb-livro', 'data-k': chave(d.t) },
+      el('button', { class: 'bb-livro-capa', title: 'Ver ' + d.t, onclick: () => detalheDesejo(d) }, imgCapa(d), el('em', { class: 'bb-selo s-desejo' }, 'Quero ler')),
+      el('b', { class: 'bb-livro-t' }, d.t), el('small', { class: 'bb-livro-a' }, d.autor || ' '),
+      el('button', { class: 'bb-mini', onclick: () => comecarDesejo(d) }, '📖 Comecei a ler'));
   }
   function cartaoPrat(p) {
     const topo = p.livros.find(l => capaDe(l)) || p.livros[0];
-    const media = (() => { const ns = p.livros.map(notaDe).filter(Boolean); return ns.length ? ns.reduce((a, b) => a + b, 0) / ns.length : 0; })();
+    const ns = p.livros.map(notaDe).filter(Boolean), media = ns.length ? ns.reduce((a, b) => a + b, 0) / ns.length : 0;
     return el('button', { class: 'bb-prat', onclick: () => { vista.prat = p.nome; render(); } },
       el('div', { class: 'bb-prat-arte' },
         el('div', { class: 'bb-pilha', 'aria-hidden': 'true' }, el('i', { class: 'l1' }), el('i', { class: 'l2' }), el('i', { class: 'l3' })),
         topo ? imgCapa(topo, 'bb-topo') : null,
-        el('span', { class: 'bb-prat-lado' }, `${p.livros.length} ${p.livros.length === 1 ? 'livro' : 'livros'}`)),
+        el('span', { class: 'bb-prat-qtd' }, String(p.livros.length), el('small', {}, p.livros.length === 1 ? ' livro' : ' livros'))),
       el('span', { class: 'bb-prat-nome' }, p.nome),
       media ? el('small', { class: 'bb-prat-media' }, '★ ' + media.toFixed(1).replace('.', ',')) : null);
   }
+  function faixaDesejos() {
+    const ds = D().desejos;
+    return el('button', { class: 'bb-desejos', onclick: () => { vista.prat = DESEJOS; render(); } },
+      el('span', { class: 'bb-desejos-tit' }, el('b', {}, '💭 Lista de desejos'), el('small', {}, ds.length ? `${ds.length} livro${ds.length === 1 ? '' : 's'} que você quer ler` : 'Toque para guardar os livros que você quer ler')),
+      el('span', { class: 'bb-desejos-capas' }, ds.slice(-6).reverse().map(d => imgCapa(d, 'mini'))),
+      el('i', {}, '›'));
+  }
 
+  function acoes() {
+    if (!acoesAtual) return;
+    acoesAtual.innerHTML = '';
+    acoesAtual.append(vista.prat === DESEJOS
+      ? el('button', { class: 'appv-bt prim', onclick: () => adicionar('', 'desejo') }, '＋ Desejo')
+      : el('button', { class: 'appv-bt prim', onclick: () => adicionar('', 'estante') }, '＋ Livro'));
+  }
   function render() {
     const corpo = corpoAtual; if (!corpo) return;
+    acoes();
+    const rolagem = corpo.scrollTop;
     corpo.innerHTML = '';
     const prats = prateleiras(), q = semAcento(vista.busca);
     const ORD = { padrao: 'Ordem da estante', nome: 'Nome (A–Z)', qtd: 'Mais livros' };
-    const barra = el('header', { class: 'bb-barra' },
+    const titulo = vista.prat === DESEJOS ? '💭 Lista de desejos' : vista.prat;
+    corpo.append(el('header', { class: 'bb-barra' },
       el('button', { class: 'bb-casa', title: 'Todas as prateleiras', onclick: () => { vista.prat = null; render(); } }, '🏛️', el('span', {}, '›')),
-      vista.prat ? el('b', { class: 'bb-onde' }, vista.prat) : el('span', { class: 'bb-onde' }, `1 estante, ${prats.length} prateleiras · ${S.livros.length} livros`),
+      titulo ? el('b', { class: 'bb-onde' }, titulo) : el('span', { class: 'bb-onde' }, `${prats.length} prateleiras · ${S.livros.length} livros`),
       el('input', { class: 'bb-busca', type: 'search', placeholder: 'Buscar livro ou autor', value: vista.busca, oninput: e => { vista.busca = e.target.value; const p = e.target.selectionStart; render(); const n = corpo.querySelector('.bb-busca'); n.focus(); n.setSelectionRange(p, p); } }),
-      vista.prat ? null : el('button', { class: 'bb-ordem', title: 'Ordenar: ' + ORD[vista.ordem], onclick: () => { vista.ordem = { padrao: 'nome', nome: 'qtd', qtd: 'padrao' }[vista.ordem]; render(); toast('Ordem: ' + ORD[vista.ordem]); } }, '⇅'));
-    corpo.append(barra);
-    if (S.fonte === 'app' && KM.ponte.computador()) corpo.append(el('p', { class: 'bb-aviso' }, 'O servidor do escritório não respondeu: mostrando o catálogo guardado no app. Abra o atalho "KWIK Mini Escritório" da área de trabalho para ler e gravar direto no Obsidian.'));
+      vista.prat ? null : el('button', { class: 'bb-ordem', title: 'Ordenar: ' + ORD[vista.ordem], onclick: () => { vista.ordem = { padrao: 'nome', nome: 'qtd', qtd: 'padrao' }[vista.ordem]; render(); toast('Ordem: ' + ORD[vista.ordem]); } }, '⇅')));
 
     if (q) {
       const achados = S.livros.filter(l => semAcento(l.t + ' ' + l.autor + ' ' + l.prateleira).includes(q));
-      corpo.append(el('h3', { class: 'bb-sec' }, `${achados.length} resultado${achados.length === 1 ? '' : 's'}`), el('div', { class: 'bb-livros' }, ordenarLivros(achados).map(cartaoLivro)));
-      if (!achados.length) corpo.append(el('p', { class: 'bb-vazio' }, 'Nenhum livro com esse nome. ', el('button', { class: 'bb-link', onclick: () => adicionar(vista.busca) }, '＋ Adicionar "' + vista.busca + '"')));
+      const desejos = D().desejos.filter(d => semAcento(d.t + ' ' + d.autor).includes(q));
+      corpo.append(el('h3', { class: 'bb-sec' }, `${achados.length + desejos.length} resultado${achados.length + desejos.length === 1 ? '' : 's'}`),
+        el('div', { class: 'bb-livros' }, ordenarLivros(achados).map(cartaoLivro), desejos.map(cartaoDesejo)));
+      if (!achados.length && !desejos.length) corpo.append(el('p', { class: 'bb-vazio' }, 'Nenhum livro com esse nome. ',
+        el('button', { class: 'bb-link', onclick: () => adicionar(vista.busca, 'estante') }, '＋ Pôr na estante'), ' · ',
+        el('button', { class: 'bb-link', onclick: () => adicionar(vista.busca, 'desejo') }, '💭 Pôr na lista de desejos')));
       return;
+    }
+    if (vista.prat === DESEJOS) {
+      const ds = D().desejos.slice().reverse();
+      if (!ds.length) corpo.append(el('p', { class: 'bb-vazio grande' }, 'Sua lista de desejos está vazia. ', el('button', { class: 'bb-link', onclick: () => adicionar('', 'desejo') }, '＋ Adicionar um livro que você quer ler')));
+      corpo.append(el('div', { class: 'bb-livros' }, ds.map(cartaoDesejo)));
+      corpo.scrollTop = rolagem; return;
     }
     if (vista.prat) {
       const p = prats.find(x => x.nome === vista.prat);
       if (!p) { vista.prat = null; return render(); }
       corpo.append(el('div', { class: 'bb-livros' }, p.livros.map(cartaoLivro)));
-      return;
+      corpo.scrollTop = rolagem; return;
     }
-    corpo.append(el('div', { class: 'bb-prats' }, prats.map(cartaoPrat)));
-    corpo.append(el('h3', { class: 'bb-sec' }, 'Todos os livros'), el('div', { class: 'bb-livros' }, ordenarLivros(S.livros).map(cartaoLivro)));
+    corpo.append(faixaDesejos(), el('div', { class: 'bb-prats' }, prats.map(cartaoPrat)),
+      el('h3', { class: 'bb-sec' }, 'Todos os livros'), el('div', { class: 'bb-livros' }, ordenarLivros(S.livros).map(cartaoLivro)));
+    corpo.scrollTop = rolagem;
   }
 
   // ------------------------------------------------------------------ janelas
@@ -302,34 +274,73 @@ ${l.sobre || ''}
     fundo.append(caixa); document.body.append(fundo);
     return { caixa, fechar };
   }
+  function blocoSobre(l) {
+    const k = chave(l.t), texto = el('div', { class: 'bb-sobre' });
+    const pintar = s => { texto.innerHTML = ''; (s || '').split(/\n{2,}/).forEach(par => texto.append(el('p', {}, par.replace(/\n/g, ' ')))); };
+    const s = sobreDe(l);
+    if (s) pintar(s);
+    else {
+      texto.append(el('p', { class: 'bb-carregando' }, 'Procurando o resumo…'));
+      resumoOnline(l.t, l.autor).then(r => { if (r) { D().resumos[k] = r; salvar(); } pintar(r || 'Não achei um resumo na internet para este livro.'); });
+    }
+    return texto;
+  }
 
   function detalhe(l) {
     const k = chave(l.t);
-    const texto = el('div', { class: 'bb-sobre' });
-    const pintarSobre = s => { texto.innerHTML = ''; (s || '').split(/\n{2,}/).forEach(par => texto.append(el('p', {}, par.replace(/\n/g, ' ')))); };
-    const sobre = sobreDe(l);
-    if (sobre) pintarSobre(sobre);
-    else {
-      texto.append(el('p', { class: 'bb-carregando' }, 'Procurando o resumo…'));
-      resumoOnline(l.t, l.autor).then(s => { if (s) { D().resumos[k] = s; A().salvar(); } pintarSobre(s || 'Não achei um resumo na internet para este livro.'); });
-    }
     const capaBox = el('div', { class: 'bb-det-capa' }, imgCapa(l));
-    const linkObs = l.obs && S.vault ? `obsidian://open?vault=${encodeURIComponent(S.vault)}&file=${encodeURIComponent(l.c.replace(/\.md$/i, ''))}` : '';
+    const etiquetas = el('div', { class: 'bb-status' });
+    const pintarEtiquetas = () => {
+      etiquetas.innerHTML = ''; const atual = statusDe(l);
+      for (const [s, [ic, nome]] of Object.entries(STATUS)) etiquetas.append(el('button', { class: 's-' + s + (atual === s ? ' on' : ''), onclick: () => { mudarStatus(l, atual === s ? '' : s); pintarEtiquetas(); render(); } }, ic + ' ' + nome));
+    };
+    pintarEtiquetas();
     const j = janela(l.t,
       el('div', { class: 'bb-det' }, capaBox,
         el('div', { class: 'bb-det-info' },
           el('h2', {}, l.t), l.autor ? el('p', { class: 'bb-det-autor' }, l.autor) : null,
-          el('p', { class: 'bb-det-tags' }, el('span', {}, '📚 ' + l.prateleira), l.status ? el('span', {}, l.status) : null, l.extra ? el('span', {}, 'só no app') : null),
+          el('p', { class: 'bb-det-tags' }, el('span', {}, '📚 ' + l.prateleira)),
+          etiquetas,
           el('div', { 'data-k': k }, estrelas(l, true)),
-          el('h4', {}, 'Sobre o que é'), texto,
+          el('h4', {}, 'Sobre o que é'), blocoSobre(l),
           el('div', { class: 'bb-det-acoes' },
             el('button', { class: 'bb-bt', onclick: () => trocarCapa(l, () => { capaBox.innerHTML = ''; capaBox.append(imgCapa(l)); render(); }) }, '🖼️ Trocar capa'),
-            linkObs ? el('a', { class: 'bb-bt', href: linkObs }, '📓 Abrir no Obsidian') : null,
-            l.extra ? el('button', { class: 'bb-bt perigo', onclick: () => { if (!confirm(`Tirar "${l.t}" da biblioteca do app?`)) return; const b = D(); b.extras = b.extras.filter(x => chave(x.t) !== k); A().salvar(); S.livros = S.livros.filter(x => x !== l); j.fechar(); render(); } }, '🗑️ Remover') : null))));
+            l.extra ? el('button', { class: 'bb-bt perigo', onclick: () => { if (!confirm(`Tirar "${l.t}" da biblioteca?`)) return; const b = D(); b.extras = b.extras.filter(x => chave(x.t) !== k); salvar(); carregar(); j.fechar(); render(); } }, '🗑️ Tirar da estante') : null))));
   }
-  async function resumoOnline(titulo, autor) {
-    try { const g = (await googleLivros(titulo, autor, 10)).filter(x => x.sobre && parecido(x.titulo, titulo)); if (g.length) return g.sort((a, b) => b.sobre.length - a.sobre.length)[0].sobre; } catch (e) { /* tenta a Wikipédia */ }
-    try { return await wikipedia(titulo, autor); } catch (e) { return ''; }
+  function detalheDesejo(d) {
+    const j = janela(d.t,
+      el('div', { class: 'bb-det' }, el('div', { class: 'bb-det-capa' }, imgCapa(d)),
+        el('div', { class: 'bb-det-info' },
+          el('h2', {}, d.t), d.autor ? el('p', { class: 'bb-det-autor' }, d.autor) : null,
+          el('p', { class: 'bb-det-tags' }, el('span', {}, '💭 Lista de desejos'), d.ano ? el('span', {}, d.ano) : null),
+          el('h4', {}, 'Sobre o que é'), blocoSobre(d),
+          el('div', { class: 'bb-det-acoes' },
+            el('button', { class: 'bb-bt prim', onclick: () => { j.fechar(); comecarDesejo(d); } }, '📖 Comecei a ler'),
+            el('button', { class: 'bb-bt', onclick: () => trocarCapa(d, () => { j.fechar(); render(); detalheDesejo(d); }) }, '🖼️ Trocar capa'),
+            el('button', { class: 'bb-bt perigo', onclick: () => { if (!confirm(`Tirar "${d.t}" da lista de desejos?`)) return; tirarDesejo(d); j.fechar(); render(); } }, '🗑️ Tirar da lista')))));
+  }
+  function tirarDesejo(d) { const b = D(); b.desejos = b.desejos.filter(x => chave(x.t) !== chave(d.t)); salvar(); }
+  // da lista de desejos para uma prateleira, já como "lendo"
+  function comecarDesejo(d) {
+    const prat = seletorPrateleira();
+    const j = janela('📖 Comecei a ler · ' + d.t,
+      el('div', { class: 'bb-form' }, el('p', { class: 'bb-dica' }, 'Em qual prateleira ele fica?'), prat.campo),
+      el('div', { class: 'bb-det-acoes' }, el('button', { class: 'bb-bt prim', onclick: () => {
+        const p = prat.valor(); if (!p) return;
+        if (S.livros.some(l => chave(l.t) === chave(d.t))) { tirarDesejo(d); j.fechar(); render(); return toast('Esse livro já estava na estante; saiu da lista de desejos'); }
+        D().extras.push({ t: d.t, autor: d.autor || '', prateleira: p, capa: d.capa || '', status: 'lendo', ordem: '', nota: 0, sobre: d.sobre || '', ano: d.ano || '', editora: d.editora || '', em: Date.now() });
+        D().status[chave(d.t)] = 'lendo'; tirarDesejo(d); carregar();
+        j.fechar(); vista.prat = p; render(); toast(`📖 "${d.t}" foi para ${p} como lendo`);
+      } }, '📚 Pôr na estante')));
+  }
+  function seletorPrateleira(inicial) {
+    const prats = prateleiras().map(p => p.nome);
+    const sel = el('select', { class: 'bb-campo' }, prats.map(p => el('option', { value: p }, p)), el('option', { value: '__nova' }, '＋ Nova prateleira…'));
+    if (inicial && prats.includes(inicial)) sel.value = inicial;
+    return { campo: sel, valor: () => {
+      if (sel.value !== '__nova') return sel.value;
+      return (prompt('Nome da nova prateleira:') || '').trim().replace(/[\\/:*?"<>|]/g, '');
+    } };
   }
 
   function trocarCapa(l, depois) {
@@ -337,11 +348,7 @@ ${l.sobre || ''}
     const url = el('input', { type: 'url', placeholder: 'ou cole o link de uma imagem de capa', class: 'bb-campo' });
     const j = janela('Trocar capa · ' + l.t, grade,
       el('div', { class: 'bb-linha' }, url, el('button', { class: 'bb-bt prim', onclick: () => { if (/^https?:\/\//.test(url.value.trim())) escolher(url.value.trim()); else toast('Cole um link que comece com https://'); } }, 'Usar')));
-    async function escolher(u) {
-      D().capas[chave(l.t)] = u; A().salvar();
-      j.fechar(); depois();
-      try { if (await mudarProp(l, { capa: u })) { l.capa = u; toast('🖼️ Capa trocada (e gravada no Obsidian)'); } else toast('🖼️ Capa trocada'); } catch (e) { toast('⚠️ Capa trocada no app, mas não no Obsidian: ' + e.message, { erro: true }); }
-    }
+    function escolher(u) { D().capas[chave(l.t)] = u; salvar(); j.fechar(); depois(); toast('🖼️ Capa trocada'); }
     edicoes(l.t, l.autor).then(({ lista, erros }) => {
       grade.innerHTML = '';
       if (!lista.length) grade.append(el('p', { class: 'bb-vazio' }, 'Não achei edições com capa agora.' + (erros.length ? ' (' + erros.join(' · ') + ')' : '')));
@@ -353,13 +360,13 @@ ${l.sobre || ''}
     });
   }
 
-  function adicionar(tituloInicial) {
-    const prats = prateleiras().map(p => p.nome);
+  // destino: 'estante' (prateleira + etiqueta) ou 'desejo' (lista de desejos)
+  function adicionar(tituloInicial, destino) {
+    const desejo = destino === 'desejo';
     const titulo = el('input', { class: 'bb-campo', placeholder: 'Título do livro', value: tituloInicial || '' });
     const autor = el('input', { class: 'bb-campo', placeholder: 'Autor (opcional, ajuda a achar)' });
-    const prat = el('select', { class: 'bb-campo' }, prats.map(p => el('option', { value: p }, p)), el('option', { value: '__nova' }, '＋ Nova prateleira…'));
-    if (vista.prat && prats.includes(vista.prat)) prat.value = vista.prat;
-    const status = el('select', { class: 'bb-campo' }, ['quero ler', 'lendo', 'lido'].map(s => el('option', { value: s }, s)));
+    const prat = seletorPrateleira(vista.prat);
+    const status = el('select', { class: 'bb-campo' }, Object.entries(STATUS).map(([s, [, nome]]) => el('option', { value: s }, nome)));
     const res = el('div', { class: 'bb-achados' });
     let escolhido = null;
     const buscar = async () => {
@@ -368,7 +375,6 @@ ${l.sobre || ''}
       let lista = [];
       try { lista = (await googleLivros(t, autor.value.trim(), 12)).filter(x => x.titulo); } catch (e) { /* reserva */ }
       if (!lista.length) { try { lista = (await openLibrary(t, autor.value.trim())).slice(0, 6); } catch (e) { /* nada */ } }
-      // melhor primeiro: título parecido, em português, com resumo e capa
       const pts = x => (parecido(x.titulo, t) ? 4 : 0) + (x.lang === 'pt' ? 2 : 0) + (x.sobre ? 2 : 0) + (x.capa ? 1 : 0);
       lista.sort((a, b) => pts(b) - pts(a) || String(b.data || b.ano).localeCompare(String(a.data || a.ano)));
       res.innerHTML = '';
@@ -381,61 +387,55 @@ ${l.sobre || ''}
       });
     };
     function marcar(x, b) { escolhido = x; res.querySelectorAll('.bb-achado').forEach(o => o.classList.toggle('on', o === b)); }
-    const j = janela('＋ Adicionar livro',
-      el('div', { class: 'bb-form' }, titulo, autor, el('div', { class: 'bb-linha' }, prat, status), el('button', { class: 'bb-bt prim', onclick: buscar }, '🔎 Buscar resumo e capa')),
+    const j = janela(desejo ? '💭 Adicionar à lista de desejos' : '＋ Adicionar livro à estante',
+      el('div', { class: 'bb-form' }, titulo, autor, desejo ? null : el('div', { class: 'bb-linha' }, prat.campo, status), el('button', { class: 'bb-bt prim', onclick: buscar }, '🔎 Buscar resumo e capa')),
       res,
-      el('div', { class: 'bb-det-acoes' }, el('button', { class: 'bb-bt prim', onclick: () => salvarNovo() }, '📚 Adicionar à biblioteca')));
+      el('div', { class: 'bb-det-acoes' }, el('button', { class: 'bb-bt prim', onclick: () => salvarNovo() }, desejo ? '💭 Pôr na lista de desejos' : '📚 Pôr na estante')));
     titulo.addEventListener('keydown', e => { if (e.key === 'Enter') buscar(); });
     autor.addEventListener('keydown', e => { if (e.key === 'Enter') buscar(); });
     setTimeout(() => titulo.focus(), 30);
     if (tituloInicial) buscar();
 
     async function salvarNovo() {
-      let p = prat.value;
-      if (p === '__nova') { p = (prompt('Nome da nova prateleira:') || '').trim().replace(/[\\/:*?"<>|]/g, ''); if (!p) return; }
       const t = (titulo.value.trim() || (escolhido && escolhido.titulo) || '').replace(/[\\/:*?"<>|#^[\]]/g, '').trim();
       if (!t) return titulo.focus();
-      if (S.livros.some(l => chave(l.t) === chave(t))) return toast('Esse livro já está na biblioteca 🙂');
+      const naEstante = S.livros.some(l => chave(l.t) === chave(t)), naLista = D().desejos.some(d => chave(d.t) === chave(t));
+      if (naEstante) return toast('Esse livro já está na estante 🙂');
+      if (desejo && naLista) return toast('Esse livro já está na lista de desejos 🙂');
+      const p = desejo ? '' : prat.valor(); if (!desejo && !p) return;
       const x = escolhido || {};
       let sobre = x.sobre || '';
       if (!sobre) { toast('Procurando o resumo…'); sobre = await resumoOnline(t, autor.value.trim() || x.autor); }
-      const novo = { t, autor: autor.value.trim() || x.autor || '', prateleira: p, capa: x.capa || '', status: status.value, ordem: '', nota: 0, sobre, ano: x.ano || '', editora: x.editora || '' };
-      if (KM.ponte.ligado() && S.fonte === 'obsidian') {
-        const c = `${S.pasta}/${p}/${t}.md`;
-        try {
-          await api('POST', '/api/obsidian/nota', { c, texto: notaObsidian(novo) });
-          S.livros.push(Object.assign(novo, { c, obs: true }));
-          toast(`📚 "${t}" adicionado (nota criada no Obsidian)`);
-        } catch (e) { return toast('⚠️ ' + e.message, { erro: true }); }
-      } else {
-        D().extras.push(Object.assign({ em: Date.now() }, novo)); A().salvar();
-        S.livros.push(Object.assign({ extra: true, obs: false }, novo));
-        toast(`📚 "${t}" adicionado`);
+      const novo = { t, autor: autor.value.trim() || x.autor || '', capa: x.capa || '', sobre, ano: x.ano || '', editora: x.editora || '', em: Date.now() };
+      if (desejo) {
+        D().desejos.push(novo); salvar();
+        j.fechar(); vista.busca = ''; vista.prat = DESEJOS; render(); toast(`💭 "${t}" está na sua lista de desejos`);
+        return;
       }
-      j.fechar(); vista.busca = ''; vista.prat = p; render();
+      if (naLista) tirarDesejo({ t });
+      D().extras.push(Object.assign(novo, { prateleira: p, status: status.value, ordem: '', nota: 0 }));
+      D().status[chave(t)] = status.value; salvar(); carregar();
+      j.fechar(); vista.busca = ''; vista.prat = p; render(); toast(`📚 "${t}" adicionado`);
       detalhe(S.livros.find(l => chave(l.t) === chave(t)));
     }
   }
 
   // ------------------------------------------------------------------ app na tela inicial
-  async function abrir(corpo, acoes) {
-    corpoAtual = corpo; corpo.classList.add('bb-corpo');
-    acoes.append(el('button', { class: 'appv-bt prim', onclick: () => adicionar('') }, '＋ Livro'));
-    corpo.append(el('p', { class: 'bb-carregando' }, 'Abrindo a estante…'));
-    await carregar();
-    if (corpoAtual !== corpo) return;
+  function abrir(corpo, acoesBox) {
+    corpoAtual = corpo; acoesAtual = acoesBox; corpo.classList.add('bb-corpo');
+    carregar();
     render();
     atualizarCapas(l => { if (corpoAtual === corpo) document.querySelectorAll(`[data-k="${CSS.escape(chave(l.t))}"] .bb-capa`).forEach(b => b.replaceWith(imgCapa(l))); });
   }
   function resumo() {
     const livros = S.livros.length ? S.livros : ((window.KM_BIBLIOTECA || {}).livros || []);
     if (!livros.length) return null;
-    const av = livros.filter(l => notaDe(l)).length;
-    return { txt: `${livros.length} livros · ${av} avaliado${av === 1 ? '' : 's'}` };
+    const av = livros.filter(l => notaDe(l)).length, ds = D().desejos.length;
+    return { txt: `${livros.length} livros · ${av} avaliado${av === 1 ? '' : 's'}${ds ? ` · ${ds} na lista de desejos` : ''}` };
   }
   function registrar() {
     if (!KM.inicio || !KM.app) return setTimeout(registrar, 50);
-    KM.inicio.registrar('biblioteca', { nome: 'Biblioteca', ic: '📚', abrir, sair: () => { corpoAtual = null; document.querySelectorAll('.bb-fundo').forEach(f => f.remove()); }, resumo });
+    KM.inicio.registrar('biblioteca', { nome: 'Biblioteca', ic: '📚', abrir, sair: () => { corpoAtual = null; acoesAtual = null; document.querySelectorAll('.bb-fundo').forEach(f => f.remove()); }, resumo });
   }
   KM.biblioteca = { abrir: () => KM.inicio && KM.inicio.abrirApp && KM.inicio.abrirApp('biblioteca') };
   registrar();
