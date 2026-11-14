@@ -1,4 +1,7 @@
-/* KWIK Mini Escritório · Obsidian conectado (só no PC: o servidor local lê e grava os arquivos .md do vault).
+/* KWIK Mini Escritório · 📇 Informações de clientes.
+   AGORA: os dados NÃO vêm mais do Obsidian ao vivo. Vêm do cofre (js/cofre.js + js/clientes-dados.js, gerado por
+   clientes-gerar.ps1 a partir da pasta de clientes), trancados com senha e só para consulta. O texto abaixo descreve
+   como era com o servidor; as rotas /api/obsidian/* agora são respondidas pelo KM.cofre.api.
    Dois apps na tela inicial:
    - 📇 Informações de clientes: as notas de clientes do Obsidian (tag #cliente ou pasta "Clientes"), com tudo o que está
      ligado a cada um (notas relacionadas, pastas de arquivos, tarefas abertas). Anotar, editar ou criar um cliente aqui
@@ -14,21 +17,17 @@
   const toast = (m, o) => A().toast(m, o);
 
   // ------------------------------------------------------------------ servidor
-  async function api(met, url, corpo) {
-    const r = await fetch(KM.ponte.base() + url, { method: met, cache: 'no-store', headers: corpo ? { 'Content-Type': 'application/json', 'X-Kwik': '1' } : {}, body: corpo ? JSON.stringify(corpo) : undefined });
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok) { const e = new Error(j.erro || 'Erro ' + r.status); e.status = r.status; e.dados = j; throw e; }
-    return j;
-  }
+  // os dados vêm do cofre (pasta de clientes trancada com senha), não do Obsidian
+  const api = (met, url) => KM.cofre.api(met, url);
   const q = o => Object.entries(o).map(([k, v]) => k + '=' + encodeURIComponent(v)).join('&');
-  const urlArquivo = c => KM.ponte.base() + '/api/obsidian/arquivo?' + q({ c });
+  const urlArquivo = c => '#anexo-' + encodeURIComponent(c); // anexos ficam só no Obsidian do PC
 
   // ------------------------------------------------------------------ índice do vault
   const S = { notas: [], porC: new Map(), porNome: new Map(), anexos: [], vault: '', carregadoEm: 0, assinatura: '', erro: '' };
   const semAcento = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   const nomeDe = c => c.split('/').pop().replace(/\.md$/i, '');
   async function carregar(forcar) {
-    if (!(await KM.ponte.checar())) throw Object.assign(new Error('O Obsidian fica no seu PC'), { status: 0 });
+    if (!(await KM.cofre.tentarAuto())) throw Object.assign(new Error('Os dados dos clientes estão trancados'), { status: 0 });
     if (!forcar && Date.now() - S.carregadoEm < 4000 && S.notas.length) return false;
     const j = await api('GET', '/api/obsidian/indice');
     const ass = j.notas.map(n => n.c + n.m).join('|');
@@ -189,7 +188,7 @@
         N.editando ? el('button', { class: 'bt peq prim', onclick: async () => { await salvarAberta(); N.editando = false; pintarNota(); } }, '✓ Concluir')
           : el('button', { class: 'bt peq', disabled: !N.gravavel, onclick: () => { N.editando = true; pintarNota(); } }, '✏️ Editar'),
         el('a', { class: 'bt peq', href: linkObsidian(N.c), title: 'Abrir esta nota no app do Obsidian' }, '📓 No Obsidian'))));
-    box.append(el('div', { class: 'ob-status', id: 'obStatus' }, N.gravavel ? `🔗 Ligada ao arquivo do Obsidian · alterada ${quandoTxt(N.m)}` : '🔒 Esta nota não está em UTF-8: edite no Obsidian'));
+    box.append(el('div', { class: 'ob-status', id: 'obStatus' }, N.gravavel ? `🔗 Ligada ao arquivo do Obsidian · alterada ${quandoTxt(N.m)}` : `🔒 Só consulta · da pasta de clientes, alterada ${quandoTxt(N.m)}`));
     // propriedades
     const pk = Object.entries(props); const tags = (Array.isArray(props.tags) ? props.tags : props.tags ? [props.tags] : n.tags || []);
     if (pk.length || tags.length) {
@@ -264,14 +263,12 @@
   };
   async function abrirApp(corpo, acoes, inicial) {
     corpoApp = corpo; corpo.classList.add('zf-corpo'); visao = inicial; aberta = null;
-    acoes.append(el('button', { class: 'appv-bt', title: 'Ler o Obsidian de novo agora', onclick: () => atualizar(true) }, '🔄'),
-      el('button', { class: 'appv-bt prim', onclick: () => { visao = 'clientes'; render(); setTimeout(novoCliente, 30); } }, '＋ Cliente'));
-    corpo.innerHTML = '<p class="ob-carrega" style="padding:24px">📓 Procurando o seu Obsidian…</p>';
-    if (!(await KM.ponte.checar(true))) { if (corpoApp === corpo) { corpo.innerHTML = ''; semPC(corpo); } return; }
-    corpo.innerHTML = '<p class="ob-carrega" style="padding:24px">📓 Lendo o seu Obsidian…</p>';
+    acoes.innerHTML = '';
+    corpo.innerHTML = '<p class="ob-carrega" style="padding:24px">🔐 Abrindo os dados dos clientes…</p>';
+    if (!(await KM.cofre.tentarAuto())) { if (corpoApp === corpo) { corpo.innerHTML = ''; semPC(corpo, acoes); } return; }
+    acoes.append(el('button', { class: 'appv-bt', title: 'Esquecer a senha neste aparelho', onclick: () => { KM.cofre.trancar(); S.notas = []; S.assinatura = ''; toast('🔒 Clientes trancados neste aparelho'); abrirApp(corpo, acoes, visao); } }, '🔒 Trancar'));
     try { await carregar(true); } catch (e) { return semVault(corpo, e); }
     render();
-    clearInterval(timer); timer = setInterval(() => atualizar(false), 5000);
     if (pendente) { const c = pendente; pendente = null; abrirCliente(c); }
   }
   function sairApp() { clearInterval(timer); timer = 0; if (aberta && aberta.sujo) salvarAberta(); aberta = null; corpoApp = null; }
@@ -287,19 +284,27 @@
     }
     if (mudou || forcar) { cacheTar = null; render(true); }
   }
-  function semPC(corpo) {
-    if (KM.ponte.computador()) {
-      // estamos num computador, mas o servidor do escritório não respondeu
-      corpo.append(el('div', { class: 'ob-aviso' }, el('h2', {}, '📓 Ligue o escritório neste PC'),
-        el('p', {}, 'O Obsidian é lido pelo servidor do escritório, que roda no seu computador. Se ele estiver fechado, dê dois cliques no atalho "KWIK Mini Escritório" da área de trabalho (ou no ABRIR-ESCRITORIO.bat).'),
-        el('p', {}, 'Se o navegador perguntar se este site pode acessar dispositivos da rede local, toque em Permitir.'),
-        (() => { const p = el('p', { class: 'ob-perm' }); KM.ponte.permissao().then(s => { if (s === 'denied') p.append(el('b', {}, '⚠️ O navegador está bloqueando: '), 'clique no cadeado (ou no ícone de ajustes) ao lado do endereço do site → Configurações do site → "Acesso à rede local" → Permitir, e recarregue a página.'); }); return p; })(),
-        el('button', { class: 'bt prim', onclick: () => abrirApp(corpo, el('div'), visao) }, '🔄 Tentar de novo')));
+  // tela da senha (os dados dos clientes ficam trancados porque o site é público)
+  function semPC(corpo, acoes) {
+    if (!KM.cofre.existe()) {
+      corpo.append(el('div', { class: 'ob-aviso' }, el('h2', {}, '📇 Ainda não há dados de clientes'),
+        el('p', {}, 'No PC, rode o clientes-gerar.ps1 (ele lê a pasta de clientes e tranca tudo com a sua senha) e publique.')));
       return;
     }
-    corpo.append(el('div', { class: 'ob-aviso' }, el('h2', {}, '📓 O seu Obsidian fica no PC'),
-      el('p', {}, 'As notas do Obsidian estão nos arquivos do seu computador. Para ver e editar as informações dos clientes, abra o Mini Escritório pelo PC.'),
-      el('p', {}, 'Tudo o que você anotar lá vai direto para o Obsidian, e o que mudar no Obsidian aparece lá.')));
+    const senha = el('input', { type: 'password', class: 'ob-anotar-in ob-senha', placeholder: 'Senha dos clientes', autocomplete: 'current-password' });
+    const msg = el('p', { class: 'ob-perm' });
+    const bt = el('button', { class: 'bt prim' }, '🔓 Abrir');
+    const ir = async () => {
+      if (!senha.value) return senha.focus();
+      bt.disabled = true; bt.textContent = 'Abrindo…'; msg.textContent = '';
+      try { await KM.cofre.abrir(senha.value); senha.value = ''; abrirApp(corpo, acoes || el('div'), visao); }
+      catch (e) { msg.textContent = '⚠️ ' + e.message; bt.disabled = false; bt.textContent = '🔓 Abrir'; senha.select(); }
+    };
+    bt.addEventListener('click', ir); senha.addEventListener('keydown', e => { if (e.key === 'Enter') ir(); });
+    corpo.append(el('div', { class: 'ob-aviso' }, el('h2', {}, '🔐 Clientes trancados'),
+      el('p', {}, `${KM.cofre.qtd()} clientes da sua pasta de clientes${KM.cofre.geradoEm() ? ' (atualizados em ' + KM.cofre.geradoEm().split('-').reverse().join('/') + ')' : ''}. Digite a senha para ver. Neste aparelho ela só é pedida uma vez.`),
+      el('div', { class: 'ob-anotar' }, senha, bt), msg));
+    setTimeout(() => senha.focus(), 50);
   }
   function semVault(corpo, e) {
     corpo.innerHTML = '';
@@ -311,7 +316,7 @@
     const lado = corpoApp && corpoApp.querySelector('.zf-lado'); if (!lado) return;
     const cl = clientes(), cont = { clientes: cl.length, empresas: cl.filter(n => tipoCliente(n) === 'empresa').length, pessoas: cl.filter(n => tipoCliente(n) === 'pessoa').length, tarefas: S.notas.reduce((s, n) => s + (n.tarefas || 0), 0) };
     lado.innerHTML = '';
-    lado.append(el('div', { class: 'zf-marca' }, el('b', {}, '📓 Obsidian'), el('small', {}, S.vault)));
+    lado.append(el('div', { class: 'zf-marca' }, el('b', {}, '📇 Clientes'), el('small', {}, KM.cofre.geradoEm() ? 'atualizado em ' + KM.cofre.geradoEm().split('-').reverse().join('/') : S.vault)));
     const item = k => el('button', { class: 'zf-item' + (visao === k ? ' on' : ''), onclick: () => { visao = k; aberta = null; render(); } }, el('span', {}, VISOES[k][0]), VISOES[k][1], cont[k] != null ? el('em', { class: 'zf-cont' }, String(cont[k])) : null);
     lado.append(el('div', { class: 'zf-sec' }, 'Informações de clientes'), item('clientes'), item('empresas'), item('pessoas'),
       el('div', { class: 'zf-sec' }, 'Todo o Obsidian'), item('pastas'), item('busca'), item('tarefas'), item('recentes'),
@@ -343,8 +348,7 @@
     };
     busca.addEventListener('input', () => { filtro = busca.value; pintar(); });
     main.append(el('div', { class: 'zf-topo' }, busca),
-      el('div', { class: 'zf-cab' }, el('div', {}, el('h2', {}, VISOES[visao][1]), el('small', {}, `${lista.length} nota(s) de cliente no Obsidian · toque para ver tudo do cliente`)),
-        el('button', { class: 'bt prim', onclick: novoCliente }, '＋ Novo cliente')),
+      el('div', { class: 'zf-cab' }, el('div', {}, el('h2', {}, VISOES[visao][1]), el('small', {}, `${lista.length} cliente(s) da pasta de clientes · toque para ver tudo do cliente`))),
       el('div', { id: 'obNovo' }), grade);
     pintar();
   }
@@ -571,20 +575,19 @@
   }
 
   // ------------------------------------------------------------------ registro e ganchos
-  const resumo = () => (KM.ponte.ligado() && S.notas.length ? { txt: `${clientes().length} clientes · ${S.notas.length} notas` } : { txt: KM.ponte.ligado() ? 'Ligado ao seu Obsidian' : KM.ponte.computador() ? 'Toque para conectar ao PC' : 'Abra pelo PC' });
+  const resumo = () => (KM.cofre.aberto() && S.notas.length ? { txt: `${clientes().length} clientes` } : { txt: !KM.cofre.existe() ? 'Ainda sem dados' : KM.cofre.aberto() ? `${KM.cofre.qtd()} clientes` : `🔐 ${KM.cofre.qtd()} clientes · toque e digite a senha` });
   function registrar() {
     if (!KM.inicio) return setTimeout(registrar, 50);
     KM.inicio.registrar('infoclientes', { nome: 'Informações de clientes', ic: '📇', abrir: (c, a) => abrirApp(c, a, 'clientes'), sair: sairApp, resumo });
     KM.inicio.registrar('obsidian', { nome: 'Obsidian', ic: '📓', abrir: (c, a) => abrirApp(c, a, 'pastas'), sair: sairApp, resumo });
-    if (KM.ehPC) setTimeout(() => carregar(true).catch(() => {}), 2500); // deixa o índice pronto para os cartões de cliente
+    setTimeout(() => carregar(true).catch(() => {}), 2500); // se este aparelho já tem a senha, deixa o índice pronto para os cartões de cliente
   }
   registrar();
   // ficha do cliente no escritório/cidade -> nota do Obsidian
   async function blocoNaFicha(nome, box) {
-    if (!KM.ponte.computador()) return;
     try { await carregar(false); } catch (e) { return; }
     const n = acharCliente(nome); if (!n || !box.isConnected) return;
-    box.append(el('div', { class: 'rua-bloco bem' }, el('b', {}, '📓 Obsidian'), el('p', {}, mascarar(n.resumo || '').slice(0, 160) || 'Nota do cliente no Obsidian.'),
+    box.append(el('div', { class: 'rua-bloco bem' }, el('b', {}, '📇 Informações do cliente'), el('p', {}, mascarar(n.resumo || '').slice(0, 160) || 'Nota do cliente.'),
       el('button', { class: 'bt peq', onclick: () => abrirCliente(n.c) }, 'Ver tudo do cliente')));
   }
   KM.obsidian = { carregar, acharCliente, abrirCliente, blocoNaFicha, clientes, estado: () => S, _md: md, _inserir: inserirAnotacao };
