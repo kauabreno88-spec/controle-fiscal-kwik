@@ -1,0 +1,64 @@
+/* KWIK Mini Escritório · 🏷️ CNAE (js/cnae.js) */
+.appv-corpo.cn-corpo { background: #F4F7F5; padding: 18px 18px 100px; }
+.cn-topo { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; background: linear-gradient(135deg, #1E8A45, #28BE52); color: #fff; border-radius: 22px; padding: 22px 24px; box-shadow: 0 18px 40px -22px rgba(23,107,55,.8); }
+.cn-topo h2 { margin: 0; font-size: 24px; font-weight: 900; } .cn-topo p { margin: 6px 0 0; color: #e3f8ea; max-width: 620px; }
+.cn-grande { background: #fff !important; color: #176B37 !important; border: 0 !important; font-size: 16px !important; padding: 14px 20px !important; border-radius: 14px !important; font-weight: 900 !important; box-shadow: 0 10px 22px -12px rgba(0,0,0,.4); }
+.cn-buscabox { margin: 14px 0; }
+.cn-busca { width: 100%; border: 1.5px solid #DCE5E1; border-radius: 12px; padding: 12px 14px; font: inherit; font-size: 14px; background: #fff; }
+.cn-busca:focus { outline: none; border-color: #28BE52; }
+.cn-achados { display: grid; gap: 6px; margin-top: 8px; }
+.cn-achado { display: grid; grid-template-columns: 90px 1fr auto auto; gap: 10px; align-items: center; background: #fff; border: 1px solid #e3ece7; border-radius: 12px; padding: 8px 12px; font-size: 13px; }
+.cn-vazio { color: #6b7774; } .cn-vazio.grande { text-align: center; padding: 40px 10px; } .cn-vazio.grande p { font-size: 16px; font-weight: 700; color: #1d2826; }
+code { font-family: Consolas, monospace; font-weight: 800; color: #176B37; }
+
+.cn-res { display: grid; gap: 14px; }
+.cn-bloco { background: #fff; border: 1px solid #e3ece7; border-radius: 18px; padding: 16px 18px; }
+.cn-bloco h3 { margin: 4px 0 10px; font-size: 14px; text-transform: uppercase; letter-spacing: .5px; color: #1E8A45; }
+.cn-bloco h3 + .cn-item, .cn-lista { margin-bottom: 8px; }
+.cn-pedido small { color: #6b7774; font-weight: 700; } .cn-pedido p { margin: 6px 0; font-size: 15px; }
+.cn-lista { display: grid; gap: 8px; }
+.cn-item { border: 1.5px solid #e3ece7; border-radius: 14px; padding: 10px 12px; background: #fbfdfc; transition: border-color .15s; }
+.cn-item.on { border-color: #28BE52; background: #f3fbf6; } .cn-item.principal { border-color: #1E8A45; background: #eaf8ef; box-shadow: 0 8px 20px -14px rgba(23,107,55,.7); }
+.cn-item-top { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; } .cn-item-top b { font-size: 14.5px; color: #111A19; }
+.cn-item-top input { width: 18px; height: 18px; accent-color: #28BE52; transform: translateY(3px); }
+.cn-tag { background: #1E8A45; color: #fff; font-size: 11px; font-weight: 900; border-radius: 6px; padding: 2px 7px; text-transform: uppercase; }
+.cn-chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 7px 0 2px; }
+.cn-chips span { font-size: 11px; font-weight: 800; border-radius: 99px; padding: 3px 8px; background: #eef3f0; color: #42514c; }
+.cn-chips span.ok { background: #dcf6e5; color: #176B37; } .cn-chips span.nao { background: #ffe9e9; color: #c0353a; } .cn-chips span.sn { background: #e7f0ff; color: #2f63c4; }
+.cn-item-bts { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 4px; }
+.cn-link { border: 0; background: none; padding: 0; color: #1E8A45; font: inherit; font-size: 12.5px; font-weight: 800; cursor: pointer; }
+.cn-link:hover { text-decoration: underline; }
+.cn-mais { margin-top: 8px; padding-top: 8px; border-top: 1px dashed #d7e6dd; font-size: 12.5px; color: #42514c; } .cn-mais p { margin: 4px 0; }
+.cn-dica { color: #6b7774; font-size: 12px; margin: 8px 0 0; }
+.cn-duas { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.cn-bloco.destaque { background: linear-gradient(180deg, #fff, #f3fbf6); }
+.cn-grande-txt { display: block; font-size: 19px; font-weight: 900; color: #176B37; } .cn-bloco p { line-height: 1.5; }
+.cn-aviso { background: #fff6e0; color: #8a5a00; border-radius: 10px; padding: 8px 10px; font-size: 13px; font-weight: 600; }
+.cn-est { display: grid; gap: 4px; background: #111A19; color: #e9f2ee; border-radius: 12px; padding: 10px 12px; margin: 8px 0; }
+.cn-est small { color: #8ff0ad; font-weight: 700; } .cn-est div { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; } .cn-est b { color: #fff; }
+.cn-objeto { background: #f6faf8; border-radius: 12px; padding: 12px; font-size: 14px; }
+.cn-ul, .cn-check { margin: 0; padding-left: 4px; list-style: none; display: grid; gap: 6px; } .cn-ul li { font-size: 14px; }
+.cn-check label { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; cursor: pointer; } .cn-check input { accent-color: #28BE52; width: 17px; height: 17px; margin-top: 2px; }
+.cn-passos { margin: 0; padding-left: 0; list-style: none; counter-reset: p; display: grid; gap: 10px; }
+.cn-passos li { counter-increment: p; display: grid; grid-template-columns: 34px 1fr; column-gap: 10px; }
+.cn-passos li::before { content: counter(p); grid-row: span 2; width: 30px; height: 30px; border-radius: 50%; background: #28BE52; color: #fff; font-weight: 900; display: grid; place-items: center; }
+.cn-passos b { font-size: 14.5px; } .cn-passos span { color: #42514c; font-size: 13.5px; line-height: 1.45; }
+.cn-fim { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+
+/* janela de descrição */
+.cn-fundo { position: fixed; inset: 0; z-index: 90; background: rgba(9,20,15,.55); display: flex; align-items: center; justify-content: center; padding: 16px; animation: appEntra .2s ease-out; }
+.cn-janela { width: min(640px, 100%); max-height: calc(100vh - 32px); overflow: auto; background: #fff; border-radius: 20px; box-shadow: 0 30px 80px rgba(0,0,0,.35); }
+.cn-janela > header { position: sticky; top: 0; display: flex; align-items: center; gap: 10px; padding: 14px 18px; background: #111A19; color: #fff; border-bottom: 3px solid #28BE52; }
+.cn-janela > header b { flex: 1; font-size: 16px; font-weight: 900; } .cn-x { border: 0; background: none; color: #fff; font-size: 26px; line-height: 1; cursor: pointer; }
+.cn-form { display: grid; gap: 12px; padding: 18px; }
+.cn-campo { display: grid; gap: 5px; font-size: 13px; font-weight: 700; color: #1d2826; min-width: 0; }
+.cn-campo small { color: #6b7774; font-weight: 500; }
+.cn-campo input, .cn-campo select, .cn-desc { width: 100%; border: 1.5px solid #DCE5E1; border-radius: 11px; padding: 10px 12px; font: inherit; font-size: 14.5px; background: #fff; color: #111A19; }
+.cn-desc { resize: vertical; min-height: 120px; line-height: 1.45; }
+.cn-campo input:focus, .cn-campo select:focus, .cn-desc:focus { outline: none; border-color: #28BE52; box-shadow: 0 0 0 3px rgba(40,190,82,.12); }
+.cn-linha { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; } .cn-linha:has(.cn-uf) { grid-template-columns: 1fr 90px; }
+.cn-ir { font-size: 15px; padding: 13px; }
+@media (max-width: 760px) {
+  .appv-corpo.cn-corpo { padding: 10px 10px 100px; } .cn-topo { padding: 18px; } .cn-topo h2 { font-size: 20px; }
+  .cn-duas { grid-template-columns: 1fr; } .cn-achado { grid-template-columns: 1fr; } .cn-linha { grid-template-columns: 1fr; } .cn-linha:has(.cn-uf) { grid-template-columns: 1fr 80px; }
+}
