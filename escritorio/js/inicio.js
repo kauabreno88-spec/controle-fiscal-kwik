@@ -92,34 +92,134 @@
     passo();
     setTimeout(() => { elm.textContent = fmt === 'brl' ? brl0(alvo) : String(Math.round(alvo)); }, dur + 80); // garante o valor final
   }
+  // ------------------------------------------------------------------ painel vivo (cartões da esquerda)
+  // Carrossel que troca a cada 5 s (com barra de progresso), resumo que alterna Hoje/Esta semana a cada 9 s e uma faixa
+  // de notícias que corre sem parar. Tudo para quando a tela inicial fecha.
+  let timerCarrossel = 0, timerResumo = 0, slideAt = 0;
+  const SLIDE_MS = 5000, RESUMO_MS = 9000;
+  const pararPainel = () => { clearInterval(timerCarrossel); clearInterval(timerResumo); timerCarrossel = timerResumo = 0; };
+  const inicioVisivel = () => { const i = $('#inicio'); return i && !i.hidden && !document.hidden; };
+  // próximos prazos do mês (dia fixo; quando cai no fim de semana o prazo real muda, então é só um lembrete)
+  function proximoPrazo() {
+    const h = new Date(); h.setHours(0, 0, 0, 0);
+    const lista = [];
+    for (let k = 0; k < 2; k++) {
+      const a = h.getFullYear(), m = h.getMonth() + k, ult = new Date(a, m + 1, 0).getDate();
+      lista.push([new Date(a, m, 15), 'eSocial e DCTFWeb', 'fechar a folha do mês']);
+      lista.push([new Date(a, m, 20), 'DAS, INSS, FGTS e IRRF', 'guias do Simples e da folha']);
+      lista.push([new Date(a, m, 25), 'PIS e COFINS', 'empresas do Presumido e do Real']);
+      if ([0, 3, 6, 9].includes(new Date(a, m, 1).getMonth())) lista.push([new Date(a, m, ult), 'IRPJ e CSLL trimestrais', 'Lucro Presumido / Real']);
+      lista.push([new Date(a, m, ult), 'Carnê-leão', 'rendimentos de pessoa física']);
+    }
+    const p = lista.filter(([d]) => d >= h).sort((x, y) => x[0] - y[0])[0];
+    return { data: p[0], nome: p[1], det: p[2], dias: Math.round((p[0] - h) / 864e5) };
+  }
+  const DICAS = [
+    ['💡', 'IR 2026', 'Salário até R$ 5.000 não paga imposto de renda. Até R$ 7.350 o desconto diminui.', 'calculo'],
+    ['🆕', 'Reforma Tributária', 'Em 2027 o PIS e a COFINS acabam e entra a CBS. O IBS chega aos poucos até 2033.', 'calculo'],
+    ['💰', 'Dividendos', 'A partir de 2026, lucro acima de R$ 50 mil no mês, da mesma empresa, tem 10% retido na fonte.', 'calculo'],
+    ['📐', 'Fator R', 'No Simples, folha de 28% ou mais do faturamento leva serviços do Anexo V para o III.', 'calculo'],
+    ['🛡️', 'INSS 2026', 'Salário mínimo R$ 1.621. Teto do INSS R$ 8.475,55, desconto máximo R$ 988,09.', 'calculo'],
+    ['🏢', 'Lucro Presumido', 'Desde 2026 a presunção é 10% maior sobre a receita do ano acima de R$ 5 milhões.', 'calculo'],
+  ];
+  function slides(N) {
+    const T = N.proxT, R = N.proxR, p = proximoPrazo(), out = [];
+    out.push({ ic: '✅', cor: 'verde', rot: 'Próxima tarefa', tit: T ? T.texto : 'Nada pendente 🎉', sub: T ? quando(T.data, T.hora) : 'Toque para anotar', ir: () => abrirApp('tarefas') });
+    out.push({ ic: '📅', cor: 'azul', rot: 'Próxima reunião', tit: R ? R.titulo : 'Agenda livre', sub: R ? quando(R.data, R.hora) + (R.com ? ' · ' + R.com : '') : 'Toque para marcar', ir: () => abrirApp('reuniao') });
+    out.push({ ic: '⏳', cor: p.dias <= 3 ? 'alerta' : 'ouro', rot: 'Próximo prazo', tit: p.nome, sub: (p.dias === 0 ? 'É hoje' : p.dias === 1 ? 'Amanhã' : `Faltam ${p.dias} dias`) + ` · ${String(p.data.getDate()).padStart(2, '0')}/${String(p.data.getMonth() + 1).padStart(2, '0')} · ${p.det}`, contagem: p.dias, ir: () => abrirApp('reuniao') });
+    if (N.vencidas != null) out.push({ ic: '🧾', cor: N.vencidas ? 'alerta' : 'verde', rot: 'Guias vencidas', tit: N.vencidas ? `${N.vencidas} guia${N.vencidas > 1 ? 's' : ''} vencida${N.vencidas > 1 ? 's' : ''}` : 'Nenhuma guia vencida', sub: N.vencidas ? 'Toque para ver no Fiscal' : 'Tudo em dia no Fiscal 👏', ir: () => abrirApp('fiscalfolha') });
+    out.push({ ic: '🎯', cor: 'verde', rot: 'Meta', tit: `${brl0(N.total)}/mês`, sub: `${N.ativos || 0} cliente${N.ativos === 1 ? '' : 's'} ativo${N.ativos === 1 ? '' : 's'}`, barras: true, ir: () => abrirApp('meta') });
+    try { // livro que você está lendo (Biblioteca)
+      const b = A().cfg().biblioteca || {}, st = b.status || {}, chave = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+      const todos = [...((window.KM_BIBLIOTECA || {}).livros || []), ...(b.extras || [])];
+      const lendo = todos.find(l => (st[chave(l.t)] || l.status) === 'lendo');
+      if (lendo) out.push({ ic: '📖', cor: 'roxo', rot: 'Lendo agora', tit: lendo.t, sub: lendo.autor || 'Biblioteca', capa: (b.capas || {})[chave(lendo.t)] || ((b.capasAuto || {})[chave(lendo.t)] || {}).url || lendo.capa, ir: () => abrirApp('biblioteca') });
+    } catch (e) { /* ok */ }
+    const d = DICAS[(new Date().getDate() + slideAt) % DICAS.length];
+    out.push({ ic: d[0], cor: 'ouro', rot: 'Dica · ' + d[1], tit: d[2], sub: 'Toque para calcular', dica: true, ir: () => abrirApp(d[3]) });
+    return out;
+  }
+  function pintarSlide(box, lista, i, direcao = 1) {
+    const s = lista[i % lista.length];
+    const corpo = el('div', { class: 'pv-slide c-' + s.cor + (direcao < 0 ? ' volta' : ''), onclick: s.ir },
+      s.capa ? el('img', { class: 'pv-capa', src: s.capa, alt: '', referrerpolicy: 'no-referrer', onerror: e => e.target.replaceWith(el('span', { class: 'pv-ic' }, s.ic)) }) : el('span', { class: 'pv-ic' }, s.ic),
+      el('div', { class: 'pv-txt' }, el('small', {}, s.rot), el('b', { class: s.dica ? 'dica' : '' }, s.tit), el('em', {}, s.sub)),
+      s.contagem != null ? el('div', { class: 'pv-cont', style: `--p:${Math.max(6, 100 - s.contagem / 30 * 100)}%` }, el('b', {}, String(s.contagem)), el('small', {}, s.contagem === 1 ? 'dia' : 'dias')) : null,
+      s.barras ? el('div', { class: 'pv-barras', 'aria-hidden': 'true' }, [40, 65, 50, 80, 70, 95].map((h, k) => el('i', { style: `--h:${h}%;--k:${k}` }))) : null);
+    const palco = box.querySelector('.pv-palco'), velho = palco.firstChild;
+    if (velho) { velho.classList.add('sai'); setTimeout(() => velho.remove(), 450); }
+    palco.append(corpo);
+    box.querySelectorAll('.pv-pontos i').forEach((p, k) => p.classList.toggle('on', k === i % lista.length));
+    const barra = box.querySelector('.pv-progresso i'); barra.style.animation = 'none'; void barra.offsetWidth; barra.style.animation = '';
+  }
+  function painelVivo(N) {
+    pararPainel();
+    // carrossel
+    const rota = $('#iniRota'); rota.innerHTML = ''; rota.className = 'i2-card i2-rota pv';
+    let lista = slides(N); slideAt = slideAt % lista.length;
+    const ir = d => { slideAt = (slideAt + d + lista.length) % lista.length; pintarSlide(rota, lista, slideAt, d); };
+    rota.append(el('div', { class: 'pv-palco' }),
+      el('div', { class: 'pv-rodape' },
+        el('button', { class: 'pv-seta', 'aria-label': 'Anterior', onclick: e => { e.stopPropagation(); ir(-1); reiniciar(); } }, '‹'),
+        el('div', { class: 'pv-pontos' }, lista.map((_, k) => el('i', { onclick: e => { e.stopPropagation(); slideAt = k; pintarSlide(rota, lista, k); reiniciar(); } }))),
+        el('button', { class: 'pv-seta', 'aria-label': 'Próximo', onclick: e => { e.stopPropagation(); ir(1); reiniciar(); } }, '›')),
+      el('div', { class: 'pv-progresso', style: `--dur:${SLIDE_MS}ms` }, el('i')),
+      el('button', { class: 'i2-giro', title: 'Atualizar', onclick: e => { e.currentTarget.classList.add('gira'); setTimeout(renderInicio, 450); } }, '↻'));
+    pintarSlide(rota, lista, slideAt);
+    rota.addEventListener('mouseenter', () => rota.classList.add('pausa')); rota.addEventListener('mouseleave', () => rota.classList.remove('pausa'));
+    function reiniciar() {
+      clearInterval(timerCarrossel);
+      timerCarrossel = setInterval(() => {
+        if (!inicioVisivel()) { if (!$('#inicio') || $('#inicio').hidden) pararPainel(); return; }
+        if (rota.classList.contains('pausa')) return;
+        if (slideAt === lista.length - 1) lista = slides(numeros()); // a cada volta, pega os dados de novo
+        ir(1);
+      }, SLIDE_MS);
+    }
+    reiniciar();
+    // resumo
+    pintarResumo(N);
+    timerResumo = setInterval(() => {
+      if (!inicioVisivel()) return;
+      if ($('#iniResumo').matches(':hover')) return;
+      visaoResumo = visaoResumo === 'hoje' ? 'semana' : 'hoje'; pintarResumo(numeros());
+    }, RESUMO_MS);
+  }
+  function pintarResumo(N) {
+    const res = $('#iniResumo'); res.innerHTML = '';
+    const H = visaoResumo === 'hoje';
+    const campos = H
+      ? [['Tarefas para hoje', N.hoje.tarefas, '', N.hoje.atrasadas ? `${N.hoje.atrasadas} atrasada${N.hoje.atrasadas > 1 ? 's' : ''}` : ''], ['Reuniões hoje', N.hoje.reunioes, '', ''], ['Guias vencidas', N.vencidas, '', 'Fiscal'], ['Clientes ativos', N.ativos, '', 'Meta']]
+      : [['Tarefas na semana', N.semana.tarefas, '', ''], ['Reuniões na semana', N.semana.reunioes, '', ''], ['Folhas a fechar', N.folhas, '', 'Folha'], ['Faturamento/mês', N.total, 'brl', 'Meta']];
+    const grade = el('div', { class: 'i2-campos pv-troca' });
+    campos.forEach(([rot, v, fmt, extra], i) => {
+      const b = el('b', { 'data-fmt': fmt }, v == null ? '—' : '0');
+      grade.append(el('div', { class: (i % 2 ? 'dir' : '') + (rot === 'Guias vencidas' && v ? ' quente' : ''), style: `--i:${i}` }, el('small', {}, rot), b, extra ? el('em', {}, extra) : null));
+      if (v != null) setTimeout(() => contar(b, v), 120 + i * 80);
+    });
+    // faixa de notícias correndo
+    const p = proximoPrazo(), itens = [
+      N.vencidas ? `🧾 ${N.vencidas} guia${N.vencidas > 1 ? 's' : ''} vencida${N.vencidas > 1 ? 's' : ''}` : '🧾 Guias em dia',
+      `⏳ ${p.nome}: ${p.dias === 0 ? 'hoje' : p.dias === 1 ? 'amanhã' : 'em ' + p.dias + ' dias'}`,
+      `🎯 Meta ${brl0(N.total)}/mês`, `👥 ${N.ativos || 0} clientes ativos`,
+      N.hoje.tarefas ? `✅ ${N.hoje.tarefas} tarefa${N.hoje.tarefas > 1 ? 's' : ''} para hoje` : '✅ Nenhuma tarefa para hoje',
+      N.semana.reunioes ? `📅 ${N.semana.reunioes} reuni${N.semana.reunioes > 1 ? 'ões' : 'ão'} na semana` : '📅 Semana sem reuniões',
+      '🆕 IBS e CBS: veja a transição na 🧮 Cálculo', '💡 IR zero até R$ 5 mil em 2026',
+    ];
+    const faixa = el('div', { class: 'pv-faixa', 'aria-hidden': 'true' }, el('div', { class: 'pv-trilho' }, [...itens, ...itens].map(t => el('span', {}, t))));
+    res.append(el('div', { class: 'i2-toggle' }, ['hoje', 'semana'].map(k => el('button', { class: visaoResumo === k ? 'on' : '', onclick: () => { visaoResumo = k; pintarResumo(numeros()); } }, k === 'hoje' ? 'Hoje' : 'Esta semana'))),
+      el('div', { class: 'pv-tempo', style: `--dur:${RESUMO_MS}ms` }, el('i')),
+      grade, faixa, el('button', { class: 'i2-botao', onclick: () => irEscritorio() }, '🏢  Entrar no escritório'));
+  }
+
   function renderInicio() {
     const agora = new Date(), N = numeros();
     $('#iniSauda').textContent = saudacao();
     $('#iniData').textContent = agora.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).replace(/^./, c => c.toUpperCase());
     $('#iniAgua').textContent = DIAS[agora.getDay()];
     relogio();
-    // cartão "rota": o que vem agora (tarefa) e depois (reunião)
-    const rota = $('#iniRota'); rota.innerHTML = '';
-    const T = N.proxT, R = N.proxR;
-    rota.append(el('div', { class: 'i2-pilula' }, el('span', {}, '✓'), el('i'), el('span', {}, '◷')),
-      el('div', { class: 'i2-rota-l', onclick: () => abrirApp('tarefas') }, el('small', {}, 'Próxima tarefa'), el('b', {}, T ? T.texto : 'Nada pendente 🎉'), el('em', {}, T ? quando(T.data, T.hora) : 'Toque para anotar')),
-      el('hr'),
-      el('div', { class: 'i2-rota-l', onclick: () => abrirApp('reuniao') }, el('small', {}, 'Próxima reunião'), el('b', {}, R ? R.titulo : 'Agenda livre'), el('em', {}, R ? quando(R.data, R.hora) + (R.com ? ' · ' + R.com : '') : 'Toque para marcar')),
-      el('button', { class: 'i2-giro', title: 'Atualizar', onclick: e => { e.currentTarget.classList.add('gira'); setTimeout(renderInicio, 450); } }, '↻'));
-    // cartão do resumo com o seletor Hoje | Semana
-    const res = $('#iniResumo'); res.innerHTML = '';
-    const H = visaoResumo === 'hoje';
-    const campos = H
-      ? [['Tarefas para hoje', N.hoje.tarefas, '', N.hoje.atrasadas ? `${N.hoje.atrasadas} atrasada${N.hoje.atrasadas > 1 ? 's' : ''}` : ''], ['Reuniões hoje', N.hoje.reunioes, '', ''], ['Guias vencidas', N.vencidas, '', 'Fiscal'], ['Clientes ativos', N.ativos, '', 'Meta']]
-      : [['Tarefas na semana', N.semana.tarefas, '', ''], ['Reuniões na semana', N.semana.reunioes, '', ''], ['Folhas a fechar', N.folhas, '', 'Folha'], ['Faturamento/mês', N.total, 'brl', 'Meta']];
-    const grade = el('div', { class: 'i2-campos' });
-    campos.forEach(([rot, v, fmt, extra], i) => {
-      const b = el('b', { 'data-fmt': fmt }, v == null ? '—' : '0');
-      grade.append(el('div', { class: i % 2 ? 'dir' : '' }, el('small', {}, rot), b, extra ? el('em', {}, extra) : null));
-      if (v != null) setTimeout(() => contar(b, v), 120 + i * 80);
-    });
-    res.append(el('div', { class: 'i2-toggle' }, ['hoje', 'semana'].map(k => el('button', { class: visaoResumo === k ? 'on' : '', onclick: () => { visaoResumo = k; renderInicio(); } }, k === 'hoje' ? 'Hoje' : 'Esta semana'))),
-      grade, el('button', { class: 'i2-botao', onclick: () => irEscritorio() }, '🏢  Entrar no escritório'));
+    // painel vivo: carrossel que troca sozinho + resumo que alterna Hoje/Semana + faixa de notícias correndo
+    painelVivo(N);
     renderCalendario();
     // atalhos
     const g = $('#iniGrade'); g.innerHTML = '';
@@ -173,6 +273,7 @@
 
   // ------------------------------------------------------------------ navegação
   function fecharTudo() {
+    pararPainel();
     for (const id of ['#inicio', '#appView']) { const x = $(id); if (x) x.hidden = true; }
     document.body.classList.remove('inicio-aberto', 'app-aberto');
     if (atual && apps[atual] && apps[atual].sair) try { apps[atual].sair(); } catch (e) { /* ok */ }

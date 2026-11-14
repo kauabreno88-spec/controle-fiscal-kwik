@@ -1,0 +1,68 @@
+/* KWIK Mini Escritório · tela inicial: painel vivo (js/inicio.js → painelVivo) e lista de atalhos com rolagem */
+
+/* ---------- carrossel que troca sozinho ---------- */
+.i2-rota.pv { display: block; padding: 18px 20px 14px; overflow: hidden; }
+.pv-palco { position: relative; height: 96px; }
+.pv-slide { position: absolute; inset: 0; display: grid; grid-template-columns: 54px minmax(0, 1fr) auto; gap: 14px; align-items: center; cursor: pointer; animation: pvEntra .55s cubic-bezier(.2,.9,.3,1) both; }
+.pv-slide.volta { animation-name: pvEntraVolta; }
+.pv-slide.sai { animation: pvSai .45s ease-in both; pointer-events: none; }
+@keyframes pvEntra { from { opacity: 0; transform: translateX(46px) scale(.97); } }
+@keyframes pvEntraVolta { from { opacity: 0; transform: translateX(-46px) scale(.97); } }
+@keyframes pvSai { to { opacity: 0; transform: translateX(-46px) scale(.97); } }
+.pv-ic { width: 54px; height: 54px; border-radius: 17px; display: grid; place-items: center; font-size: 27px; background: #EAF8EF; box-shadow: inset 0 0 0 1.5px rgba(40,190,82,.25); animation: pvFlutua 3s ease-in-out infinite; }
+@keyframes pvFlutua { 50% { transform: translateY(-4px) rotate(-4deg); } }
+.pv-capa { width: 46px; height: 68px; object-fit: cover; border-radius: 3px 7px 7px 3px; box-shadow: 0 8px 16px -6px rgba(0,0,0,.45); justify-self: center; animation: pvFlutua 3.4s ease-in-out infinite; }
+.pv-txt { min-width: 0; }
+.pv-txt small { display: block; color: #7f9a8c; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+.pv-txt b { display: block; color: #176B37; font-size: 18px; font-weight: 800; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pv-txt b.dica { white-space: normal; font-size: 14.5px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.pv-txt em { display: block; font-style: normal; color: #28BE52; font-size: 13px; font-weight: 700; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pv-slide:hover .pv-txt b { color: #1E8A45; }
+/* cores por tipo */
+.pv-slide.c-azul .pv-ic { background: #EAF2FF; box-shadow: inset 0 0 0 1.5px rgba(61,139,253,.25); } .pv-slide.c-azul .pv-txt em { color: #3d8bfd; }
+.pv-slide.c-ouro .pv-ic { background: #FFF6D6; box-shadow: inset 0 0 0 1.5px rgba(240,180,0,.3); } .pv-slide.c-ouro .pv-txt em { color: #c48a00; }
+.pv-slide.c-roxo .pv-txt em { color: #7b4fd6; }
+.pv-slide.c-alerta .pv-ic { background: #FFECEC; box-shadow: inset 0 0 0 1.5px rgba(229,72,77,.3); animation: pvPulsa 1.4s ease-in-out infinite; } .pv-slide.c-alerta .pv-txt em { color: #e5484d; }
+@keyframes pvPulsa { 50% { transform: scale(1.08); box-shadow: inset 0 0 0 1.5px rgba(229,72,77,.3), 0 0 0 8px rgba(229,72,77,.12); } }
+/* contagem regressiva do prazo */
+.pv-cont { display: grid; place-items: center; width: 58px; height: 58px; border-radius: 50%; background: conic-gradient(#28BE52 var(--p, 70%), #e5efe9 0); position: relative; animation: pvGira 6s linear infinite; }
+.pv-cont::before { content: ''; position: absolute; inset: 5px; border-radius: 50%; background: #fff; }
+.pv-cont b, .pv-cont small { position: relative; line-height: 1; } .pv-cont b { font-size: 20px; font-weight: 900; color: #176B37; } .pv-cont small { font-size: 10px; color: #7f9a8c; font-weight: 700; margin-top: -14px; }
+@keyframes pvGira { 50% { filter: hue-rotate(-25deg); } }
+/* barrinhas que sobem (Meta) */
+.pv-barras { display: flex; align-items: flex-end; gap: 4px; height: 46px; }
+.pv-barras i { width: 7px; height: var(--h); border-radius: 3px; background: linear-gradient(#28BE52, #1E8A45); transform-origin: bottom; animation: pvBarra 2.4s ease-in-out infinite; animation-delay: calc(var(--k) * .15s); }
+@keyframes pvBarra { 0%, 100% { transform: scaleY(.55); } 50% { transform: scaleY(1); } }
+/* rodapé: setas e bolinhas */
+.pv-rodape { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 8px; }
+.pv-seta { border: 0; background: #F1F7F3; color: #1E8A45; width: 26px; height: 26px; border-radius: 50%; font-size: 17px; font-weight: 900; line-height: 1; cursor: pointer; }
+.pv-seta:hover { background: #28BE52; color: #fff; }
+.pv-pontos { display: flex; gap: 6px; } .pv-pontos i { width: 7px; height: 7px; border-radius: 99px; background: #d4e4da; cursor: pointer; transition: width .3s, background .3s; }
+.pv-pontos i.on { width: 22px; background: #28BE52; }
+.pv-progresso { height: 3px; border-radius: 3px; background: #e9f2ec; overflow: hidden; margin-top: 10px; }
+.pv-progresso i { display: block; height: 100%; background: linear-gradient(90deg, #28BE52, #8ff0ad); transform-origin: left; animation: pvProg var(--dur) linear both; }
+.i2-rota.pv.pausa .pv-progresso i { animation-play-state: paused; }
+@keyframes pvProg { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* ---------- resumo que alterna Hoje / Esta semana ---------- */
+.pv-tempo { height: 2px; margin: -10px auto 14px; width: 120px; border-radius: 2px; background: #edf4ef; overflow: hidden; }
+.pv-tempo i { display: block; height: 100%; background: #28BE52; transform-origin: left; animation: pvProg var(--dur) linear both; }
+.i2-campos.pv-troca > div { animation: pvNum .5s cubic-bezier(.2,.9,.3,1) both; animation-delay: calc(var(--i) * 70ms); }
+@keyframes pvNum { from { opacity: 0; transform: translateY(10px); } }
+.i2-campos > div.quente b { color: #e5484d; animation: pvTreme 2.2s ease-in-out infinite; }
+@keyframes pvTreme { 0%, 86%, 100% { transform: none; } 90% { transform: translateX(-2px); } 94% { transform: translateX(2px); } }
+/* faixa de notícias correndo */
+.pv-faixa { position: relative; overflow: hidden; margin: 0 -24px 18px; padding: 9px 0; background: #F1F8F3; border-top: 1px solid #e3efe7; border-bottom: 1px solid #e3efe7;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+.pv-trilho { display: flex; gap: 34px; width: max-content; animation: pvCorre 32s linear infinite; }
+.pv-faixa:hover .pv-trilho { animation-play-state: paused; }
+.pv-trilho span { white-space: nowrap; color: #176B37; font-size: 13px; font-weight: 700; }
+@keyframes pvCorre { to { transform: translateX(-50%); } }
+
+/* ---------- atalhos: poucos à vista, o resto com barra de rolagem ---------- */
+.i2-lista { max-height: 372px; overflow-y: auto; overscroll-behavior: contain; padding-right: 12px; margin-right: 6px; padding-bottom: 6px; scrollbar-width: thin; scrollbar-color: #28BE52 #E8F3EC; }
+.i2-lista::-webkit-scrollbar { width: 8px; } .i2-lista::-webkit-scrollbar-track { background: #E8F3EC; border-radius: 8px; }
+.i2-lista::-webkit-scrollbar-thumb { background: #28BE52; border-radius: 8px; } .i2-lista::-webkit-scrollbar-thumb:hover { background: #1E8A45; }
+.i2-atalhos h2::after { content: ' · role para ver todos ↓'; font-size: 12px; font-weight: 700; color: #7f9a8c; letter-spacing: 0; vertical-align: middle; }
+@media (max-width: 760px) { .i2-lista { max-height: 340px; } .pv-palco { height: 100px; } .pv-txt b { font-size: 16px; } .pv-faixa { margin: 0 -24px 16px; } }
+@media (prefers-reduced-motion: reduce) { .pv-trilho, .pv-ic, .pv-capa, .pv-barras i, .pv-cont { animation: none !important; } }
