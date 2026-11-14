@@ -31,7 +31,7 @@
 
   // ------------------------------------------------------------------ servidor (Obsidian)
   async function api(met, url, corpo) {
-    const r = await fetch(url, { method: met, cache: 'no-store', headers: corpo ? { 'Content-Type': 'application/json', 'X-Kwik': '1' } : {}, body: corpo ? JSON.stringify(corpo) : undefined });
+    const r = await fetch(KM.ponte.base() + url, { method: met, cache: 'no-store', headers: corpo ? { 'Content-Type': 'application/json', 'X-Kwik': '1' } : {}, body: corpo ? JSON.stringify(corpo) : undefined });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) { const e = new Error(j.erro || 'Erro ' + r.status); e.status = r.status; throw e; }
     return j;
@@ -42,7 +42,7 @@
     S.pasta = emb.pasta || PASTA_PADRAO;
     const porC = new Map((emb.livros || []).map(l => [l.c, l]));
     let base = null;
-    if (KM.ehPC) {
+    if (await KM.ponte.checar(true)) {
       try {
         const j = await api('GET', '/api/obsidian/indice');
         S.vault = j.vault || '';
@@ -158,7 +158,7 @@
 
   // ------------------------------------------------------------------ gravar no Obsidian (só no PC)
   async function mudarProp(l, props) {
-    if (!l.obs || !KM.ehPC) return false;
+    if (!l.obs || !KM.ponte.ligado()) return false;
     const j = await api('GET', '/api/obsidian/nota?c=' + encodeURIComponent(l.c));
     let txt = j.texto;
     if (!txt.startsWith('---\n')) txt = '---\n---\n' + txt;
@@ -273,7 +273,7 @@ ${l.sobre || ''}
       el('input', { class: 'bb-busca', type: 'search', placeholder: 'Buscar livro ou autor', value: vista.busca, oninput: e => { vista.busca = e.target.value; const p = e.target.selectionStart; render(); const n = corpo.querySelector('.bb-busca'); n.focus(); n.setSelectionRange(p, p); } }),
       vista.prat ? null : el('button', { class: 'bb-ordem', title: 'Ordenar: ' + ORD[vista.ordem], onclick: () => { vista.ordem = { padrao: 'nome', nome: 'qtd', qtd: 'padrao' }[vista.ordem]; render(); toast('Ordem: ' + ORD[vista.ordem]); } }, '⇅'));
     corpo.append(barra);
-    if (S.fonte === 'app' && KM.ehPC) corpo.append(el('p', { class: 'bb-aviso' }, 'O servidor do escritório está desligado: mostrando o catálogo guardado no app. Abra o ABRIR-ESCRITORIO.bat para ler e gravar direto no Obsidian.'));
+    if (S.fonte === 'app' && KM.ponte.computador()) corpo.append(el('p', { class: 'bb-aviso' }, 'O servidor do escritório não respondeu: mostrando o catálogo guardado no app. Abra o atalho "KWIK Mini Escritório" da área de trabalho para ler e gravar direto no Obsidian.'));
 
     if (q) {
       const achados = S.livros.filter(l => semAcento(l.t + ' ' + l.autor + ' ' + l.prateleira).includes(q));
@@ -400,7 +400,7 @@ ${l.sobre || ''}
       let sobre = x.sobre || '';
       if (!sobre) { toast('Procurando o resumo…'); sobre = await resumoOnline(t, autor.value.trim() || x.autor); }
       const novo = { t, autor: autor.value.trim() || x.autor || '', prateleira: p, capa: x.capa || '', status: status.value, ordem: '', nota: 0, sobre, ano: x.ano || '', editora: x.editora || '' };
-      if (KM.ehPC && S.fonte === 'obsidian') {
+      if (KM.ponte.ligado() && S.fonte === 'obsidian') {
         const c = `${S.pasta}/${p}/${t}.md`;
         try {
           await api('POST', '/api/obsidian/nota', { c, texto: notaObsidian(novo) });

@@ -10,7 +10,7 @@
   const $ = s => document.querySelector(s);
   const el = (...a) => A().el(...a);
   const apps = {};
-  const ORDEM = ['escritorio', 'tarefas', 'infoclientes', 'fiscalfolha', 'reuniao', 'meta', 'relatorio', 'obsidian', 'biblioteca']; // Fiscal e Folha juntos numa tela só
+  const ORDEM = ['escritorio', 'tarefas', 'infoclientes', 'fiscalfolha', 'reuniao', 'meta', 'relatorio', 'biblioteca']; // Fiscal e Folha juntos numa tela só (o atalho 📓 Obsidian saiu da tela inicial)
   let atual = null, raf = 0;
 
   function registrar(id, def) { apps[id] = def; }
@@ -220,7 +220,7 @@
       ['Ir para', [
         ['🏠', 'Início', abrirInicio], ['🏢', 'Escritório', () => irEscritorio()], ['✨', 'Criar', () => { fecharMenu(); if (KM.criar) KM.criar.abrir(); }], ['✅', 'Tarefas', () => abrirApp('tarefas')], ['🧾', 'Fiscal e Folha', () => abrirApp('fiscalfolha')],
         ['🗓️', 'Reunião', () => abrirApp('reuniao')], ['🎯', 'Meta', () => abrirApp('meta')], ['📄', 'Relatório', () => abrirApp('relatorio')],
-        ['📇', 'Info. clientes', () => abrirApp('infoclientes')], ['📓', 'Obsidian', () => abrirApp('obsidian')], ['📚', 'Biblioteca', () => abrirApp('biblioteca')]]],
+        ['📇', 'Info. clientes', () => abrirApp('infoclientes')], ['📚', 'Biblioteca', () => abrirApp('biblioteca')]]],
       ['No escritório', [
         ['▶️', 'Trabalhar', noEsc(clicar('btTrabalhar')), 'prim'], ['👤', 'Escolher', noEsc(clicar('btSelecionar'))], ['✨', 'Animar', () => mostrarAnimacoes()], ['🎮', 'Jogar', noEsc(clicar('btSalaJogos'))],
         ['📊', 'Apresentação', clicar('btApresentacao')], ['🌃', 'Clientes 3D', noEsc(clicar('btClientesAtalho'))], ['🤝', 'RH', clicar('btRH')], ['📘', 'E-book', clicar('btEbook')], ['🌾', 'Fazendinha', clicar('btFazenda')]]],
