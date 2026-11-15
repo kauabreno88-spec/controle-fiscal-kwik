@@ -466,6 +466,12 @@ dialog.ag-dlg { max-width: 640px; } .ag-form { display: grid; grid-template-colu
 .iva-achados { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 6px; margin-top: 8px; }
 .iva-achado { text-align: left; border: 1px solid #E5DEFA; background: #FBF9FF; border-radius: 12px; padding: 8px 10px; cursor: pointer; font: inherit; display: flex; flex-direction: column; gap: 2px; }
 .iva-achado b { font-size: 13.5px; } .iva-achado small { color: #6B7472; font-size: 11.5px; font-weight: 600; } .iva-achado:hover, .iva-achado.on { border-color: #9B7BEA; background: #F3EEFF; box-shadow: 0 0 0 3px rgba(155,123,234,.18); }
+/* Dona Iva: o que pesquisar na internet, buscas para fazer à mão e o resultado da pesquisa */
+.iva-termo-box { display: grid; gap: 4px; margin: 10px 0 4px; background: #fff; border: 1.5px dashed #b9a4ef; border-radius: 12px; padding: 10px 12px; }
+.iva-termo-box > span { font-size: 13px; font-weight: 800; color: #5f3dc4; } .iva-termo-box small { color: #6B7472; font-size: 11.5px; }
+.iva-termo { width: 100%; border: 2px solid #E1E5E4; border-radius: 10px; padding: 9px 11px; font: inherit; font-size: 14px; } .iva-termo:focus { outline: none; border-color: #9B7BEA; }
+.iva-links { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 12px; }
+.iva-web { background: #f3eeff; border: 1px solid #e0d4fb; border-radius: 14px; padding: 12px 14px; margin: 12px 0; } .iva-web b { color: #5f3dc4; } .iva-web p { margin: 6px 0; } .iva-web ul { margin: 4px 0 0; padding-left: 18px; }
 
 /* ================= cópias de segurança ================= */
 dialog.cp-dlg { max-width: 720px; }

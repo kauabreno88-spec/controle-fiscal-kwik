@@ -10,7 +10,7 @@
   const $ = s => document.querySelector(s);
   const el = (...a) => A().el(...a);
   const apps = {};
-  const ORDEM = ['escritorio', 'tarefas', 'infoclientes', 'fiscalfolha', 'reuniao', 'meta', 'relatorio', 'calculo', 'cnae', 'biblioteca']; // Fiscal e Folha juntos numa tela só (o atalho 📓 Obsidian saiu da tela inicial)
+  const ORDEM = ['escritorio', 'tarefas', 'infoclientes', 'fiscalfolha', 'reuniao', 'meta', 'relatorio', 'calculo', 'precificacao', 'cnae', 'biblioteca']; // Fiscal e Folha juntos numa tela só (o atalho 📓 Obsidian saiu da tela inicial)
   let atual = null, raf = 0;
 
   function registrar(id, def) { apps[id] = def; }
@@ -57,6 +57,7 @@
     infoclientes: { ic: '📇', nome: 'Informações de clientes', desc: 'Tudo do cliente, ligado ao seu Obsidian' },
     obsidian: { ic: '📓', nome: 'Obsidian', desc: 'Suas notas, pastas, busca e tarefas' },
     calculo: { ic: '🧮', nome: 'Cálculo', desc: 'Simples, folha, rescisão, IBS e CBS e mais' },
+    precificacao: { ic: '💰', nome: 'Precificação', desc: 'Dona Iva: preço de serviços (São Luís)' },
     cnae: { ic: '🏷️', nome: 'CNAE', desc: 'Descreva a empresa: CNAEs, regime e abertura' },
     biblioteca: { ic: '📚', nome: 'Biblioteca', desc: 'Sua estante, capas, resumos e estrelas' },
   };
@@ -227,7 +228,7 @@
     ORDEM.forEach((id, i) => {
       const c = CARTOES[id], ap = apps[id];
       let r = null; try { r = id === 'escritorio' ? resumoEscritorio() : ap && ap.resumo ? ap.resumo() : null; } catch (e) { r = null; }
-      g.append(el('button', { class: 'i2-at c-' + id, style: `--i:${i}`, onclick: () => (id === 'escritorio' ? irEscritorio() : abrirApp(id)) },
+      g.append(el('button', { class: 'i2-at c-' + id, style: `--i:${i}`, onclick: () => (id === 'escritorio' ? irEscritorio() : id === 'precificacao' ? KM.precificacao && KM.precificacao.abrir() : abrirApp(id)) },
         el('span', { class: 'i2-at-ic' }, c.ic), el('span', { class: 'i2-at-t' }, el('b', {}, c.nome), el('small', { class: r && r.alerta ? 'alerta' : '' }, r && r.txt ? r.txt : c.desc)), el('i', {}, '›')));
       // botão "✨ Criar" do Kauã logo depois do Escritório
       if (id === 'escritorio' && KM.criar) g.append(el('button', { class: 'i2-at c-criar', style: `--i:${i}`, onclick: () => KM.criar.abrir() },
@@ -323,7 +324,7 @@
       ['Ir para', [
         ['🏠', 'Início', abrirInicio], ['🏢', 'Escritório', () => irEscritorio()], ['✨', 'Criar', () => { fecharMenu(); if (KM.criar) KM.criar.abrir(); }], ['✅', 'Tarefas', () => abrirApp('tarefas')], ['🧾', 'Fiscal e Folha', () => abrirApp('fiscalfolha')],
         ['🗓️', 'Reunião', () => abrirApp('reuniao')], ['🎯', 'Meta', () => abrirApp('meta')], ['📄', 'Relatório', () => abrirApp('relatorio')],
-        ['📇', 'Info. clientes', () => abrirApp('infoclientes')], ['🧮', 'Cálculo', () => abrirApp('calculo')], ['🏷️', 'CNAE', () => abrirApp('cnae')], ['📚', 'Biblioteca', () => abrirApp('biblioteca')]]],
+        ['📇', 'Info. clientes', () => abrirApp('infoclientes')], ['🧮', 'Cálculo', () => abrirApp('calculo')], ['💰', 'Precificação', () => { fecharMenu(); KM.precificacao && KM.precificacao.abrir(); }], ['🏷️', 'CNAE', () => abrirApp('cnae')], ['📚', 'Biblioteca', () => abrirApp('biblioteca')]]],
       ['No escritório', [
         ['▶️', 'Trabalhar', noEsc(clicar('btTrabalhar')), 'prim'], ['👤', 'Escolher', noEsc(clicar('btSelecionar'))], ['✨', 'Animar', () => mostrarAnimacoes()], ['🎮', 'Jogar', noEsc(clicar('btSalaJogos'))],
         ['📊', 'Apresentação', clicar('btApresentacao')], ['🌃', 'Clientes 3D', noEsc(clicar('btClientesAtalho'))], ['🤝', 'RH', clicar('btRH')], ['📘', 'E-book', clicar('btEbook')], ['🌾', 'Fazendinha', clicar('btFazenda')]]],
