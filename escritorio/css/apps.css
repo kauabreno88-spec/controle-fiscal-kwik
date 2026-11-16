@@ -557,3 +557,40 @@ dialog.cp-dlg { max-width: 720px; }
 .kaua-mini canvas { display: block; width: 45px; height: 69px; image-rendering: pixelated; filter: drop-shadow(0 6px 8px rgba(0,0,0,.25)); }
 .cp-part { position: fixed; z-index: 67; pointer-events: none; font-size: 20px; line-height: 1; animation: cpSobe 1.3s ease-out forwards; }
 @keyframes cpSobe { 0% { opacity: 1; transform: translate(-50%, 0) scale(.5); } 30% { transform: translate(-50%, -16px) scale(1.2); } 100% { opacity: 0; transform: translate(calc(-50% + var(--dx, 0px)), -72px) scale(1); } }
+
+/* ================= ⚖️ Reforma tributária (LC 214/2025) ================= */
+.rf-lado .zf-item { font-size: 13px; padding: 7px 10px; } .rf-lado .zf-item .rf-nome { font-style: normal; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rf-topo { padding-bottom: 8px; } .rf-busca { font-size: 15px; padding: 14px 18px; border-width: 1.5px; } .rf-busca:focus { box-shadow: 0 0 0 4px rgba(40,190,82,.15); }
+.rf-escopo { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 8px; } .rf-escopo small { color: #6B7472; font-weight: 700; }
+.rf-chip { border: 1.5px solid #DCE5E1; background: #fff; border-radius: 99px; padding: 5px 11px; font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; color: #2B3634; } .rf-chip.on, .rf-chip:hover { border-color: #28BE52; background: #EAF7EE; color: #1E8A45; } .rf-chip:disabled { opacity: .4; cursor: default; }
+.rf-carrega, .rf-vazio { color: #6B7472; font-weight: 600; padding: 20px 4px; }
+.rf-hero { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 14px; margin: 6px 0 18px; }
+.rf-hero > div:first-child { background: #111A19; color: #fff; border-radius: 16px; padding: 20px 22px; } .rf-hero h2 { margin: 0 0 6px; font-size: 22px; font-weight: 900; } .rf-hero p { margin: 0 0 10px; color: #cfe9d8; font-size: 14px; line-height: 1.45; } .rf-hero small { color: #8fb39c; font-size: 12px; }
+.rf-aviso { background: #FFF8E6; border: 1.5px solid #F5C451; border-radius: 16px; padding: 16px 18px; font-size: 13px; font-weight: 600; color: #5c4400; line-height: 1.45; }
+.rf-h3 { margin: 18px 0 10px; font-size: 16px; font-weight: 900; } .rf-h2 { margin: 6px 0 4px; font-size: 22px; font-weight: 900; } .rf-sub { color: #6B7472; font-size: 13px; margin: 0 0 12px; }
+.rf-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.rf-card { text-align: left; font: inherit; border: 1px solid #E6ECE9; background: #fff; border-radius: 14px; padding: 14px; cursor: pointer; display: flex; flex-direction: column; gap: 5px; box-shadow: 0 1px 4px rgba(17,26,25,.05); transition: transform .15s, border-color .15s, box-shadow .15s; animation: iniSobe .35s both; animation-delay: calc(var(--i, 0) * 18ms); }
+.rf-card:hover { transform: translateY(-2px); border-color: #28BE52; box-shadow: 0 8px 20px rgba(17,26,25,.08); }
+.rf-card b { font-size: 14px; color: #111A19; } .rf-card p { margin: 0; font-size: 12.5px; color: #4B5654; line-height: 1.4; } .rf-card small { margin-top: auto; color: #1E8A45; font-weight: 700; font-size: 11.5px; }
+.rf-card-ic { font-size: 24px; } .rf-card-ic.grande { font-size: 40px; line-height: 1; }
+.rf-tema-cab { display: flex; gap: 14px; align-items: flex-start; background: #fff; border-radius: 16px; padding: 16px 18px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(17,26,25,.06); }
+.rf-tema-cab small { color: #1E8A45; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; } .rf-tema-cab h2 { margin: 2px 0 4px; font-size: 21px; font-weight: 900; } .rf-tema-cab p { margin: 0; color: #4B5654; font-size: 13.5px; line-height: 1.45; }
+.rf-anexos-lig { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 4px 0 12px; font-size: 13px; }
+.rf-res-info { font-size: 13.5px; font-weight: 800; color: #111A19; margin: 4px 0 12px; } .rf-res-info small { font-weight: 600; color: #8C9997; }
+.rf-art { background: #fff; border-radius: 14px; padding: 14px 18px; margin-bottom: 10px; box-shadow: 0 1px 4px rgba(17,26,25,.06); border: 1.5px solid transparent; animation: iniSobe .3s both; animation-delay: calc(var(--i, 0) * 15ms); scroll-margin-top: 90px; }
+.rf-art.foco { border-color: #28BE52; box-shadow: 0 6px 20px rgba(40,190,82,.15); }
+.rf-art header { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; } .rf-art header b { font-size: 16px; font-weight: 900; color: #1E8A45; margin-right: 8px; } .rf-art header small { color: #8C9997; font-size: 12px; font-weight: 600; }
+.rf-art-bts { display: flex; gap: 4px; flex: none; } .rf-ic { border: 0; background: #F4F7F6; border-radius: 8px; width: 32px; height: 32px; cursor: pointer; font-size: 14px; } .rf-ic:hover { background: #EAF7EE; }
+.rf-tags { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0 2px; } .rf-tag { border: 0; background: #EAF7EE; color: #1E8A45; border-radius: 99px; padding: 2px 9px; font: inherit; font-size: 11.5px; font-weight: 700; cursor: pointer; }
+.rf-texto { margin-top: 8px; font-size: 14px; line-height: 1.55; color: #1f2a28; } .rf-texto p { margin: 0 0 6px; } .rf-texto p.par { font-weight: 500; margin-top: 8px; } .rf-texto p.inc { padding-left: 16px; } .rf-texto p.ali { padding-left: 32px; color: #2B3634; } .rf-texto p.ite { padding-left: 46px; color: #4B5654; }
+.rf-texto.cortado p:nth-child(n+9) { display: none; } .rf-texto mark, .rf-anexo mark, .rf-art small mark { background: #FFE066; color: inherit; border-radius: 3px; padding: 0 1px; }
+.rf-ver { border: 0; background: transparent; color: #1E8A45; font: inherit; font-weight: 800; font-size: 13px; cursor: pointer; padding: 4px 0 0; }
+.rf-mais { width: 100%; justify-content: center; margin: 6px 0 20px; }
+.rf-det { margin-top: 12px; } .rf-det > summary { cursor: pointer; font-weight: 800; font-size: 14px; padding: 10px 0; color: #2B3634; }
+.rf-livro { margin: 22px 0 6px; font-size: 15px; font-weight: 900; color: #111A19; } .rf-titulo { margin: 12px 0 6px; font-size: 13.5px; font-weight: 800; color: #1E8A45; }
+.rf-cap { background: #fff; border-radius: 12px; margin-bottom: 6px; box-shadow: 0 1px 3px rgba(17,26,25,.05); } .rf-cap > summary { cursor: pointer; padding: 10px 14px; display: flex; justify-content: space-between; gap: 10px; font-size: 13.5px; font-weight: 700; } .rf-cap > summary small { color: #8C9997; flex: none; } .rf-cap[open] { padding-bottom: 6px; } .rf-cap[open] .rf-art { margin: 0 8px 8px; box-shadow: none; border-color: #EEF1F0; }
+.rf-nav { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 4px 0 6px; font-size: 12.5px; font-weight: 700; color: #6B7472; flex-wrap: wrap; }
+.rf-filtro { width: 100%; box-sizing: border-box; border: 1.5px solid #DCE5E1; border-radius: 10px; padding: 10px 12px; font: inherit; font-size: 14px; margin: 8px 0 10px; }
+.rf-anexo { background: #fff; border-radius: 14px; padding: 12px 16px; box-shadow: 0 1px 4px rgba(17,26,25,.06); } .rf-anexo p { margin: 0; padding: 7px 0; border-bottom: 1px solid #F0F3F2; font-size: 13.5px; line-height: 1.45; }
+.rf-chip { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .rf-tema-cab > div, .rf-art header > div { min-width: 0; } .zf-main.rf-main { margin: 0; max-width: none; min-width: 0; } /* sem margem automática do <main> geral: ocupa a coluna e não passa da tela */ .rf-busca { text-overflow: ellipsis; }
+@media (max-width: 760px) { .rf-hero { grid-template-columns: minmax(0, 1fr); } .rf-lado .zf-sec { display: none; } .rf-lado .zf-item .rf-nome { max-width: 150px; } .rf-art { padding: 12px 13px; } .rf-texto { font-size: 13.5px; } .rf-texto p.ali { padding-left: 22px; } .rf-texto p.ite { padding-left: 30px; } }
