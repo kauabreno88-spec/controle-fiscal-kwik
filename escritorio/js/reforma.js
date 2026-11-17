@@ -220,7 +220,12 @@
   const classe = p => /^§|^Parágrafo único/.test(p) ? 'par' : /^[IVXLC]+\s*-/.test(p) ? 'inc' : /^[a-z]\)/.test(p) ? 'ali' : /^\d+\.\s/.test(p) ? 'ite' : '';
   function copiar(a) {
     const t = `Art. ${a.n}${a.s ? '-' + a.s : ''} da Lei Complementar nº 214/2025\n${a.p.join('\n')}`;
-    (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toast('📋 Artigo copiado')).catch(() => { prompt('Copie o artigo:', t); });
+    const plano2 = () => { // navegador sem permissão de área de transferência: copia por uma caixa de texto escondida
+      const ta = el('textarea', { style: 'position:fixed;left:-9999px;top:0', readonly: true }); ta.value = t; document.body.append(ta); ta.select();
+      let ok = false; try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+      ta.remove(); toast(ok ? '📋 Artigo copiado' : 'Não deu para copiar aqui: selecione o texto do artigo e copie', { erro: !ok });
+    };
+    (navigator.clipboard && window.isSecureContext ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toast('📋 Artigo copiado')).catch(plano2);
   }
 
   // ---- lei inteira pela estrutura
